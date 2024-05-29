@@ -10,8 +10,6 @@ CORS(app, resources={r"/*": {"origins": ["http://localhost:4321"]}})
 #Configuracion
 app.config['MYSQL_HOST'] = 'db'
 app.config['MYSQL_USER'] = 'root'
-# app.config['MYSQL_HOST'] = 'localhost'
-# app.config['MYSQL_USER'] = 'admin'
 app.config['MYSQL_PASSWORD'] = 'admin'
 app.config['MYSQL_DB'] = 'proyectodsv'
 app.config['CORS_HEADERS'] = 'Content-Type'
@@ -46,11 +44,9 @@ def ver_formularios():
 @app.route('/ver_multipropietarios')
 def ver_multipropietarios():
     # Obtener la lista de multipropietarios desde la base de datos
-    multipropietarios = [...] # Consulta a la base de datos
+    multipropietarios = [...] 
     return render_template('ver_multipropietarios.html', multipropietarios=multipropietarios)
 
-
-## API
 @app.route('/show_formularios', methods=['GET'])
 def show_formularios():
     connection = get_db_connection()
@@ -74,7 +70,6 @@ def show_formularios():
             formularios= json.dumps(formularios, default=str)
             print(formularios)
         return formularios
-        # return render_template('index.html', formularios=formularios)
 
     finally:
         connection.close()
@@ -102,7 +97,6 @@ def show_formulario():
             print(formulario)
             
         return formulario
-        # return render_template('show_form.html', formulario=formulario, enajenantes=enajenantes, adquirentes=adquirentes)
 
     finally:
         connection.close()
@@ -110,7 +104,7 @@ def show_formulario():
 def show_multipropietarios():
     connection = get_db_connection()
     filters = {}
-    # if(not request.args.get('com_man_pred'))
+
     if(request.args.get('com_man_pred')):
         filters["com_man_pred"] = '\'' + request.args.get('com_man_pred') + '\''
     else:
@@ -133,7 +127,6 @@ def show_multipropietarios():
             multipropietarios= json.dumps(multipropietarios, default=str)
             print(multipropietarios)
         return multipropietarios
-        # return render_template('show_multis.html', multipropietarios=multipropietarios)
 
     finally:
         connection.close()
@@ -150,7 +143,7 @@ def show_multipropietario():
             multipropietario = cursor.fetchall()
             multipropietario= json.dumps(multipropietario, default=str)
         return multipropietario
-        # return render_template('show_multi.html', multipropietario=multipropietario)
+
 
     finally:
         connection.close()
@@ -179,8 +172,8 @@ def add_formulario():
     except:
         adquirentes_data = []
     formulario = form_solver(data, get_db_connection)
-    formulario.nivel_0()
-    formulario.nivel_1()
+    formulario.determinar_y_procesar_escenario()
+    formulario.ajustar_porcentajes_adquirentes()
     return jsonify({"message": "Formulario submitted successfully"})
 if __name__ == '__main__':
     app.run(debug=True, port=8000, host='0.0.0.0')
