@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block title %}Página de Inicio{% endblock %}
+
+{% block content %}
+  {{ super() }}
+
+  <div class="container mt-4">
+    <h1>Bienvenido a Forms Gov</h1>
+    <p>Esta es la página de inicio de nuestra aplicación de formularios.</p>
+
+    <hr>
+
+    <h2>Opciones</h2>
+    <ul class="list-group">
+      <li class="list-group-item">
+        <h5>Crear Formulario</h5>
+        <p>Subir nuevos formularios al sistema.</p>
+        <a href="{{ url_for('crear_formulario') }}" class="btn btn-primary">Ir a Crear Formulario</a>
+      </li>
+      <li class="list-group-item">
+        <h5>Ver Todos los Formularios</h5>
+        <p>Ver más detalles de los formularios existentes.</p>
+        <a href="{{ url_for('ver_formularios') }}" class="btn btn-primary">Ir a Ver Formularios</a>
+      </li>
+      <li class="list-group-item">
+        <h5>Ver Multipropietarios</h5>
+        <p>Consultar información de los multipropietarios.</p>
+        <a href="{{ url_for('ver_multipropietarios') }}" class="btn btn-primary">Ir a Ver Multipropietarios</a>
+      </li>
+    </ul>
+  </div>
+{% endblock %}

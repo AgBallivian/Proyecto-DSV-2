@@ -25,6 +25,32 @@ def get_db_connection():
     return connection
 
 
+#Front end
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+@app.route('/crear_formulario', methods=['GET', 'POST'])
+def crear_formulario():
+    if request.method == 'POST':
+        # Lógica para procesar el formulario enviado
+        pass
+    return render_template('crear_formulario.html')
+
+@app.route('/ver_formularios')
+def ver_formularios():
+    # Obtener la lista de formularios desde la base de datos
+    formularios = [...] # Consulta a la base de datos
+    return render_template('ver_formularios.html', formularios=formularios)
+
+@app.route('/ver_multipropietarios')
+def ver_multipropietarios():
+    # Obtener la lista de multipropietarios desde la base de datos
+    multipropietarios = [...] # Consulta a la base de datos
+    return render_template('ver_multipropietarios.html', multipropietarios=multipropietarios)
+
+
+## API
 @app.route('/show_formularios', methods=['GET'])
 def show_formularios():
     connection = get_db_connection()

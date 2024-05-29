@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block title %}Ver Multipropietarios{% endblock %}
+
+{% block content %}
+  {{ super() }}
+
+  <div class="container mt-4">
+    <h1>Ver Multipropietarios</h1>
+    <ul>
+      {% for multipropietario in multipropietarios %}
+      <li>{{ multipropietario.nombre }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+{% endblock %}

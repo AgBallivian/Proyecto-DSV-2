@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block title %}Ver Formularios{% endblock %}
+
+{% block content %}
+  {{ super() }}
+
+  <div class="container mt-4">
+    <h1>Ver Formularios</h1>
+    <ul>
+      {% for formulario in formularios %}
+      <li>{{ formulario.nombre }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+{% endblock %}
