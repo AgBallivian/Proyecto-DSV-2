@@ -31,9 +31,79 @@ def index():
 @app.route('/crear_formulario', methods=['GET', 'POST'])
 def crear_formulario():
     if request.method == 'POST':
-        # Lógica para procesar el formulario enviado
-        pass
+        cne = request.form['cne']
+        comuna = request.form['comuna']
+        manzana = request.form['manzana']
+        predio = request.form['predio']
+        fojas = request.form['fojas']
+        fecha_inscripcion = request.form['fecha_inscripcion']
+        numero_inscripcion = request.form['numero_inscripcion']
+
+        enajenantes_data = []
+        for key, value in request.form.items():
+            if key.startswith('enajenantes'):
+                datos_enajenante = {
+                    'RUNRUT': value,
+                    'porcDerecho': request.form.get(f"enajenantes[{key.split('[')[2].split(']')[0]}][porcDerecho]", None)
+                }
+                enajenantes_data.append(datos_enajenante)
+
+        adquirentes_data = []
+        for key, value in request.form.items():
+            if key.startswith('adquirentes'):
+                datos_adquirente = {
+                    'RUNRUT': value,
+                    'porcDerecho': request.form.get(f"adquirentes[{key.split('[')[2].split(']')[0]}][porcDerecho]", None)
+                }
+                adquirentes_data.append(datos_adquirente)
+
+        data = {
+            'CNE': cne,
+            'bienRaiz': {
+                'comuna': comuna,
+                'manzana': manzana,
+                'predio': predio
+            },
+            'enajenantes': enajenantes_data,
+            'adquirentes': adquirentes_data,
+            'fojas': fojas,
+            'fechaInscripcion': fecha_inscripcion,
+            'nroInscripcion': numero_inscripcion
+        }
+
+        formulario = form_solver(data, get_db_connection)
+        formulario.determinar_y_procesar_escenario()
+        formulario.ajustar_porcentajes_adquirentes()
+
+        return render_template('index.html')
+
     return render_template('crear_formulario.html')
+
+
+@app.route('/subir_json', methods=['GET', 'POST'])
+def subir_json():
+    if request.method == 'POST':
+        archivo = request.files['archivo']
+
+        if archivo:
+            contenido = archivo.read()
+            datos_json = json.loads(contenido)
+
+            errores = []
+            for datos in datos_json:
+                try:
+                    formulario = form_solver(datos, get_db_connection)
+                    formulario.determinar_y_procesar_escenario()
+                    formulario.ajustar_porcentajes_adquirentes()
+                except Exception as e:
+                    errores.append(str(e))
+
+            if errores:
+                return render_template('subir_json.html', errores=errores)
+            else:
+                return render_template('exito.html')
+
+    return render_template('subir_json.html')
 
 @app.route('/ver_formularios')
 def ver_formularios():

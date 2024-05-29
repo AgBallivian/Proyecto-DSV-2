@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block title %}Subir JSON{% endblock %}
+
+{% block content %}
+  {{ super() }}
+
+  <div class="container mt-4">
+    <h1>Subir JSON</h1>
+    {% if errores %}
+      {% for error in errores %}
+        <div class="alert alert-danger" role="alert">
+          {{ error }}
+        </div>
+      {% endfor %}
+    {% endif %}
+    <form method="post" enctype="multipart/form-data" action="{{ url_for('subir_json') }}">
+      <div class="mb-3">
+        <label for="archivo" class="form-label">Seleccionar archivo JSON</label>
+        <input type="file" class="form-control" id="archivo" name="archivo" required>
+      </div>
+      <button type="submit" class="btn btn-primary">Subir</button>
+    </form>
+  </div>
+{% endblock %}

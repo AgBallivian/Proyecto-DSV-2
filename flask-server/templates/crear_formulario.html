@@ -7,6 +7,126 @@
 
   <div class="container mt-4">
     <h1>Crear Formulario</h1>
-    <!-- Aquí puedes agregar el formulario para crear un nuevo formulario -->
+    <form method="post" action="{{ url_for('crear_formulario') }}">
+      <div class="mb-3">
+        <label for="cne" class="form-label">CNE</label>
+        <select class="form-select" id="cne" name="cne" required>
+          <option value="">Seleccione una opción</option>
+          <option value="8">Compraventa (8)</option>
+          <option value="99">Regularización de Patrimonio (99)</option>
+        </select>
+      </div>
+      <div class="row mb-3">
+        <div class="col">
+          <label for="comuna" class="form-label">Comuna</label>
+          <input type="text" class="form-control" id="comuna" name="comuna" required>
+        </div>
+        <div class="col">
+          <label for="manzana" class="form-label">Manzana</label>
+          <input type="text" class="form-control" id="manzana" name="manzana" required>
+        </div>
+        <div class="col">
+          <label for="predio" class="form-label">Predio</label>
+          <input type="text" class="form-control" id="predio" name="predio" required>
+        </div>
+      </div>
+      <div class="mb-3">
+        <label for="enajenantes" class="form-label">Enajenantes</label>
+        <div id="enajenantes-container">
+          <div class="row mb-2">
+            <div class="col">
+              <input type="text" class="form-control" placeholder="RUN o RUT" name="enajenantes[0][RUNRUT]" required>
+            </div>
+            <div class="col">
+              <input type="number" class="form-control" placeholder="% de derecho" name="enajenantes[0][porcDerecho]">
+            </div>
+          </div>
+        </div>
+        <button type="button" class="btn btn-primary" id="agregar-enajenante">Agregar Enajenante</button>
+      </div>
+      <div class="mb-3">
+        <label for="adquirentes" class="form-label">Adquirentes</label>
+        <div id="adquirentes-container">
+          <div class="row mb-2">
+            <div class="col">
+              <input type="text" class="form-control" placeholder="RUN o RUT" name="adquirentes[0][RUNRUT]" required>
+            </div>
+            <div class="col">
+              <input type="number" class="form-control" placeholder="% de derecho" name="adquirentes[0][porcDerecho]">
+            </div>
+          </div>
+        </div>
+        <button type="button" class="btn btn-primary" id="agregar-adquirente">Agregar Adquirente</button>
+      </div>
+      <div class="mb-3">
+        <label for="fojas" class="form-label">Fojas</label>
+        <input type="text" class="form-control" id="fojas" name="fojas" required>
+      </div>
+      <div class="mb-3">
+        <label for="fecha-inscripcion" class="form-label">Fecha de Inscripción</label>
+        <input type="date" class="form-control" id="fecha-inscripcion" name="fecha_inscripcion" required>
+      </div>
+      <div class="mb-3">
+        <label for="numero-inscripcion" class="form-label">Número de Inscripción</label>
+        <input type="text" class="form-control" id="numero-inscripcion" name="numero_inscripcion" required>
+      </div>
+      <button type="submit" class="btn btn-primary">Enviar Formulario</button>
+    </form>
   </div>
+
+  <script>
+    const enajenantesContainer = document.getElementById('enajenantes-container');
+    const agregarEnajenanteBtn = document.getElementById('agregar-enajenante');
+    let enajenanteIndex = 1;
+
+    agregarEnajenanteBtn.addEventListener('click', () => {
+      const nuevoEnajenante = document.createElement('div');
+      nuevoEnajenante.classList.add('row', 'mb-2');
+      nuevoEnajenante.innerHTML = `
+        <div class="col">
+          <input type="text" class="form-control" placeholder="RUN o RUT" name="enajenantes[${enajenanteIndex}][RUNRUT]" required>
+        </div>
+        <div class="col">
+          <input type="number" class="form-control" placeholder="% de derecho" name="enajenantes[${enajenanteIndex}][porcDerecho]">
+        </div>
+        <div class="col-auto">
+          <button type="button" class="btn btn-danger eliminar-enajenante">Eliminar</button>
+        </div>
+      `;
+      enajenantesContainer.appendChild(nuevoEnajenante);
+      enajenanteIndex++;
+
+      const eliminarBtn = nuevoEnajenante.querySelector('.eliminar-enajenante');
+      eliminarBtn.addEventListener('click', () => {
+        nuevoEnajenante.remove();
+      });
+    });
+
+    const adquirentesContainer = document.getElementById('adquirentes-container');
+    const agregarAdquirenteBtn = document.getElementById('agregar-adquirente');
+    let adquirenteIndex = 1;
+
+    agregarAdquirenteBtn.addEventListener('click', () => {
+      const nuevoAdquirente = document.createElement('div');
+      nuevoAdquirente.classList.add('row', 'mb-2');
+      nuevoAdquirente.innerHTML = `
+        <div class="col">
+          <input type="text" class="form-control" placeholder="RUN o RUT" name="adquirentes[${adquirenteIndex}][RUNRUT]" required>
+        </div>
+        <div class="col">
+          <input type="number" class="form-control" placeholder="% de derecho" name="adquirentes[${adquirenteIndex}][porcDerecho]">
+        </div>
+        <div class="col-auto">
+          <button type="button" class="btn btn-danger eliminar-adquirente">Eliminar</button>
+        </div>
+      `;
+      adquirentesContainer.appendChild(nuevoAdquirente);
+      adquirenteIndex++;
+      
+      const eliminarBtn = nuevoAdquirente.querySelector('.eliminar-adquirente');
+      eliminarBtn.addEventListener('click', () => {
+        nuevoAdquirente.remove();
+      });
+    });
+  </script>
 {% endblock %}
