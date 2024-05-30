@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block title %}Ver Formulario{% endblock %}
+
+{% block content %}
+  {{ super() }}
+
+  <div class="container mt-4">
+    <h1>Detalle del Formulario</h1>
+    <table class="table">
+      <tr>
+        <th>N° Atención</th>
+        <td>{{ formulario.Numero_de_atencion }}</td>
+      </tr>
+      <tr>
+        <th>CNE</th>
+        <td>{{ formulario.CNE }}</td>
+      </tr>
+      <tr>
+        <th>Comuna</th>
+        <td>{{ formulario.Comuna }}</td>
+      </tr>
+      <tr>
+        <th>Manzana</th>
+        <td>{{ formulario.Manzana }}</td>
+      </tr>
+      <tr>
+        <th>Predio</th>
+        <td>{{ formulario.Predio }}</td>
+      </tr>
+      <tr>
+        <th>Fojas</th>
+        <td>{{ formulario.Fojas }}</td>
+      </tr>
+      <tr>
+        <th>Fecha de Inscripción</th>
+        <td>{{ formulario.Fecha_de_inscripcion }}</td>
+      </tr>
+      <tr>
+        <th>Número de Inscripción</th>
+        <td>{{ formulario.Numero_de_insripcion }}</td>
+      </tr>
+    </table>
+
+    <h2>Enajenantes</h2>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>RUN o RUT</th>
+          <th>% de derecho</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for enajenante in enajenantes %}
+        <tr>
+          <td>{{ enajenante.RUNRUT }}</td>
+          <td>{{ enajenante.porcDerecho }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <h2>Adquirentes</h2>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>RUN o RUT</th>
+          <th>% de derecho</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for adquirente in adquirentes %}
+        <tr>
+          <td>{{ adquirente.RUNRUT }}</td>
+          <td>{{ adquirente.porcDerecho }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endblock %}

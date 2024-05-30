@@ -14,6 +14,7 @@ class form_solver():
         self.fojas = formulario['fojas']
         self.fecha_inscripcion = formulario['fechaInscripcion']
         self.numero_inscripcion = formulario['nroInscripcion']
+        self.numero_de_atencion = None
         self.connection = connection
 
         try:
@@ -79,6 +80,7 @@ class form_solver():
                     self.fecha_inscripcion, 
                     self.numero_inscripcion
                 ))
+            self.numero_de_atencion = numero_de_atencion
             connect.commit()
             return numero_de_atencion
         except Exception as e:
@@ -311,19 +313,21 @@ class form_solver():
 
     def ajustar_porcentajes_adquirentes(self):
         sum_porc_Derecho_adquirente = 0
-        for i in self.adquirentes_data:
-            sum_porc_Derecho_adquirente += i['porcDerecho']
+        for adquirente in self.adquirentes_data:
+            porc_Derecho = adquirente.get('porcDerecho')
+            if porc_Derecho is not None:
+                sum_porc_Derecho_adquirente += porc_Derecho
+
         print(sum_porc_Derecho_adquirente)
-        if(sum_porc_Derecho_adquirente == 100):
+        if sum_porc_Derecho_adquirente == 100:
             com_man_pred = str(self.comuna) + "-" + str(self.manzana) + "-" + str(self.predio)
-            print(self.enajenantes_data)
-            Run_Rut_enajenantes = []
-            for i in self.enajenantes_data:
-                Run_Rut_enajenantes.append(i['RUNRUT'])
-            sum_porc_Derecho_enajenante_query = "SELECT SUM(porcDerecho) as sum FROM Multipropietarios WHERE com_man_pred=" + '\'' + com_man_pred + '\'' + " AND RUNRUT IN " + str(Run_Rut_enajenantes).replace("[","(").replace("]",")")
+            Run_Rut_enajenantes = [enajenante['RUNRUT'] for enajenante in self.enajenantes_data]
+            sum_porc_Derecho_enajenante_query = "SELECT SUM(porcDerecho) as sum FROM Multipropietarios WHERE com_man_pred=" + '\'' + com_man_pred + '\'' + " AND RUNRUT IN " + str(Run_Rut_enajenantes).replace("[", "(").replace("]", ")")
             print(sum_porc_Derecho_enajenante_query)
             sum_porc_Derecho_enajenante = int(self.execute_Select_query(sum_porc_Derecho_enajenante_query)[0]['sum'])
             print(sum_porc_Derecho_enajenante)
-            for i in self.adquirentes_data:
-                i['porcDerecho'] *= sum_porc_Derecho_enajenante/100
+            for adquirente in self.adquirentes_data:
+                porc_Derecho = adquirente.get('porcDerecho')
+                if porc_Derecho is not None:
+                    adquirente['porcDerecho'] *= sum_porc_Derecho_enajenante / 100
             print(self.adquirentes_data)

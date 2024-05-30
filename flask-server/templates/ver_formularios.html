@@ -7,10 +7,29 @@
 
   <div class="container mt-4">
     <h1>Ver Formularios</h1>
-    <ul>
-      {% for formulario in formularios %}
-      <li>{{ formulario.nombre }}</li>
-      {% endfor %}
-    </ul>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>N° Atención</th>
+          <th>CNE</th>
+          <th>Comuna</th>
+          <th>Manzana</th>
+          <th>Predio</th>
+          <th>Detalle</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for formulario in formularios %}
+        <tr>
+          <td>{{ formulario.Numero_de_atencion }}</td>
+          <td>{{ formulario.CNE }}</td>
+          <td>{{ formulario.Comuna }}</td>
+          <td>{{ formulario.Manzana }}</td>
+          <td>{{ formulario.Predio }}</td>
+          <td><a href="{{ url_for('ver_formulario', id=formulario.Numero_de_atencion) }}">Ver Detalle</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
   </div>
 {% endblock %}

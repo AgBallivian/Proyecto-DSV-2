@@ -1,0 +1,32 @@
+version: '3'
+services:
+  flask-app:
+    build:
+      context: ./flask-server
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - db-setup
+    environment:
+      MYSQL_HOST: db
+      MYSQL_ROOT_PASSWORD: admin
+      MYSQL_DB: proyectodsv
+
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: admin
+      MYSQL_DATABASE: proyectodsv
+    volumes:
+      - db_data:/var/lib/mysql
+
+  db-setup:
+    build:
+      context: ./database
+      dockerfile: dockerfile
+    depends_on:
+      - db
+
+volumes:
+  db_data:
