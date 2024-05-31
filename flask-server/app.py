@@ -91,8 +91,7 @@ def crear_formulario():
         numero_de_atencion = formulario.add_formulario()
         formulario.add_enajenante(numero_de_atencion)
         formulario.add_adquirente(numero_de_atencion)
-        #Ver eso con el maldo pq se me olvido xd
-        # formulario.add_multipropietario()
+        formulario.add_multipropietario()
         formulario.determinar_y_procesar_escenario()
         formulario.ajustar_porcentajes_adquirentes()
         
