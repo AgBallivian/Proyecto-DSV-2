@@ -8,8 +8,13 @@ app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": ["http://localhost:4321"]}})
 
 #Configuracion
-app.config['MYSQL_HOST'] = 'db'
-app.config['MYSQL_USER'] = 'root'
+# app.config['MYSQL_HOST'] = 'db'
+# app.config['MYSQL_USER'] = 'root'
+
+#Esto solo es para testeo sin docker.
+app.config['MYSQL_HOST'] = 'localhost'
+app.config['MYSQL_USER'] = 'admin'
+
 app.config['MYSQL_PASSWORD'] = 'admin'
 app.config['MYSQL_DB'] = 'proyectodsv'
 app.config['CORS_HEADERS'] = 'Content-Type'
@@ -40,22 +45,32 @@ def crear_formulario():
         numero_inscripcion = request.form['numero_inscripcion']
 
         enajenantes_data = []
-        for key, value in request.form.items():
-            if key.startswith('enajenantes'):
-                datos_enajenante = {
-                    'RUNRUT': value,
-                    'porcDerecho': request.form.get(f"enajenantes[{key.split('[')[2].split(']')[0]}][porcDerecho]", None)
-                }
-                enajenantes_data.append(datos_enajenante)
-
         adquirentes_data = []
-        for key, value in request.form.items():
-            if key.startswith('adquirentes'):
-                datos_adquirente = {
-                    'RUNRUT': value,
-                    'porcDerecho': request.form.get(f"adquirentes[{key.split('[')[2].split(']')[0]}][porcDerecho]", None)
-                }
-                adquirentes_data.append(datos_adquirente)
+
+        for key, value in request.form.lists():
+            if key.startswith('enajenantes'):
+                index = int(key.split('[')[1].split(']')[0])
+                field = key.split('[')[2].split(']')[0]
+                
+                if len(enajenantes_data) <= index:
+                    enajenantes_data.append({'RUNRUT': None, 'porcDerecho': None})
+                
+                if field == 'RUNRUT':
+                    enajenantes_data[index]['RUNRUT'] = value[0]
+                elif field == 'porcDerecho':
+                    enajenantes_data[index]['porcDerecho'] = value[0]
+            
+            elif key.startswith('adquirentes'):
+                index = int(key.split('[')[1].split(']')[0])
+                field = key.split('[')[2].split(']')[0]
+                
+                if len(adquirentes_data) <= index:
+                    adquirentes_data.append({'RUNRUT': None, 'porcDerecho': None})
+                
+                if field == 'RUNRUT':
+                    adquirentes_data[index]['RUNRUT'] = value[0]
+                elif field == 'porcDerecho':
+                    adquirentes_data[index]['porcDerecho'] = value[0]
         
         data = {
             'CNE': cne,
@@ -71,16 +86,16 @@ def crear_formulario():
             'nroInscripcion': numero_inscripcion
         }
 
+        print(data)
         formulario = form_solver(data, get_db_connection)
-        numero_de_atencion = formulario.numero_de_atencion
-        formulario.add_formulario()
-        #ARREGLAR ESTA COSA NO FUNCIONA, NO AÑADE ENAJENANTES NI ADQUIRENTES. >:(
+        numero_de_atencion = formulario.add_formulario()
         formulario.add_enajenante(numero_de_atencion)
         formulario.add_adquirente(numero_de_atencion)
+        #Ver eso con el maldo pq se me olvido xd
+        # formulario.add_multipropietario()
         formulario.determinar_y_procesar_escenario()
         formulario.ajustar_porcentajes_adquirentes()
         
-        print(numero_de_atencion, " numero de atencion que chucha weon")
         if numero_de_atencion:
             return redirect(url_for('ver_formulario', id=numero_de_atencion))
         else:
@@ -167,6 +182,8 @@ def ver_multipropietarios():
     # Obtener la lista de multipropietarios desde la base de datos
     multipropietarios = [...] 
     return render_template('ver_multipropietarios.html', multipropietarios=multipropietarios)
+
+#LAS FUCNIONES COMENTADAS SON REDUNDANTES, NO SE USAN. VEO SI HAGO ALGO CON ELLAS O LAS FUNO.
 
 # @app.route('/show_formularios', methods=['GET'])
 # def show_formularios():

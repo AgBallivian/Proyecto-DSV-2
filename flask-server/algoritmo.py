@@ -14,7 +14,6 @@ class form_solver():
         self.fojas = formulario['fojas']
         self.fecha_inscripcion = formulario['fechaInscripcion']
         self.numero_inscripcion = formulario['nroInscripcion']
-        self.numero_de_atencion = None
         self.connection = connection
 
         try:
@@ -63,7 +62,6 @@ class form_solver():
                 formularios = cursor.fetchall()
                 numero_de_atencion = len(formularios) + 1
                 
-                
                 formulario_sql = """
                     INSERT INTO formulario (
                         Numero_de_atencion, CNE, Comuna, Manzana, Predio, Fojas, Fecha_de_inscripcion, Numero_de_insripcion
@@ -80,7 +78,6 @@ class form_solver():
                     self.fecha_inscripcion, 
                     self.numero_inscripcion
                 ))
-            self.numero_de_atencion = numero_de_atencion
             connect.commit()
             return numero_de_atencion
         except Exception as e:
@@ -314,7 +311,7 @@ class form_solver():
     def ajustar_porcentajes_adquirentes(self):
         sum_porc_Derecho_adquirente = 0
         for adquirente in self.adquirentes_data:
-            porc_Derecho = adquirente.get('porcDerecho')
+            porc_Derecho = int(adquirente.get('porcDerecho'))
             if porc_Derecho is not None:
                 sum_porc_Derecho_adquirente += porc_Derecho
 

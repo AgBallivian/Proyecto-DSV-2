@@ -1,10 +1,13 @@
 import pymysql
 
 # Configuration
-MYSQL_HOST = 'db'
-MYSQL_ROOT_USER = 'root'
-# MYSQL_HOST = 'localhost'
-# MYSQL_ROOT_USER = 'admin'
+# MYSQL_HOST = 'db'
+# MYSQL_ROOT_USER = 'root'
+
+#Esto solo es para testeo sin docker.
+MYSQL_HOST = 'localhost'
+MYSQL_ROOT_USER = 'admin'
+
 MYSQL_ROOT_PASSWORD = 'admin'
 MYSQL_USER = 'admin'
 MYSQL_PASSWORD = 'admin'

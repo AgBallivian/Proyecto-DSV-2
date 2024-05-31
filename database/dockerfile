@@ -2,4 +2,4 @@ FROM python:3.9
 WORKDIR /app
 COPY requirements.txt setup_database.py ./
 RUN pip install --no-cache-dir -r requirements.txt
-CMD ["sh", "-c", "sleep 6 && python setup_database.py"]
+CMD ["sh", "-c", "sleep 10 && python setup_database.py"]
