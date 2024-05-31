@@ -7,10 +7,27 @@
 
   <div class="container mt-4">
     <h1>Ver Multipropietarios</h1>
-    <ul>
-      {% for multipropietario in multipropietarios %}
-      <li>{{ multipropietario.nombre }}</li>
-      {% endfor %}
-    </ul>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Com-Man-Pred</th>
+          <th>RUNRUT</th>
+          <th>% Derecho</th>
+          <th>Detalle</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for multipropietario in multipropietarios %}
+        <tr>
+          <td>{{ multipropietario.id }}</td>
+          <td>{{ multipropietario.com_man_pred }}</td>
+          <td>{{ multipropietario.RUNRUT }}</td>
+          <td>{{ multipropietario.porcDerecho }}</td>
+          <td><a href="{{ url_for('ver_multipropietario', id=multipropietario.id) }}">Ver Detalle</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
   </div>
 {% endblock %}

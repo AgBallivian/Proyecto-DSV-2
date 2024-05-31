@@ -176,11 +176,29 @@ def ver_formulario(id):
     finally:
         connection.close()
 
-@app.route('/ver_multipropietarios')
+@app.route('/ver_multipropietarios', methods=['GET'])
 def ver_multipropietarios():
-    # Obtener la lista de multipropietarios desde la base de datos
-    multipropietarios = [...] 
-    return render_template('ver_multipropietarios.html', multipropietarios=multipropietarios)
+    connection = get_db_connection()
+    try:
+        with connection.cursor() as cursor:
+            multipropietarios_sql = "SELECT * FROM Multipropietarios"
+            cursor.execute(multipropietarios_sql)
+            multipropietarios = cursor.fetchall()
+        return render_template('ver_multipropietarios.html', multipropietarios=multipropietarios)
+    finally:
+        connection.close()
+
+@app.route('/ver_multipropietario/<int:id>', methods=['GET'])
+def ver_multipropietario(id):
+    connection = get_db_connection()
+    try:
+        with connection.cursor() as cursor:
+            multipropietario_sql = "SELECT * FROM Multipropietarios WHERE id = %s"
+            cursor.execute(multipropietario_sql, (id,))
+            multipropietario = cursor.fetchone()
+        return render_template('ver_multipropietario.html', multipropietario=multipropietario)
+    finally:
+        connection.close()
 
 #LAS FUCNIONES COMENTADAS SON REDUNDANTES, NO SE USAN. VEO SI HAGO ALGO CON ELLAS O LAS FUNO.
 

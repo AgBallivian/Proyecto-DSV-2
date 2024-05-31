@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block title %}Ver Multipropietario{% endblock %}
+
+{% block content %}
+  {{ super() }}
+
+  <div class="container mt-4">
+    <h1>Detalle del Multipropietario</h1>
+    <table class="table">
+      <tr>
+        <th>ID</th>
+        <td>{{ multipropietario.id }}</td>
+      </tr>
+      <tr>
+        <th>Com-Man-Pred</th>
+        <td>{{ multipropietario.com_man_pred }}</td>
+      </tr>
+      <tr>
+        <th>RUNRUT</th>
+        <td>{{ multipropietario.RUNRUT }}</td>
+      </tr>
+      <tr>
+        <th>% Derecho</th>
+        <td>{{ multipropietario.porcDerecho }}</td>
+      </tr>
+      <tr>
+        <th>Fojas</th>
+        <td>{{ multipropietario.Fojas }}</td>
+      </tr>
+      <tr>
+        <th>Año Inscripción</th>
+        <td>{{ multipropietario.Ano_inscripcion }}</td>
+      </tr>
+      <tr>
+        <th>Número Inscripción</th>
+        <td>{{ multipropietario.Numero_inscripcion }}</td>
+      </tr>
+      <tr>
+        <th>Fecha de Inscripción</th>
+        <td>{{ multipropietario.Fecha_de_inscripcion }}</td>
+      </tr>
+      <tr>
+        <th>Año Vigencia Inicial</th>
+        <td>{{ multipropietario.Ano_vigencia_inicial }}</td>
+      </tr>
+      <tr>
+        <th>Año Vigencia Final</th>
+        <td>{{ multipropietario.Ano_vigencia_final }}</td>
+      </tr>
+      <tr>
+        <th>Tipo</th>
+        <td>{{ multipropietario.Tipo }}</td>
+      </tr>
+    </table>
+  </div>
+{% endblock %}
