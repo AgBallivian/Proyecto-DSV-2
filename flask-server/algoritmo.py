@@ -7,13 +7,13 @@ INTERNAL_SERVER_ERROR = 500
 class form_solver(): 
     def __init__(self, formulario, connection):
         self.formulario = formulario
-        self.cne = formulario['CNE']
-        self.comuna = formulario['bienRaiz']['comuna']
-        self.manzana = formulario['bienRaiz']['manzana']
-        self.predio = formulario['bienRaiz']['predio']
-        self.fojas = formulario['fojas']
+        self.cne = int(formulario['CNE'])
+        self.comuna = int(formulario['bienRaiz']['comuna'])
+        self.manzana = int(formulario['bienRaiz']['manzana'])
+        self.predio = int(formulario['bienRaiz']['predio'])
+        self.fojas = int(formulario['fojas'])
         self.fecha_inscripcion = formulario['fechaInscripcion']
-        self.numero_inscripcion = formulario['nroInscripcion']
+        self.numero_inscripcion = int(formulario['nroInscripcion'])
         self.connection = connection
 
         try:
@@ -303,7 +303,7 @@ class form_solver():
                     self.actualizar_vigencia(last_initial_year)
                 if(last_initial_year > int(self.fecha_inscripcion[0:4])):
                     print("Es menor pero este escenario no esta listo")
-                    self.scenario_3(last_initial_year)
+                    self.procesar_escenario_3(last_initial_year)
                 if(last_initial_year == int(self.fecha_inscripcion[0:4])):
                     print("Escenario 4")
                     self.eliminar_antiguos_y_reemplazar(last_initial_year)

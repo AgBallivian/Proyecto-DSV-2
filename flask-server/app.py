@@ -3,6 +3,7 @@ from flask_cors import CORS
 import json
 import pymysql
 from algoritmo import form_solver
+from collections import defaultdict
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": ["http://localhost:4321"]}})
@@ -86,14 +87,14 @@ def crear_formulario():
             'nroInscripcion': numero_inscripcion
         }
 
-        print(data)
+        # print(data)
         formulario = form_solver(data, get_db_connection)
         numero_de_atencion = formulario.add_formulario()
+        formulario.determinar_y_procesar_escenario()
+        formulario.ajustar_porcentajes_adquirentes()
         formulario.add_enajenante(numero_de_atencion)
         formulario.add_adquirente(numero_de_atencion)
         formulario.add_multipropietario()
-        formulario.determinar_y_procesar_escenario()
-        formulario.ajustar_porcentajes_adquirentes()
         
         if numero_de_atencion:
             return redirect(url_for('ver_formulario', id=numero_de_atencion))
@@ -107,24 +108,31 @@ def crear_formulario():
 def subir_json():
     if request.method == 'POST':
         archivo = request.files['archivo']
-
         if archivo:
             contenido = archivo.read()
             datos_json = json.loads(contenido)
+            # print(datos_json.get("F2890", []))
 
+            # result, properties = parse_json(datos_json.get("F2890", []))
+            result = datos_json.get("F2890", [])
             errores = []
-            for datos in datos_json:
+            for datos in result:
+                print(datos)
                 try:
                     formulario = form_solver(datos, get_db_connection)
+                    numero_de_atencion = formulario.add_formulario()
                     formulario.determinar_y_procesar_escenario()
                     formulario.ajustar_porcentajes_adquirentes()
+                    formulario.add_enajenante(numero_de_atencion)
+                    formulario.add_adquirente(numero_de_atencion)
+                    formulario.add_multipropietario()
                 except Exception as e:
                     errores.append(str(e))
 
             if errores:
                 return render_template('subir_json.html', errores=errores)
             else:
-                return render_template('exito.html')
+                return render_template('ver_formularios.html')
 
     return render_template('subir_json.html')
 
@@ -276,12 +284,10 @@ def show_multipropietarios():
 
     try:
         with connection.cursor() as cursor:
-            # Obtener los datos de la tabla 'multipropietarios'
             multipropietarios_sql = "SELECT * FROM Multipropietarios"  + search_filters[0:-4]
             cursor.execute(multipropietarios_sql)
             multipropietarios = cursor.fetchall()
             multipropietarios= json.dumps(multipropietarios, default=str)
-            print(multipropietarios)
         return multipropietarios
 
     finally:
