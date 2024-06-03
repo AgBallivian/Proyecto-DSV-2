@@ -1,0 +1,80 @@
+Procesar Formulario
+{
+    Insertar nuevo formulario en la "F2890"
+    PreparaMultiPyFor()
+    ProcesarBitécora()
+}
+
+PrepararMultiPyFor
+{
+    beginAÑO = form.AÑO
+    delete from MultiPropietario where AÑO >= beginAÑO
+    Acotar registro anterior (si corresponde)
+}
+
+Distribuir%=100()
+{
+    aDistribuir = sum(%dominioENAs); --tomor valor de TMP
+    if(aDistribuir == O)
+        aDistribuir = 100%;
+    eliminar ENAs de TMP;
+    foreach adq in form
+        insertar a TMP(form.adq, form.adq.% * aDistribiur, form.AÑO, form.NO, form.Foias);
+}
+
+Distribuir%<100()
+{
+    if(form.ena in TMP AND TMP.ena.% > O) {
+        var%dominioENA = %dominioENA; --el % que tiene en TMP
+        %dominioENA = var%dominioENA * (100% - form.ena.%); -- update en TMP
+    }
+    else {
+        var%dominioENA = 100%;
+        insertar form.ena a TMP(RUT, DV y % en 0);
+    }
+    insertar form.adq a TMP(form.adq, form.adq.% * var%dominioENA);
+}
+
+Distribuir%s()
+{
+    foreach ena in form.ENA {
+        if(ena in TMP)
+            TMP.ena.% = TMP.ena.% - ena.%;
+        else
+            insertar ena in TMP, con %=0, sin F.INS/ANO/NO;
+    }
+    foreach adq in form.ADQ {
+        insertar adq in TMP;
+    }    
+}
+
+ProcesarBitacora()
+{
+    añoCorte = 0;
+    foreach form in F2890 ordenados por AÑO-NO, partiendo de beginAÑO {
+        if(añoCorte == 0)
+            añoCorte = form.AÑO;
+        else if(añoCorte < form.AÑO) {
+            Ajustar%s();
+            Acotar registro anterior;
+            Insertar TMP en la "MultiPropietario"; --limpiar TMP
+            añoCorte = form.AÑO;
+        }
+        if(TMP.isNull())
+            Duplicar último registro de la "MultiPropietario", en TMP(si existe);
+        if(form.esResoluciónDePatrimonio()){
+            ProcesarResoluciónDePatrimonio();
+        }
+        else if(form.esCompraventa()){
+            ProcesarCompraventa();
+        }
+        mergePropietarios(); -- en TMP
+        NegativosToO();
+        TMP.VigInicial = form.AÑO;
+    }
+    if TMP.isNotNull() {
+        Acotar registro anterior();
+        Insertar TMP en la "MultiPropietario";
+    }
+
+}
