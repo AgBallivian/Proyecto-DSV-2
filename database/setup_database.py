@@ -13,36 +13,6 @@ MYSQL_USER = 'admin'
 MYSQL_PASSWORD = 'admin'
 MYSQL_DB = 'proyectodsv'
 
-def create_admin_user():
-    connection = pymysql.connect(host=MYSQL_HOST,
-                                 user=MYSQL_ROOT_USER,
-                                 password=MYSQL_ROOT_PASSWORD)
-
-    try:
-        with connection.cursor() as cursor:
-            # Check if the 'admin' user already exists
-            check_user_query = "SELECT EXISTS(SELECT 1 FROM mysql.user WHERE user = %s)"
-            cursor.execute(check_user_query, (MYSQL_USER,))
-            user_exists = cursor.fetchone()[0]
-
-            if user_exists:
-                print(f"User '{MYSQL_USER}' already exists.")
-            else:
-                # Create the 'admin' user
-                create_user_query = "CREATE USER %s@%s IDENTIFIED BY %s"
-                cursor.execute(create_user_query, (MYSQL_USER, 'localhost', MYSQL_PASSWORD))
-
-                # Grant all privileges to the 'admin' user
-                grant_privileges_query = "GRANT ALL PRIVILEGES ON *.* TO %s@%s WITH GRANT OPTION"
-                cursor.execute(grant_privileges_query, (MYSQL_USER, 'localhost'))
-
-                print(f"User '{MYSQL_USER}' created successfully with all privileges.")
-
-        connection.commit()
-
-    finally:
-        connection.close()
-
 def create_database():
     connection = pymysql.connect(host=MYSQL_HOST,
                                  user=MYSQL_ROOT_USER,

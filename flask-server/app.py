@@ -4,23 +4,14 @@ import json
 import pymysql
 from algoritmo import form_solver
 from collections import defaultdict
+from config import Config 
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": ["http://localhost:8000"]}})
 
-#Configuracion
-# app.config['MYSQL_HOST'] = 'db'
-# app.config['MYSQL_USER'] = 'root'
+app.config.from_object(Config)
 
-#Esto solo es para testeo sin docker.
-app.config['MYSQL_HOST'] = 'localhost'
-app.config['MYSQL_USER'] = 'admin'
-
-app.config['MYSQL_PASSWORD'] = 'admin'
-app.config['MYSQL_DB'] = 'proyectodsv'
-app.config['CORS_HEADERS'] = 'Content-Type'
-
-def get_db_connection():
+def obtener_conexion_db():
     connection = pymysql.connect(host=app.config['MYSQL_HOST'],
                                  user=app.config['MYSQL_USER'],
                                  password=app.config['MYSQL_PASSWORD'],
@@ -29,7 +20,6 @@ def get_db_connection():
     return connection
 
 
-#Front end
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -88,7 +78,7 @@ def crear_formulario():
         }
 
         # print(data)
-        formulario = form_solver(data, get_db_connection)
+        formulario = form_solver(data, obtener_conexion_db)
         numero_de_atencion = formulario.add_formulario()
         formulario.determinar_y_procesar_escenario()
         formulario.ajustar_porcentajes_adquirentes()
@@ -116,7 +106,7 @@ def subir_json():
             for datos in result:
                 print(datos)
                 try:
-                    formulario = form_solver(datos, get_db_connection)
+                    formulario = form_solver(datos, obtener_conexion_db)
                     numero_de_atencion = formulario.add_formulario()
                     formulario.determinar_y_procesar_escenario()
                     formulario.ajustar_porcentajes_adquirentes()
@@ -133,57 +123,29 @@ def subir_json():
 
     return render_template('subir_json.html')
 
+
 @app.route('/ver_todos_formularios', methods=['GET'])
 def ver_todos_formularios():
-    connection = get_db_connection()
-    filters = {}
-    filters["CNE"] = request.args.get('CNE')
-    filters["Comuna"] = request.args.get('Comuna')
-    filters["Manzana"] = request.args.get('Manzana')
-    filters["Predio"] = request.args.get('Predio')
-    search_filters = ""
-    if any(v is not None for v in list(filters.values())):
-        search_filters = " WHERE "
-        for key in filters.keys():
-            if filters[key] is not None:
-                search_filters += key + " = " + str(filters[key]) + " AND "
-        search_filters = search_filters[:-5] 
+    filtros = {
+        "CNE": request.args.get('CNE'),
+        "Comuna": request.args.get('Comuna'),
+        "Manzana": request.args.get('Manzana'),
+        "Predio": request.args.get('Predio')
+    }
 
-    try:
-        with connection.cursor() as cursor:
-            formulario_sql = "SELECT * FROM formulario" + search_filters
-            cursor.execute(formulario_sql)
-            formularios = cursor.fetchall()
-        return render_template('ver_todos_formularios.html', formularios=formularios)
-
-    finally:
-        connection.close()
+    formularios = obtener_formularios(filtros)
+    return render_template('ver_todos_formularios.html', formularios=formularios)
 
 @app.route('/ver_formulario/<int:id>', methods=['GET'])
 def ver_formulario(id):
-    connection = get_db_connection()
-    try:
-        with connection.cursor() as cursor:
-            formulario_sql = "SELECT * FROM formulario WHERE Numero_de_atencion = %s"
-            cursor.execute(formulario_sql, (id,))
-            formulario = cursor.fetchone()
-
-            enajenantes_sql = "SELECT RUNRUT, porcDerecho FROM Enajenantes WHERE enajenante_id = %s"
-            cursor.execute(enajenantes_sql, (id,))
-            enajenantes = cursor.fetchall()
-
-            adquirentes_sql = "SELECT RUNRUT, porcDerecho FROM Adquirentes WHERE Adquirente_id = %s"
-            cursor.execute(adquirentes_sql, (id,))
-            adquirentes = cursor.fetchall()
-
-        return render_template('ver_formulario.html', formulario=formulario, enajenantes=enajenantes, adquirentes=adquirentes)
-
-    finally:
-        connection.close()
+    formulario = obtener_formulario(id)
+    enajenantes = obtener_enajenantes(id)
+    adquirentes = obtener_adquirentes(id)
+    return render_template('ver_formulario.html', formulario=formulario, enajenantes=enajenantes, adquirentes=adquirentes)
 
 @app.route('/ver_todos_multipropietarios', methods=['GET'])
 def ver_todos_multipropietarios():
-    connection = get_db_connection()
+    connection = obtener_conexion_db()
     try:
         with connection.cursor() as cursor:
             multipropietarios_sql = "SELECT * FROM Multipropietarios"
@@ -195,7 +157,7 @@ def ver_todos_multipropietarios():
 
 @app.route('/ver_multipropietario/<int:id>', methods=['GET'])
 def ver_multipropietario(id):
-    connection = get_db_connection()
+    connection = obtener_conexion_db()
     try:
         with connection.cursor() as cursor:
             multipropietario_sql = "SELECT * FROM Multipropietarios WHERE id = %s"
@@ -204,5 +166,59 @@ def ver_multipropietario(id):
         return render_template('ver_multipropietario.html', multipropietario=multipropietario)
     finally:
         connection.close()
+
+def obtener_formularios(filtros):
+    connection = obtener_conexion_db()
+    search_filters = ""
+    if any(v is not None for v in list(filtros.values())):
+        search_filters = " WHERE "
+        for key in filtros.keys():
+            if filtros[key] is not None:
+                search_filters += f"{key} = {filtros[key]} AND "
+        search_filters = search_filters[:-5]
+
+    formulario_sql = f"SELECT * FROM formulario{search_filters}"
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(formulario_sql)
+            formularios = cursor.fetchall()
+            return formularios
+    finally:
+        connection.close()
+
+def obtener_formulario(id):
+    connection = obtener_conexion_db()
+    formulario_sql = f"SELECT * FROM formulario WHERE Numero_de_atencion = {id}"
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(formulario_sql)
+            formulario = cursor.fetchone()
+            return formulario
+    finally:
+        connection.close()
+
+def obtener_enajenantes(id):
+    connection = obtener_conexion_db()
+    enajenantes_sql = f"SELECT RUNRUT, porcDerecho FROM Enajenantes WHERE enajenante_id = {id}"
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(enajenantes_sql)
+            enajenantes = cursor.fetchall()
+            return enajenantes
+    finally:
+        connection.close()
+
+def obtener_adquirentes(id):
+    connection = obtener_conexion_db()
+    adquirentes_sql = f"SELECT RUNRUT, porcDerecho FROM Adquirentes WHERE Adquirente_id = {id}"
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(adquirentes_sql)
+            adquirentes = cursor.fetchall()
+            return adquirentes
+    finally:
+        connection.close()
+
+
 if __name__ == '__main__':
     app.run(debug=True, port=8000, host='0.0.0.0')
