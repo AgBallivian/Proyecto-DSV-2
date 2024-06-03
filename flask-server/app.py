@@ -6,7 +6,7 @@ from algoritmo import form_solver
 from collections import defaultdict
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": ["http://localhost:4321"]}})
+CORS(app, resources={r"/*": {"origins": ["http://localhost:8000"]}})
 
 #Configuracion
 # app.config['MYSQL_HOST'] = 'db'
@@ -111,9 +111,6 @@ def subir_json():
         if archivo:
             contenido = archivo.read()
             datos_json = json.loads(contenido)
-            # print(datos_json.get("F2890", []))
-
-            # result, properties = parse_json(datos_json.get("F2890", []))
             result = datos_json.get("F2890", [])
             errores = []
             for datos in result:
@@ -132,12 +129,12 @@ def subir_json():
             if errores:
                 return render_template('subir_json.html', errores=errores)
             else:
-                return render_template('ver_formularios.html')
+                return render_template('ver_todos_formularios.html')
 
     return render_template('subir_json.html')
 
-@app.route('/ver_formularios', methods=['GET'])
-def ver_formularios():
+@app.route('/ver_todos_formularios', methods=['GET'])
+def ver_todos_formularios():
     connection = get_db_connection()
     filters = {}
     filters["CNE"] = request.args.get('CNE')
@@ -157,7 +154,7 @@ def ver_formularios():
             formulario_sql = "SELECT * FROM formulario" + search_filters
             cursor.execute(formulario_sql)
             formularios = cursor.fetchall()
-        return render_template('ver_formularios.html', formularios=formularios)
+        return render_template('ver_todos_formularios.html', formularios=formularios)
 
     finally:
         connection.close()
@@ -184,15 +181,15 @@ def ver_formulario(id):
     finally:
         connection.close()
 
-@app.route('/ver_multipropietarios', methods=['GET'])
-def ver_multipropietarios():
+@app.route('/ver_todos_multipropietarios', methods=['GET'])
+def ver_todos_multipropietarios():
     connection = get_db_connection()
     try:
         with connection.cursor() as cursor:
             multipropietarios_sql = "SELECT * FROM Multipropietarios"
             cursor.execute(multipropietarios_sql)
             multipropietarios = cursor.fetchall()
-        return render_template('ver_multipropietarios.html', multipropietarios=multipropietarios)
+        return render_template('ver_todos_multipropietarios.html', multipropietarios=multipropietarios)
     finally:
         connection.close()
 
@@ -207,135 +204,5 @@ def ver_multipropietario(id):
         return render_template('ver_multipropietario.html', multipropietario=multipropietario)
     finally:
         connection.close()
-
-#LAS FUCNIONES COMENTADAS SON REDUNDANTES, NO SE USAN. VEO SI HAGO ALGO CON ELLAS O LAS FUNO.
-
-# @app.route('/show_formularios', methods=['GET'])
-# def show_formularios():
-#     connection = get_db_connection()
-#     filters = {}
-#     filters["CNE"] = request.args.get('CNE')
-#     filters["Comuna"] = request.args.get('Comuna')
-#     filters["Manzana"] = request.args.get('Manzana')
-#     filters["Predio"] = request.args.get('Predio')
-#     search_filters = ""
-#     if(any(v != None for v in list(filters.values()))):
-#         search_filters = " WHERE "
-#         for key in filters.keys():
-#             if(filters[key] != None):
-#                 search_filters += key + " = " + filters[key] + " AND "
-
-#     try:
-#         with connection.cursor() as cursor:
-#             formulario_sql = "SELECT * FROM formulario" + search_filters[0:-4]
-#             cursor.execute(formulario_sql)
-#             formularios = cursor.fetchall()
-#             formularios= json.dumps(formularios, default=str)
-#             print(formularios)
-#         return formularios
-
-#     finally:
-#         connection.close()
-
-
-# @app.route('/show_formulario', methods=['GET'])
-# def show_formulario():
-#     connection = get_db_connection()
-#     id  = request.args.get('id')
-#     try:
-#         with connection.cursor() as cursor:
-#             # Obtener los datos de la tabla 'formulario'
-#             formulario_sql = "SELECT * FROM formulario WHERE Numero_de_atencion = " + str(id)
-#             cursor.execute(formulario_sql)
-#             formulario = cursor.fetchall()
-#             adquirentes_sql = "SELECT * FROM Adquirentes WHERE Adquirente_id = " + str(id)
-#             cursor.execute(adquirentes_sql)
-#             adquirentes = cursor.fetchall()
-#             enajenantes_sql = "SELECT * FROM Enajenantes WHERE Enajenante_id = " + str(id)
-#             cursor.execute(enajenantes_sql)
-#             enajenantes = cursor.fetchall()
-#             formulario[0]["enajenantes"] = enajenantes
-#             formulario[0]["adquirentes"] = adquirentes
-#             formulario= json.dumps(formulario, default=str)
-#             print(formulario)
-            
-#         return formulario
-
-#     finally:
-#         connection.close()
-
-@app.route('/show_multipropietarios', methods=['GET'])
-def show_multipropietarios():
-    connection = get_db_connection()
-    filters = {}
-
-    if(request.args.get('com_man_pred')):
-        filters["com_man_pred"] = '\'' + request.args.get('com_man_pred') + '\''
-    else:
-        filters["com_man_pred"] = request.args.get('com_man_pred')
-    filters["RUNRUT"] = request.args.get('RUNRUT')
-    filters["Fojas"] = request.args.get('Fojas')
-    search_filters = ""
-    if(any(v != None for v in list(filters.values()))):
-        search_filters = " WHERE "
-        for key in filters.keys():
-            if(filters[key] != None):
-                search_filters += key + " = " + filters[key] + " AND "
-
-    try:
-        with connection.cursor() as cursor:
-            multipropietarios_sql = "SELECT * FROM Multipropietarios"  + search_filters[0:-4]
-            cursor.execute(multipropietarios_sql)
-            multipropietarios = cursor.fetchall()
-            multipropietarios= json.dumps(multipropietarios, default=str)
-        return multipropietarios
-
-    finally:
-        connection.close()
-
-@app.route('/show_multipropietario', methods=['GET'])
-def show_multipropietario():
-    connection = get_db_connection()
-    id  = request.args.get('id')
-    try:
-        with connection.cursor() as cursor:
-            # Obtener los datos de la tabla 'multipropietario'
-            multipropietario_sql = "SELECT * FROM Multipropietarios WHERE com_man_pred = " + '\''+ id +'\''
-            cursor.execute(multipropietario_sql)
-            multipropietario = cursor.fetchall()
-            multipropietario= json.dumps(multipropietario, default=str)
-        return multipropietario
-
-
-    finally:
-        connection.close()
-
-# @app.route('/add_formulario', methods=['POST'])
-# def add_formulario():
-#     data = request.get_json()
-#     print(f"Data recieved: {data['CNE']}")
-    
-#     # Extract the form data from the JSON object
-#     cne = data['CNE']
-#     comuna = data['bienRaiz']['comuna']
-#     manzana = data['bienRaiz']['manzana']
-#     predio = data['bienRaiz']['predio']
-#     fojas = data['fojas']
-#     fecha_inscripcion = data['fechaInscripcion']
-#     numero_inscripcion = data['nroInscripcion']
-
-#     # Extract enajenantes and adquirentes data from the JSON object
-#     try:
-#         enajenantes_data = data['enajenantes']
-#     except:
-#         enajenantes_data = []
-#     try:
-#         adquirentes_data = data['adquirentes']
-#     except:
-#         adquirentes_data = []
-#     formulario = form_solver(data, get_db_connection)
-#     formulario.determinar_y_procesar_escenario()
-#     formulario.ajustar_porcentajes_adquirentes()
-#     return jsonify({"message": "Formulario submitted successfully"})
 if __name__ == '__main__':
     app.run(debug=True, port=8000, host='0.0.0.0')
