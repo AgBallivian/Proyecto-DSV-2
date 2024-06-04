@@ -81,14 +81,14 @@ class form_solver():
         try:
             with connect.cursor() as cursor:
                 #Obtain next id from 'enajenantes' table
-                enajenante_sql = "SELECT * FROM enajenantes"
+                enajenante_sql = "SELECT * FROM Enajenantes"
                 cursor.execute(enajenante_sql)
                 enajenantes = cursor.fetchall()
                 id = len(enajenantes) + 1
                 # Insert enajenantes data into the 'enajenantes' table
                 for num_enajenante, enajenante in enumerate(self.enajenantes_data):
                     enajenante_sql = """
-                        INSERT INTO enajenantes (id, enajenante_id, RUNRUT, porcDerecho)
+                        INSERT INTO Enajenantes (id, enajenante_id, RUNRUT, porcDerecho)
                         VALUES ( %s, %s, %s, %s)
                     """
                     cursor.execute(enajenante_sql, (
