@@ -1,5 +1,4 @@
 "Feedback entrega 1
-KUCHO: * No es posible buscar multipropietarios
 Feedback entrega 2
 Revisión de código
 * Revision algoritmo multipropietario

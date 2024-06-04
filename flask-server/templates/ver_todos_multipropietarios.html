@@ -7,6 +7,40 @@
 
   <div class="container mt-4">
     <h1>Ver Multipropietarios</h1>
+    <form>
+      <div class="form-group">
+        <label for="region">Región:</label>
+        <select class="form-control" id="region" name="region">
+          <option value="">Todas</option>
+          {% for id_region, nombre_region in regiones.items() %}
+            <option value="{{ id_region }}" {% if region_id == id_region %}selected{% endif %}>{{ nombre_region }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="comuna">Comuna:</label>
+        <select class="form-control" id="comuna" name="comuna">
+          <option value="">Todas</option>
+          {% for id_comuna, datos_comuna in comunas.items() %}
+            <option value="{{ id_comuna }}" {% if comuna_id == id_comuna %}selected{% endif %}>{{ datos_comuna['descripcion'] }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="block">Manzana:</label>
+        <input type="number" class="form-control" id="block" name="block" value="{{ block_number }}">
+      </div>
+      <div class="form-group">
+        <label for="property">Predio:</label>
+        <input type="number" class="form-control" id="property" name="property" value="{{ property_number }}">
+      </div>
+      <div class="form-group">
+        <label for="year">Año:</label>
+        <input type="number" class="form-control" id="year" name="year" value="{{ year }}">
+      </div>
+      <button type="submit" class="btn btn-primary">Filtrar</button>
+    </form>
+
     <table class="table">
       <thead>
         <tr>

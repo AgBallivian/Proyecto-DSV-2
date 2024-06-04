@@ -1,4 +1,6 @@
 import pymysql
+import csv
+import os
 
 # Configuration
 # MYSQL_HOST = 'db'
@@ -102,6 +104,24 @@ def create_tables():
                 )
             """)
 
+            # Crear tabla 'regiones'
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS regiones (
+                    id_region INT PRIMARY KEY,
+                    descripcion VARCHAR(100)
+                )
+            """)
+
+            # Crear tabla 'comunas'
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS comunas (
+                    id_comuna INT PRIMARY KEY,
+                    descripcion VARCHAR(100),
+                    id_region INT,
+                    FOREIGN KEY (id_region) REFERENCES regiones(id_region)
+                )
+            """)
+
         connection.commit()
         print("Tables created/replaced successfully.")
 
@@ -121,9 +141,9 @@ def insert_default_data():
 
             # Insertar datos challa en la tabla 'multipropietario'
             multipropietario_data = [
-                (1, '13101-514-23', "123456789", 50.00, 1, 2021, 1, '2021-01-01', 2021, None, "Enjante"),
-                (2, '11214-54-456', "987654321", 75.50, 2, 2022, 2, '2022-02-15', 2022, None, "Adquirente"),
-                (3, '11111-22-22', "456789012", 100.00, 3, 2023, 3, '2023-03-30', 2023, None, "Adquirente")
+                (1, '394-514-23', "123456789", 50.00, 1, 2021, 1, '2021-01-01', 2021, None, "Enjante"),
+                (2, '8-54-456', "987654321", 75.50, 2, 2022, 2, '2022-02-15', 2022, None, "Adquirente"),
+                (3, '7-22-22', "456789012", 100.00, 3, 2023, 3, '2023-03-30', 2023, None, "Adquirente")
             ]
 
             sql = """
@@ -207,7 +227,47 @@ def insert_default_data():
     finally:
         connection.close()
 
+
+def cargar_datos_desde_csv():
+    connection = pymysql.connect(host=MYSQL_HOST,
+                                 user=MYSQL_ROOT_USER,
+                                 password=MYSQL_ROOT_PASSWORD,
+                                 db=MYSQL_DB)
+
+    try:
+        with connection.cursor() as cursor:
+            # Eliminar datos existentes
+            cursor.execute("DELETE FROM regiones")
+            cursor.execute("DELETE FROM comunas")
+
+            # Cargar datos desde regiones.csv
+            with open(os.path.join(os.path.dirname(__file__), 'csv', 'regiones.csv'), 'r', encoding='utf-8-sig') as csvfile:
+                csvreader = csv.reader(csvfile, delimiter=';')
+                next(csvreader)  # Omitir el encabezado
+
+                regiones_data = [(int(fila[0]), fila[1]) for fila in csvreader]
+
+                sql = "INSERT INTO regiones (id_region, descripcion) VALUES (%s, %s)"
+                cursor.executemany(sql, regiones_data)
+
+            # Cargar datos desde comunas.csv
+            with open(os.path.join(os.path.dirname(__file__), 'csv', 'comunas.csv'), 'r', encoding='utf-8-sig') as csvfile:
+                csvreader = csv.reader(csvfile, delimiter=';')
+                next(csvreader)  # Omitir el encabezado
+
+                comunas_data = [(int(fila[0]), fila[1], int(fila[2])) for fila in csvreader]
+
+                sql = "INSERT INTO comunas (id_comuna, descripcion, id_region) VALUES (%s, %s, %s)"
+                cursor.executemany(sql, comunas_data)
+
+        connection.commit()
+        print("Datos cargados desde CSV correctamente.")
+
+    finally:
+        connection.close()
+
 if __name__ == '__main__':
     create_database()
     create_tables()
-    insert_default_data()
+    insert_default_data()  
+    cargar_datos_desde_csv()

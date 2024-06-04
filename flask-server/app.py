@@ -5,6 +5,7 @@ import pymysql
 from algoritmo import form_solver
 from collections import defaultdict
 from config import Config 
+from carga_datos import cargar_regiones, cargar_comunas
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": ["http://localhost:8000"]}})
@@ -145,13 +146,63 @@ def ver_formulario(id):
 
 @app.route('/ver_todos_multipropietarios', methods=['GET'])
 def ver_todos_multipropietarios():
+    regiones = cargar_regiones()
+    comunas = cargar_comunas()
+
+    region_id = request.args.get('region', type=int)
+    comuna_id = request.args.get('comuna', type=int)
+    block_number = request.args.get('block', type=int)
+    property_number = request.args.get('property', type=int)
+    year = request.args.get('year', type=int)
+
     connection = obtener_conexion_db()
     try:
         with connection.cursor() as cursor:
             multipropietarios_sql = "SELECT * FROM Multipropietarios"
+            filtros = aplicar_filtros(region_id, comuna_id, block_number, property_number, year)
+            if filtros:
+                multipropietarios_sql += " WHERE " + " AND ".join(filtros)
+
             cursor.execute(multipropietarios_sql)
             multipropietarios = cursor.fetchall()
-        return render_template('ver_todos_multipropietarios.html', multipropietarios=multipropietarios)
+
+        return render_template('ver_todos_multipropietarios.html', multipropietarios=multipropietarios, regiones=regiones, comunas=comunas, region_id=region_id, comuna_id=comuna_id, block_number=block_number, property_number=property_number, year=year)
+    finally:
+        connection.close()
+
+@app.route('/ver_multipropietarios_filtrados', methods=['GET'])
+def ver_multipropietarios_filtrados():
+    regiones = cargar_regiones()
+    comunas = cargar_comunas()
+
+    # Obtener los filtros desde los parámetros de la URL
+    id_region = request.args.get('region')
+    id_comuna = request.args.get('comuna')
+    runrut = request.args.get('runrut')
+    fojas = request.args.get('fojas')
+
+    # Construir la consulta SQL con los filtros
+    consulta = "SELECT * FROM Multipropietarios"
+    condiciones = []
+    if id_region:
+        comunas_filtradas = [id_comuna for id_comuna, datos in comunas.items() if datos['id_region'] == int(id_region)]
+        condiciones.append(f"Comuna IN ({','.join(map(str, comunas_filtradas))})")
+    if id_comuna:
+        condiciones.append(f"Comuna = {id_comuna}")
+    if runrut:
+        condiciones.append(f"RUNRUT LIKE '%{runrut}%'")
+    if fojas:
+        condiciones.append(f"Fojas = {fojas}")
+
+    if condiciones:
+        consulta += " WHERE " + " AND ".join(condiciones)
+
+    connection = obtener_conexion_db()
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(consulta)
+            multipropietarios = cursor.fetchall()
+        return render_template('ver_todos_multipropietarios.html', multipropietarios=multipropietarios, regiones=regiones, comunas=comunas)
     finally:
         connection.close()
 
@@ -219,6 +270,20 @@ def obtener_adquirentes(id):
     finally:
         connection.close()
 
+def aplicar_filtros(region_id, comuna_id, block_number, property_number, year):
+    filtros = []
+    if region_id:
+        filtros.append(f"com_man_pred IN (SELECT CONCAT(SUBSTRING_INDEX(m.com_man_pred, '-', 1), '-', SUBSTRING_INDEX(SUBSTRING_INDEX(m.com_man_pred, '-', -2), '-', 1), '-', SUBSTRING_INDEX(m.com_man_pred, '-', -1)) FROM Multipropietarios m JOIN comunas c ON SUBSTRING_INDEX(m.com_man_pred, '-', 1) = c.id_comuna WHERE c.id_region = {region_id})")
+    if comuna_id:
+        filtros.append(f"SUBSTRING_INDEX(com_man_pred, '-', 1) = '{comuna_id}'")
+    if block_number:
+        filtros.append(f"SUBSTRING_INDEX(SUBSTRING_INDEX(com_man_pred, '-', -2), '-', 1) = '{block_number}'")
+    if property_number:
+        filtros.append(f"SUBSTRING_INDEX(com_man_pred, '-', -1) = '{property_number}'")
+    if year:
+        filtros.append(f"(Ano_vigencia_final IS NULL OR Ano_vigencia_final >= {year}) AND Ano_vigencia_inicial <= {year}")
+
+    return filtros
 
 if __name__ == '__main__':
     app.run(debug=True, port=8000, host='0.0.0.0')

@@ -1,0 +1,17 @@
+id_region;descripcion;numero;orden;descripcion_corta
+13;Región Metropolitana de Santiago;13;70;Metropolitana de Stgo.
+11;Región de Aysén del Gral.Carlos Ibáñez del C.;11;150;Aysén del G. C. Ibáñez del C.
+15;Región de Arica y Parinacota;15;10;Arica y Parinacota
+1;Región de Tarapacá;1;20;Tarapacá
+2;Región de Antofagasta;2;30;Antofagasta
+3;Región de Atacama;3;40;Atacama
+4;Región de Coquimbo;4;50;Coquimbo
+5;Región de Valparaíso;5;60;Valparaíso
+6;Región del Libertador General Bernardo O'Higgins;6;80;Libertador B. O'Higgins
+7;Región del Maule;7;90;Maule
+16;Región de Ñuble;16;100;Ñuble
+8;Región del Biobío;8;110;Biobío
+9;Región de la Araucanía;9;120;Araucanía
+10;Región de Los Lagos;10;140;Los Lagos
+12;Región de Magallanes y la Antártica Chilena;12;160;Magallanes y Antártica
+14;Región de Los Ríos;14;130;Los Ríos
