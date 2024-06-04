@@ -112,7 +112,6 @@ def subir_json():
             if errores:
                 return render_template('subir_json.html', errores=errores)
             else:
-                print("entro")
                 return redirect(url_for('ver_todos_formularios'))
 
     return render_template('subir_json.html')

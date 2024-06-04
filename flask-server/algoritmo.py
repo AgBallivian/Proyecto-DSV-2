@@ -214,7 +214,6 @@ class form_solver():
             connect.close()
 
     def _obtener_suma_porc_Dercho_enjantes(self, Run_Rut_enajenantes):
-        print("El error esta aqui")
         print(Run_Rut_enajenantes)
         com_man_pred = self._construir_com_man_pred()
         connect = self.connection()
@@ -345,12 +344,10 @@ class form_solver():
             pass#TODO
 
         if(self.cne == REGULARIZACION_DE_PATRIMONIO):
-            print("Antes de error")
             count_multipropietario = self.obtener_multipropietarios()
             if(count_multipropietario == 0):
                 print("Escenario 1")
                 self.agregar_nuevo_formulario()
-                print("Despues de error")
             else:
                 last_initial_year = self._obtener_ultimo_ano_inicial()
                 if(last_initial_year < self.obtener_ano_inscripcion()):
