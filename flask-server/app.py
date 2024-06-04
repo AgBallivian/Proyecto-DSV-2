@@ -80,13 +80,10 @@ def crear_formulario():
 
         # print(data)
         formulario = form_solver(data, obtener_conexion_db)
-        numero_de_atencion = formulario.add_formulario()
         formulario.determinar_y_procesar_escenario()
         formulario.ajustar_porcentajes_adquirentes()
-        formulario.add_enajenante(numero_de_atencion)
-        formulario.add_adquirente(numero_de_atencion)
-        formulario.add_multipropietario()
-        
+
+        numero_de_atencion = formulario.obtener_numer_de_atencion()
         if numero_de_atencion:
             return redirect(url_for('ver_formulario', id=numero_de_atencion))
         else:
@@ -108,19 +105,15 @@ def subir_json():
                 print(datos)
                 try:
                     formulario = form_solver(datos, obtener_conexion_db)
-                    numero_de_atencion = formulario.add_formulario()
                     formulario.determinar_y_procesar_escenario()
                     formulario.ajustar_porcentajes_adquirentes()
-                    formulario.add_enajenante(numero_de_atencion)
-                    formulario.add_adquirente(numero_de_atencion)
-                    formulario.add_multipropietario()
                 except Exception as e:
                     errores.append(str(e))
-
             if errores:
                 return render_template('subir_json.html', errores=errores)
             else:
-                return render_template('ver_todos_formularios.html')
+                print("entro")
+                return redirect(url_for('ver_todos_formularios'))
 
     return render_template('subir_json.html')
 

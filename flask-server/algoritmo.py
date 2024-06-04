@@ -3,6 +3,8 @@ import json
 import pymysql
 
 INTERNAL_SERVER_ERROR = 500
+COMPRAVENTA = 8
+REGULARIZACION_DE_PATRIMONIO = 99
 
 class form_solver(): 
     def __init__(self, formulario, connection):
@@ -25,30 +27,18 @@ class form_solver():
         except:
             self.adquirentes_data = []
 
-    def execute_Select_query(self, query):
+    def obtener_numer_de_atencion(self):
         connect = self.connection()
         try:
-            with connect.cursor() as cursor:   
-                cursor.execute(query)
-                return cursor.fetchall()
+            with connect.cursor() as cursor:  
+                formulario_sql = "SELECT * FROM formulario" 
+                cursor.execute(formulario_sql)
+                formularios = cursor.fetchall()
+                return len(formularios)
         except Exception as e:
             connect.rollback()
             print("error: ", e)
             raise e
-        finally:
-            connect.close()
-    
-    def execute_Update_query(self, query):
-        connect = self.connection()
-        try:
-            with connect.cursor() as cursor:   
-                print("Number of rows modified: ", cursor.execute(query))
-                connect.commit()
-                return True
-        except Exception as e:
-            connect.rollback()
-            print("error: ", e)
-            return jsonify({"error": str(e)}), INTERNAL_SERVER_ERROR
         finally:
             connect.close()
 
@@ -146,22 +136,44 @@ class form_solver():
             connect.close()
 
     def add_multipropietario(self):
+        id_multipropietario = self._obtener_siguiente_id_multipropietario()
+        com_man_pred = self._construir_com_man_pred()
+
+        for enajenante in self.enajenantes_data:
+            self._insertar_enajenante(id_multipropietario, com_man_pred, enajenante)
+            id_multipropietario += 1
+
+        for adquirente in self.adquirentes_data:
+            self._insertar_adquirente(id_multipropietario, com_man_pred, adquirente)
+            id_multipropietario += 1
+
+    def obtener_ano_inscripcion(self):
+        return int(self.fecha_inscripcion.split("-")[0])
+
+    def _obtener_siguiente_id_multipropietario(self):
         connect = self.connection()
         try:
             with connect.cursor() as cursor:
-                id_multipropietario = self._obtener_siguiente_id_multipropietario(cursor)
+                multipropietario_sql = "SELECT id FROM Multipropietarios ORDER BY id DESC LIMIT 1"
+                cursor.execute(multipropietario_sql)
+                id_multipropietario = cursor.fetchall()
+                return id_multipropietario[0]["id"] + 1 if id_multipropietario else 0
+        except Exception as e:
+            connect.rollback()
+            print("error: ", e)
+            return jsonify({"error": str(e)}), INTERNAL_SERVER_ERROR
+        finally:
+            connect.close()
+    
+    def _actualizar_multipropietarios_por_vigencia(self, last_initial_year):
+        connect = self.connection()
+        try:
+            with connect.cursor() as cursor:
                 com_man_pred = self._construir_com_man_pred()
-
-                for enajenante in self.enajenantes_data:
-                    self._insertar_enajenante(cursor, id_multipropietario, com_man_pred, enajenante)
-                    id_multipropietario += 1
-
-                for adquirente in self.adquirentes_data:
-                    self._insertar_adquirente(cursor, id_multipropietario, com_man_pred, adquirente)
-                    id_multipropietario += 1
-
+                multipropietario_sql = "UPDATE Multipropietarios SET Ano_vigencia_final=" + str(self.obtener_ano_inscripcion() - 1) + " WHERE Ano_vigencia_inicial=" + str(last_initial_year) + " AND Ano_vigencia_final IS NULL AND com_man_pred=" + '\'' + com_man_pred + '\''
+                print("Number of rows modified: ", cursor.execute(multipropietario_sql))
                 connect.commit()
-
+                return True
         except Exception as e:
             connect.rollback()
             print("error: ", e)
@@ -169,142 +181,185 @@ class form_solver():
         finally:
             connect.close()
 
-    def _obtener_siguiente_id_multipropietario(self, cursor):
-        multipropietario_sql = "SELECT id FROM Multipropietarios ORDER BY id DESC LIMIT 1"
-        cursor.execute(multipropietario_sql)
-        id_multipropietario = cursor.fetchall()
-        return id_multipropietario[0]["id"] + 1 if id_multipropietario else 0
+    def delete_multipropietarios_antiguos(self, last_initial_year):
+        connect = self.connection()
+        com_man_pred = self._construir_com_man_pred()
+        try:
+            with connect.cursor() as cursor:
+                delete_vigencia_final_query = "DELETE FROM Multipropietarios WHERE Ano_vigencia_inicial=" + str(last_initial_year) + " AND com_man_pred=" + '\'' + com_man_pred + '\''
+                print("Number of rows modified: ", cursor.execute(delete_vigencia_final_query))
+                connect.commit()
+                return True
+        except Exception as e:
+            connect.rollback()
+            print("error: ", e)
+            return jsonify({"error": str(e)}), INTERNAL_SERVER_ERROR
+        finally:
+            connect.close()
+
+    def obtener_multipropietarios(self):
+        com_man_pred = self._construir_com_man_pred()
+        connect = self.connection()
+        try:
+            with connect.cursor() as cursor:
+                multipropietario_sql = "SELECT COUNT(*) FROM Multipropietarios WHERE com_man_pred=" + '\'' + com_man_pred + '\''
+                cursor.execute(multipropietario_sql)
+                multipropietarios = cursor.fetchall()
+                return multipropietarios[0]['COUNT(*)']
+        except Exception as e:
+            connect.rollback()
+            print("error: ", e)
+            return jsonify({"error": str(e)}), INTERNAL_SERVER_ERROR
+        finally:
+            connect.close()
+
+    def _obtener_suma_porc_Dercho_enjantes(self, Run_Rut_enajenantes):
+        print("El error esta aqui")
+        print(Run_Rut_enajenantes)
+        com_man_pred = self._construir_com_man_pred()
+        connect = self.connection()
+        try:
+            with connect.cursor() as cursor:
+                multipropietario_sql = "SELECT SUM(porcDerecho) as sum FROM Multipropietarios WHERE com_man_pred=" + '\'' + com_man_pred + '\'' + " AND RUNRUT IN " + str(Run_Rut_enajenantes).replace("[", "(").replace("]", ")")
+                cursor.execute(multipropietario_sql)
+                multipropietarios = cursor.fetchall()
+                return int(multipropietarios[0]['sum'])
+        except Exception as e:
+            connect.rollback()
+            print("error: ", e)
+            return jsonify({"error": str(e)}), INTERNAL_SERVER_ERROR
+        finally:
+            connect.close() 
 
     def _construir_com_man_pred(self):
         return f"{self.comuna}-{self.manzana}-{self.predio}"
 
-    def _insertar_enajenante(self, cursor, id_multipropietario, com_man_pred, enajenante):
-        enajenante_sql = """
-            INSERT INTO Multipropietarios (id, com_man_pred, RUNRUT, porcDerecho,
-                                        Fojas, Ano_inscripcion, Numero_inscripcion,
-                                        Fecha_de_inscripcion, Ano_vigencia_inicial,
-                                        Ano_vigencia_final, Tipo)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-        """
-        cursor.execute(enajenante_sql, (
-            id_multipropietario,
-            com_man_pred,
-            enajenante['RUNRUT'],
-            enajenante['porcDerecho'],
-            self.fojas,
-            int(self.fecha_inscripcion[0:4]),
-            self.numero_inscripcion,
-            self.fecha_inscripcion,
-            int(self.fecha_inscripcion[0:4]),
-            None,
-            "Enajenante"
-        ))
-
-    def _insertar_adquirente(self, cursor, id_multipropietario, com_man_pred, adquirente):
-        adquirente_sql = """
-            INSERT INTO Multipropietarios (id, com_man_pred, RUNRUT, porcDerecho,
-                                        Fojas, Ano_inscripcion, Numero_inscripcion,
-                                        Fecha_de_inscripcion, Ano_vigencia_inicial,
-                                        Ano_vigencia_final, Tipo)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-        """
-        cursor.execute(adquirente_sql, (
-            id_multipropietario,
-            com_man_pred,
-            adquirente['RUNRUT'],
-            adquirente['porcDerecho'],
-            self.fojas,
-            int(self.fecha_inscripcion[0:4]),
-            self.numero_inscripcion,
-            self.fecha_inscripcion,
-            int(self.fecha_inscripcion[0:4]),
-            None,
-            "Aquirente"
-        ))
-
-
-    def agregar_nuevo_formulario(self):
+    def _insertar_enajenante(self, id_multipropietario, com_man_pred, enajenante):
         connect = self.connection()
         try:
             with connect.cursor() as cursor:
-                numero_de_atencion = self.add_formulario()
-                self.add_enajenante(numero_de_atencion)
-                self.add_adquirente(numero_de_atencion)
-                self.add_multipropietario()
-                return True
-        except Exception as e:
-            connect.rollback()
-            return jsonify({"error": str(e)}), INTERNAL_SERVER_ERROR
-        finally:
-            connect.close()
-
-    def actualizar_vigencia(self, last_initial_year):
-        connect = self.connection()
-        try:
-            with connect.cursor() as cursor:
-                com_man_pred = str(self.comuna) + "-" + str(self.manzana) + "-" + str(self.predio)
-                update_vigencia_final_query = "UPDATE Multipropietarios SET Ano_vigencia_final=" + str(int(self.fecha_inscripcion[0:4]) - 1) + " WHERE Ano_vigencia_inicial=" + str(last_initial_year) + " AND Ano_vigencia_final IS NULL AND com_man_pred=" + '\'' + com_man_pred + '\''
-                self.execute_Update_query(update_vigencia_final_query)
-
-                numero_de_atencion = self.add_formulario()
-                self.add_enajenante(numero_de_atencion)
-                self.add_adquirente(numero_de_atencion)
-                self.add_multipropietario() 
-                return True
+                enajenante_sql = """
+                    INSERT INTO Multipropietarios (id, com_man_pred, RUNRUT, porcDerecho,
+                                                Fojas, Ano_inscripcion, Numero_inscripcion,
+                                                Fecha_de_inscripcion, Ano_vigencia_inicial,
+                                                Ano_vigencia_final, Tipo)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """
+                cursor.execute(enajenante_sql, (
+                    id_multipropietario,
+                    com_man_pred,
+                    enajenante['RUNRUT'],
+                    enajenante['porcDerecho'],
+                    self.fojas,
+                    int(self.obtener_ano_inscripcion()),
+                    self.numero_inscripcion,
+                    self.fecha_inscripcion,
+                    int(self.obtener_ano_inscripcion()),
+                    None,
+                    "Enajenante"
+                ))
+                connect.commit()
         except Exception as e:
             connect.rollback()
             print("error: ", e)
             return jsonify({"error": str(e)}), INTERNAL_SERVER_ERROR
         finally:
             connect.close()
+
+    def _insertar_adquirente(self, id_multipropietario, com_man_pred, adquirente):
+        connect = self.connection()
+        try:
+            with connect.cursor() as cursor:
+                adquirente_sql = """
+                    INSERT INTO Multipropietarios (id, com_man_pred, RUNRUT, porcDerecho,
+                                                Fojas, Ano_inscripcion, Numero_inscripcion,
+                                                Fecha_de_inscripcion, Ano_vigencia_inicial,
+                                                Ano_vigencia_final, Tipo)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """
+                cursor.execute(adquirente_sql, (
+                    id_multipropietario,
+                    com_man_pred,
+                    adquirente['RUNRUT'],
+                    adquirente['porcDerecho'],
+                    self.fojas,
+                    int(self.obtener_ano_inscripcion()),
+                    self.numero_inscripcion,
+                    self.fecha_inscripcion,
+                    int(self.obtener_ano_inscripcion()),
+                    None,
+                    "Aquirente"
+                ))
+                connect.commit()
+        except Exception as e:
+            connect.rollback()
+            print("error: ", e)
+            return jsonify({"error": str(e)}), INTERNAL_SERVER_ERROR
+        finally:
+            connect.close()
+
+    def _obtener_ultimo_ano_inicial(self):
+        com_man_pred = self._construir_com_man_pred()
+        connect = self.connection()
+        try:
+            with connect.cursor() as cursor:
+                multipropietario_sql = "SELECT Ano_vigencia_inicial AS Ano FROM Multipropietarios WHERE com_man_pred=" + '\'' + com_man_pred + '\'' + " ORDER BY Ano_vigencia_inicial DESC LIMIT 1"
+                cursor.execute(multipropietario_sql)
+                last_initial_year_query = cursor.fetchall()
+                return last_initial_year_query[0]['Ano']
+        except Exception as e:
+            connect.rollback()
+            print("error: ", e)
+            return jsonify({"error": str(e)}), INTERNAL_SERVER_ERROR
+        finally:
+            connect.close()
+
+    def agregar_nuevo_formulario(self):
+
+        numero_de_atencion = self.add_formulario()
+        self.add_enajenante(numero_de_atencion)
+        self.add_adquirente(numero_de_atencion)
+        self.add_multipropietario()
+
+    def actualizar_vigencia(self, last_initial_year):
+        self._actualizar_multipropietarios_por_vigencia(last_initial_year)
+
+        numero_de_atencion = self.add_formulario()
+        self.add_enajenante(numero_de_atencion)
+        self.add_adquirente(numero_de_atencion)
+        self.add_multipropietario() 
+        return True
 
     def procesar_escenario_3(self, last_initial_year):
         pass
 
     def eliminar_antiguos_y_reemplazar(self, last_initial_year):
-        pass
-        connect = self.connection()
-        try:
-            with connect.cursor() as cursor:
-                com_man_pred = str(self.comuna) + "-" + str(self.manzana) + "-" + str(self.predio)
-                delete_vigencia_final_query = "DELETE FROM Multipropietarios WHERE Ano_vigencia_inicial=" + str(last_initial_year) + " AND com_man_pred=" + '\'' + com_man_pred + '\''
-                self.execute_Update_query(delete_vigencia_final_query)
-                print("aqui")
-                numero_de_atencion = self.add_formulario()
-                self.add_enajenante(numero_de_atencion)
-                self.add_adquirente(numero_de_atencion)
-                self.add_multipropietario() 
-                print("aqui 2")
-                return True
-        except Exception as e:
-            connect.rollback()
-            print("error: ", e)
-            return jsonify({"error": str(e)}), INTERNAL_SERVER_ERROR
-        finally:
-            connect.close()
-
+        self.delete_multipropietarios_antiguos(last_initial_year)
+        numero_de_atencion = self.add_formulario()
+        self.add_enajenante(numero_de_atencion)
+        self.add_adquirente(numero_de_atencion)
+        self.add_multipropietario() 
 
     def determinar_y_procesar_escenario(self):
-        if(self.cne == 8):
-            pass
+        if(self.cne == COMPRAVENTA):
+            pass#TODO
 
-        if(self.cne == 99):
-            com_man_pred = str(self.comuna) + "-" + str(self.manzana) + "-" + str(self.predio)
-            count_multipropietario = "SELECT COUNT(*) FROM Multipropietarios WHERE com_man_pred=" + '\'' + com_man_pred + '\''
-            if(self.execute_Select_query(count_multipropietario)[0]['COUNT(*)'] == 0):
+        if(self.cne == REGULARIZACION_DE_PATRIMONIO):
+            print("Antes de error")
+            count_multipropietario = self.obtener_multipropietarios()
+            if(count_multipropietario == 0):
                 print("Escenario 1")
                 self.agregar_nuevo_formulario()
+                print("Despues de error")
             else:
-                com_man_pred = str(self.comuna) + "-" + str(self.manzana) + "-" + str(self.predio)
-                last_initial_year_query = "SELECT Ano_vigencia_inicial AS Ano FROM Multipropietarios WHERE com_man_pred=" + '\'' + com_man_pred + '\'' + " ORDER BY Ano_vigencia_inicial DESC LIMIT 1"
-                last_initial_year = self.execute_Select_query(last_initial_year_query)[0]['Ano']
-                if(last_initial_year < int(self.fecha_inscripcion[0:4])):
+                last_initial_year = self._obtener_ultimo_ano_inicial()
+                if(last_initial_year < self.obtener_ano_inscripcion()):
                     print("Escenario 2")
                     self.actualizar_vigencia(last_initial_year)
-                if(last_initial_year > int(self.fecha_inscripcion[0:4])):
+                if(last_initial_year > self.obtener_ano_inscripcion()):
                     print("Es menor pero este escenario no esta listo")
                     self.procesar_escenario_3(last_initial_year)
-                if(last_initial_year == int(self.fecha_inscripcion[0:4])):
+                if(last_initial_year == self.obtener_ano_inscripcion()):
                     print("Escenario 4")
                     self.eliminar_antiguos_y_reemplazar(last_initial_year)
 
@@ -317,14 +372,12 @@ class form_solver():
 
         print(sum_porc_Derecho_adquirente)
         if sum_porc_Derecho_adquirente == 100:
-            com_man_pred = str(self.comuna) + "-" + str(self.manzana) + "-" + str(self.predio)
             Run_Rut_enajenantes = [enajenante['RUNRUT'] for enajenante in self.enajenantes_data]
-            sum_porc_Derecho_enajenante_query = "SELECT SUM(porcDerecho) as sum FROM Multipropietarios WHERE com_man_pred=" + '\'' + com_man_pred + '\'' + " AND RUNRUT IN " + str(Run_Rut_enajenantes).replace("[", "(").replace("]", ")")
-            print(sum_porc_Derecho_enajenante_query)
-            sum_porc_Derecho_enajenante = int(self.execute_Select_query(sum_porc_Derecho_enajenante_query)[0]['sum'])
-            print(sum_porc_Derecho_enajenante)
-            for adquirente in self.adquirentes_data:
-                porc_Derecho = adquirente.get('porcDerecho')
-                if porc_Derecho is not None:
-                    adquirente['porcDerecho'] *= sum_porc_Derecho_enajenante / 100
-            print(self.adquirentes_data)
+            if(Run_Rut_enajenantes != []):
+                sum_porc_Derecho_enajenante = self._obtener_suma_porc_Dercho_enjantes(Run_Rut_enajenantes)
+                print(sum_porc_Derecho_enajenante)
+                for adquirente in self.adquirentes_data:
+                    porc_Derecho = adquirente.get('porcDerecho')
+                    if porc_Derecho is not None:
+                        adquirente['porcDerecho'] *= sum_porc_Derecho_enajenante / 100
+                print(self.adquirentes_data)
