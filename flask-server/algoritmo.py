@@ -5,6 +5,48 @@ import pymysql
 INTERNAL_SERVER_ERROR = 500
 COMPRAVENTA = 8
 REGULARIZACION_DE_PATRIMONIO = 99
+QUERY_ALL_ENAJENANTES = "SELECT * FROM Enajenantes"
+QUERY_ALL_FORMULARIOS = "SELECT * FROM formulario"
+QUERY_ALL_ADQUIRENTES = "SELECT * FROM Adquirentes"
+QUERY_INSERTAR_FORM = """
+                    INSERT INTO formulario (
+                        Numero_de_atencion, CNE, Comuna, Manzana, Predio, Fojas, Fecha_de_inscripcion, Numero_de_insripcion
+                    )
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                """
+QUERY_INSERTAR_ENAJENANTES = """
+                        INSERT INTO Enajenantes (id, enajenante_id, RUNRUT, porcDerecho)
+                        VALUES ( %s, %s, %s, %s)
+                    """
+QUERY_INSERTAR_ADQUIRENTES = """
+                        INSERT INTO Adquirentes (id, Adquirente_id, RUNRUT, porcDerecho)
+                        VALUES (%s, %s, %s, %s)
+                    """
+QUERY_ID_MULTIPROPIETARIOS = "SELECT id FROM Multipropietarios ORDER BY id DESC LIMIT 1"
+QUERY_UPDATE_MULTIPROPIETARIO_SQL = """
+                    UPDATE Multipropietarios
+                    SET Ano_vigencia_final={ano_final}
+                    WHERE Ano_vigencia_inicial={ano_inicial}
+                    AND Ano_vigencia_final IS NULL
+                    AND com_man_pred='{com_man_pred}'
+                    """
+QUERY_DELETE_MULTIPROPIETARIOS = """
+DELETE FROM Multipropietarios 
+WHERE Ano_vigencia_inicial = {last_initial_year}
+AND com_man_pred = {com_man_pred}"""
+
+QUERY_OBTENER_MULTIPROPIETARIOS_SQL = """
+SELECT COUNT(*) 
+FROM Multipropietarios
+WHERE com_man_pred='{com_man_pred}'
+"""
+
+QUERY_OBTENER_SUMA_PORC_DERECHO_SQL = """
+SELECT SUM(porcDerecho) AS sum
+FROM Multipropietarios
+WHERE com_man_pred='{com_man_pred}'
+  AND RUNRUT IN {run_rut_enajenantes}
+"""
 
 class form_solver(): 
     def __init__(self, formulario, connection):
@@ -30,9 +72,8 @@ class form_solver():
     def obtener_numer_de_atencion(self):
         connect = self.connection()
         try:
-            with connect.cursor() as cursor:  
-                formulario_sql = "SELECT * FROM formulario" 
-                cursor.execute(formulario_sql)
+            with connect.cursor() as cursor:   
+                cursor.execute(QUERY_ALL_FORMULARIOS)
                 formularios = cursor.fetchall()
                 return len(formularios)
         except Exception as e:
@@ -45,20 +86,12 @@ class form_solver():
     def add_formulario(self):
         connect = self.connection()
         try:
-            with connect.cursor() as cursor:
-                
-                formulario_sql = "SELECT * FROM formulario"
-                cursor.execute(formulario_sql)
+            with connect.cursor() as cursor:               
+                cursor.execute(QUERY_ALL_FORMULARIOS)
                 formularios = cursor.fetchall()
                 numero_de_atencion = len(formularios) + 1
                 
-                formulario_sql = """
-                    INSERT INTO formulario (
-                        Numero_de_atencion, CNE, Comuna, Manzana, Predio, Fojas, Fecha_de_inscripcion, Numero_de_insripcion
-                    )
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-                """
-                cursor.execute(formulario_sql, (
+                cursor.execute(QUERY_INSERTAR_FORM, (
                     numero_de_atencion, 
                     self.cne, 
                     self.comuna, 
@@ -81,17 +114,12 @@ class form_solver():
         try:
             with connect.cursor() as cursor:
                 #Obtain next id from 'enajenantes' table
-                enajenante_sql = "SELECT * FROM Enajenantes"
-                cursor.execute(enajenante_sql)
+                cursor.execute(QUERY_ALL_ENAJENANTES)
                 enajenantes = cursor.fetchall()
                 id = len(enajenantes) + 1
                 # Insert enajenantes data into the 'enajenantes' table
                 for num_enajenante, enajenante in enumerate(self.enajenantes_data):
-                    enajenante_sql = """
-                        INSERT INTO Enajenantes (id, enajenante_id, RUNRUT, porcDerecho)
-                        VALUES ( %s, %s, %s, %s)
-                    """
-                    cursor.execute(enajenante_sql, (
+                    cursor.execute(QUERY_INSERTAR_ENAJENANTES, (
                         (id + num_enajenante), 
                         numero_de_atencion, 
                         enajenante['RUNRUT'], 
@@ -111,17 +139,12 @@ class form_solver():
         try:
             with connect.cursor() as cursor:
                 #Obtain next id from 'Adquirentes' table
-                adquirente_sql = "SELECT * FROM Adquirentes"
-                cursor.execute(adquirente_sql)
+                cursor.execute(QUERY_ALL_ADQUIRENTES)
                 adquirentes = cursor.fetchall()
                 id = len(adquirentes) + 1
                 # Insert adquirentes data into the 'Adquirentes' table
                 for num_adquirente, adquirente in enumerate(self.adquirentes_data):
-                    adquirente_sql = """
-                        INSERT INTO Adquirentes (id, Adquirente_id, RUNRUT, porcDerecho)
-                        VALUES (%s, %s, %s, %s)
-                    """
-                    cursor.execute(adquirente_sql, (
+                    cursor.execute(QUERY_INSERTAR_ADQUIRENTES, (
                         (id + num_adquirente),
                         numero_de_atencion, 
                         adquirente['RUNRUT'], 
@@ -154,8 +177,7 @@ class form_solver():
         connect = self.connection()
         try:
             with connect.cursor() as cursor:
-                multipropietario_sql = "SELECT id FROM Multipropietarios ORDER BY id DESC LIMIT 1"
-                cursor.execute(multipropietario_sql)
+                cursor.execute(QUERY_ID_MULTIPROPIETARIOS)
                 id_multipropietario = cursor.fetchall()
                 return id_multipropietario[0]["id"] + 1 if id_multipropietario else 0
         except Exception as e:
@@ -165,13 +187,21 @@ class form_solver():
         finally:
             connect.close()
     
+
+
+#Revisar
     def _actualizar_multipropietarios_por_vigencia(self, last_initial_year):
         connect = self.connection()
         try:
             with connect.cursor() as cursor:
                 com_man_pred = self._construir_com_man_pred()
-                multipropietario_sql = "UPDATE Multipropietarios SET Ano_vigencia_final=" + str(self.obtener_ano_inscripcion() - 1) + " WHERE Ano_vigencia_inicial=" + str(last_initial_year) + " AND Ano_vigencia_final IS NULL AND com_man_pred=" + '\'' + com_man_pred + '\''
-                print("Number of rows modified: ", cursor.execute(multipropietario_sql))
+                ano_final = self.obtener_ano_inscripcion() - 1
+                query_multipropietarios = QUERY_UPDATE_MULTIPROPIETARIO_SQL.format(
+                    ano_final=ano_final,
+                    Ano_vigencia_inicial=last_initial_year,
+                    com_man_pred=com_man_pred
+                )
+                print("Number of rows modified: ", cursor.execute(query_multipropietarios))
                 connect.commit()
                 return True
         except Exception as e:
@@ -186,7 +216,10 @@ class form_solver():
         com_man_pred = self._construir_com_man_pred()
         try:
             with connect.cursor() as cursor:
-                delete_vigencia_final_query = "DELETE FROM Multipropietarios WHERE Ano_vigencia_inicial=" + str(last_initial_year) + " AND com_man_pred=" + '\'' + com_man_pred + '\''
+                delete_vigencia_final_query = QUERY_DELETE_MULTIPROPIETARIOS.format(
+                    Ano_vigencia_inicial=last_initial_year,
+                    com_man_pred=com_man_pred
+                )
                 print("Number of rows modified: ", cursor.execute(delete_vigencia_final_query))
                 connect.commit()
                 return True
@@ -202,7 +235,7 @@ class form_solver():
         connect = self.connection()
         try:
             with connect.cursor() as cursor:
-                multipropietario_sql = "SELECT COUNT(*) FROM Multipropietarios WHERE com_man_pred=" + '\'' + com_man_pred + '\''
+                multipropietario_sql = QUERY_OBTENER_MULTIPROPIETARIOS_SQL.format(com_man_pred=com_man_pred)
                 cursor.execute(multipropietario_sql)
                 multipropietarios = cursor.fetchall()
                 return multipropietarios[0]['COUNT(*)']
@@ -213,13 +246,18 @@ class form_solver():
         finally:
             connect.close()
 
+#revisar
     def _obtener_suma_porc_Dercho_enjantes(self, Run_Rut_enajenantes):
         print(Run_Rut_enajenantes)
         com_man_pred = self._construir_com_man_pred()
+        run_rut_enajenantes = tuple(Run_Rut_enajenantes)
         connect = self.connection()
         try:
             with connect.cursor() as cursor:
-                multipropietario_sql = "SELECT SUM(porcDerecho) as sum FROM Multipropietarios WHERE com_man_pred=" + '\'' + com_man_pred + '\'' + " AND RUNRUT IN " + str(Run_Rut_enajenantes).replace("[", "(").replace("]", ")")
+                multipropietario_sql = QUERY_OBTENER_SUMA_PORC_DERECHO_SQL.format(
+                com_man_pred=com_man_pred,
+                run_rut_enajenantes=run_rut_enajenantes
+            )
                 cursor.execute(multipropietario_sql)
                 multipropietarios = cursor.fetchall()
                 return int(multipropietarios[0]['sum'])
@@ -233,7 +271,7 @@ class form_solver():
     def _construir_com_man_pred(self):
         return f"{self.comuna}-{self.manzana}-{self.predio}"
 
-    def _insertar_enajenante(self, id_multipropietario, com_man_pred, enajenante):
+    def _insert_enajenantes_to_multipropietarios(self, id_multipropietario, com_man_pred, enajenante):
         connect = self.connection()
         try:
             with connect.cursor() as cursor:
