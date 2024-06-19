@@ -41,12 +41,33 @@ FROM Multipropietarios
 WHERE com_man_pred='{com_man_pred}'
 """
 
-QUERY_OBTENER_SUMA_PORC_DERECHO_SQL = """
-SELECT SUM(porcDerecho) AS sum
-FROM Multipropietarios
-WHERE com_man_pred='{com_man_pred}'
-  AND RUNRUT IN {run_rut_enajenantes}
-"""
+QUERY_OBTENER_ULT_ANO_INIT = "SELECT Ano_vigencia_inicial AS Ano FROM Multipropietarios WHERE com_man_pred='{com_man_pred}' ORDER BY Ano_vigencia_inicial DESC LIMIT 1"
+
+QUERY_INSERTAR_ENAJENANTES_MULTIPROPIETARIO_SQL = """
+        INSERT INTO Multipropietarios (id, com_man_pred, RUNRUT, porcDerecho,
+                                    Fojas, Ano_inscripcion, Numero_inscripcion,
+                                    Fecha_de_inscripcion, Ano_vigencia_inicial,
+                                    Ano_vigencia_final, Tipo)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+    """
+
+QUERY_INSERTAR_ADQUIRENTES_MULTIPROPIETARIO_SQL = """
+        INSERT INTO Multipropietarios (id, com_man_pred, RUNRUT, porcDerecho,
+                                    Fojas, Ano_inscripcion, Numero_inscripcion,
+                                    Fecha_de_inscripcion, Ano_vigencia_inicial,
+                                    Ano_vigencia_final, Tipo)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+    """
+#revisar
+# QUERY_OBTENER_SUMA_PORC_DERECHO_SQL = """
+# SELECT SUM(porcDerecho) AS sum
+# FROM Multipropietarios
+# WHERE com_man_pred='{com_man_pred}'
+#   AND RUNRUT IN {run_rut_enajenantes}
+# """
+#Mover esto a otro archivo
+def formatear_runrut_enajenantes(runrut_enajenantes):
+    return str(runrut_enajenantes).replace("[", "(").replace("]", ")")
 
 class form_solver(): 
     def __init__(self, formulario, connection):
@@ -148,7 +169,7 @@ class form_solver():
                         (id + num_adquirente),
                         numero_de_atencion, 
                         adquirente['RUNRUT'], 
-                        adquirente['porcDerecho']
+                        int(adquirente['porcDerecho'])
                     ))
                 connect.commit()
             return "Ingreso el Adquirente"
@@ -163,12 +184,13 @@ class form_solver():
         com_man_pred = self._construir_com_man_pred()
 
         for enajenante in self.enajenantes_data:
-            self._insertar_enajenante(id_multipropietario, com_man_pred, enajenante)
+            self._insert_enajenantes_to_multipropietarios(id_multipropietario, com_man_pred, enajenante)
             id_multipropietario += 1
 
         for adquirente in self.adquirentes_data:
-            self._insertar_adquirente(id_multipropietario, com_man_pred, adquirente)
+            self._insert_adquirientes_to_multipropietarios(id_multipropietario, com_man_pred, adquirente)
             id_multipropietario += 1
+        
 
     def obtener_ano_inscripcion(self):
         return int(self.fecha_inscripcion.split("-")[0])
@@ -212,12 +234,13 @@ class form_solver():
             connect.close()
 
     def delete_multipropietarios_antiguos(self, last_initial_year):
+        print("SOY UN FURROOOOOOOOOOOOOOOOOOOO "+ str(last_initial_year))
         connect = self.connection()
         com_man_pred = self._construir_com_man_pred()
         try:
             with connect.cursor() as cursor:
                 delete_vigencia_final_query = QUERY_DELETE_MULTIPROPIETARIOS.format(
-                    Ano_vigencia_inicial=last_initial_year,
+                    last_initial_year=str(last_initial_year),
                     com_man_pred=com_man_pred
                 )
                 print("Number of rows modified: ", cursor.execute(delete_vigencia_final_query))
@@ -247,17 +270,20 @@ class form_solver():
             connect.close()
 
 #revisar
-    def _obtener_suma_porc_Dercho_enjantes(self, Run_Rut_enajenantes):
+
+    #def _obtener_suma_porc_Dercho_enjantes(self, Run_Rut_enajenantes):
         print(Run_Rut_enajenantes)
         com_man_pred = self._construir_com_man_pred()
-        run_rut_enajenantes = tuple(Run_Rut_enajenantes)
+        runrut_enajenantes_formateado = formatear_runrut_enajenantes(Run_Rut_enajenantes)
+        print("HOLAAAAAAAAAAAAAAAAAAAAAAAAAA"+runrut_enajenantes_formateado)
         connect = self.connection()
         try:
             with connect.cursor() as cursor:
                 multipropietario_sql = QUERY_OBTENER_SUMA_PORC_DERECHO_SQL.format(
                 com_man_pred=com_man_pred,
-                run_rut_enajenantes=run_rut_enajenantes
+                run_rut_enajenantes=runrut_enajenantes_formateado
             )
+                print("multipropietario_sql :" + multipropietario_sql)
                 cursor.execute(multipropietario_sql)
                 multipropietarios = cursor.fetchall()
                 return int(multipropietarios[0]['sum'])
@@ -275,14 +301,7 @@ class form_solver():
         connect = self.connection()
         try:
             with connect.cursor() as cursor:
-                enajenante_sql = """
-                    INSERT INTO Multipropietarios (id, com_man_pred, RUNRUT, porcDerecho,
-                                                Fojas, Ano_inscripcion, Numero_inscripcion,
-                                                Fecha_de_inscripcion, Ano_vigencia_inicial,
-                                                Ano_vigencia_final, Tipo)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                """
-                cursor.execute(enajenante_sql, (
+                cursor.execute(QUERY_INSERTAR_ENAJENANTES_MULTIPROPIETARIO_SQL, (
                     id_multipropietario,
                     com_man_pred,
                     enajenante['RUNRUT'],
@@ -303,18 +322,11 @@ class form_solver():
         finally:
             connect.close()
 
-    def _insertar_adquirente(self, id_multipropietario, com_man_pred, adquirente):
+    def _insert_adquirientes_to_multipropietarios(self, id_multipropietario, com_man_pred, adquirente):
         connect = self.connection()
         try:
             with connect.cursor() as cursor:
-                adquirente_sql = """
-                    INSERT INTO Multipropietarios (id, com_man_pred, RUNRUT, porcDerecho,
-                                                Fojas, Ano_inscripcion, Numero_inscripcion,
-                                                Fecha_de_inscripcion, Ano_vigencia_inicial,
-                                                Ano_vigencia_final, Tipo)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                """
-                cursor.execute(adquirente_sql, (
+                cursor.execute(QUERY_INSERTAR_ADQUIRENTES_MULTIPROPIETARIO_SQL, (
                     id_multipropietario,
                     com_man_pred,
                     adquirente['RUNRUT'],
@@ -340,8 +352,8 @@ class form_solver():
         connect = self.connection()
         try:
             with connect.cursor() as cursor:
-                multipropietario_sql = "SELECT Ano_vigencia_inicial AS Ano FROM Multipropietarios WHERE com_man_pred=" + '\'' + com_man_pred + '\'' + " ORDER BY Ano_vigencia_inicial DESC LIMIT 1"
-                cursor.execute(multipropietario_sql)
+                cursor.execute(QUERY_OBTENER_ULT_ANO_INIT.format(com_man_pred=com_man_pred)
+                )
                 last_initial_year_query = cursor.fetchall()
                 return last_initial_year_query[0]['Ano']
         except Exception as e:
@@ -383,7 +395,7 @@ class form_solver():
 
         if(self.cne == REGULARIZACION_DE_PATRIMONIO):
             count_multipropietario = self.obtener_multipropietarios()
-            if(count_multipropietario == 0):
+            if(count_multipropietario == 0):#esta malo arreglar
                 print("Escenario 1")
                 self.agregar_nuevo_formulario()
             else:
@@ -394,6 +406,7 @@ class form_solver():
                 if(last_initial_year > self.obtener_ano_inscripcion()):
                     print("Es menor pero este escenario no esta listo")
                     self.procesar_escenario_3(last_initial_year)
+                    #TODO
                 if(last_initial_year == self.obtener_ano_inscripcion()):
                     print("Escenario 4")
                     self.eliminar_antiguos_y_reemplazar(last_initial_year)
@@ -405,14 +418,19 @@ class form_solver():
             if porc_Derecho is not None:
                 sum_porc_Derecho_adquirente += porc_Derecho
 
-        print(sum_porc_Derecho_adquirente)
+        print("q pijas " + str(sum_porc_Derecho_adquirente))
         if sum_porc_Derecho_adquirente == 100:
             Run_Rut_enajenantes = [enajenante['RUNRUT'] for enajenante in self.enajenantes_data]
             if(Run_Rut_enajenantes != []):
-                sum_porc_Derecho_enajenante = self._obtener_suma_porc_Dercho_enjantes(Run_Rut_enajenantes)
-                print(sum_porc_Derecho_enajenante)
-                for adquirente in self.adquirentes_data:
-                    porc_Derecho = adquirente.get('porcDerecho')
+                sum_porc_Derecho_enajenante = 0
+                for enajenante in self.enajenantes_data:
+                    porc_Derecho = int(enajenante.get('porcDerecho'))
                     if porc_Derecho is not None:
-                        adquirente['porcDerecho'] *= sum_porc_Derecho_enajenante / 100
+                        sum_porc_Derecho_enajenante += porc_Derecho
+                for adquirente in self.adquirentes_data:
+                    porc_Derecho = int(adquirente.get('porcDerecho'))
+                    if porc_Derecho is not None:
+                        print()
+                        porc_Derecho *= sum_porc_Derecho_enajenante / 100
+                        adquirente['porcDerecho'] = str(porc_Derecho)
                 print(self.adquirentes_data)

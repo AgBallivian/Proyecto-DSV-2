@@ -107,6 +107,7 @@ def subir_json():
                     formulario = form_solver(datos, obtener_conexion_db)
                     formulario.determinar_y_procesar_escenario()
                     formulario.ajustar_porcentajes_adquirentes()
+
                 except Exception as e:
                     errores.append(str(e))
             if errores:
