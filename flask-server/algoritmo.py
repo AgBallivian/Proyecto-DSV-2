@@ -331,6 +331,8 @@ class form_solver():
         self.add_enajenante(numero_de_atencion)
         self.add_adquirente(numero_de_atencion)
         self.add_multipropietario()
+        self.handle_enajenante_fantasma()
+        
 
     def determinar_y_procesar_escenario(self):
         if self.cne == COMPRAVENTA:
@@ -351,7 +353,8 @@ class form_solver():
             if last_initial_year < self.obtener_ano_inscripcion():
                 self.procesar_escenario_2(last_initial_year)
             elif last_initial_year > self.obtener_ano_inscripcion():
-                self.procesar_escenario_3(last_initial_year)
+                #self.procesar_escenario_3(last_initial_year)
+                pass
             else:
                 self.procesar_escenario_4(last_initial_year)
 
@@ -392,6 +395,51 @@ class form_solver():
             porc_derecho = int(adquirente.get('porcDerecho', 0))
             if porc_derecho != 0:
                 adquirente['porcDerecho'] = str(porc_derecho * sum_porc_derecho_enajenante / 100)
+    
+    def handle_enajenante_fantasma(self):
+        # Check if there is an "enajenante fantasma" (0% ownership)
+        enajenante_fantasma = next((enajenante for enajenante in self.enajenantes_data if int(enajenante['porcDerecho']) == 0), None)
+
+        if enajenante_fantasma:
+            # Calculate the sum of ownership percentages
+            sum_porc_derecho = sum(int(enajenante['porcDerecho']) for enajenante in self.enajenantes_data if int(enajenante['porcDerecho']) != 0) + sum(int(adquirente['porcDerecho']) for adquirente in self.adquirentes_data)
+
+            if sum_porc_derecho > 100:
+                # Prorate the ownership percentages
+                self.prorate_ownership_percentages(sum_porc_derecho)
+                self.remove_owners_with_zero_ownership()
+            elif sum_porc_derecho < 100:
+                # Distribute the remaining percentage
+                remaining_percentage = 100 - sum_porc_derecho
+                self.distribute_remaining_percentage(remaining_percentage)
+
+            # Adjust the ownership percentages of the adquirentes
+            self.ajustar_porcentajes_adquirentes()
+
+        # Add the processed data to the database
+        self.add_all(...)
+
+    def prorate_ownership_percentages(self, sum_porc_derecho):
+        # Scale down the ownership percentages proportionally
+        for enajenante in self.enajenantes_data:
+            if int(enajenante['porcDerecho']) != 0:
+                enajenante['porcDerecho'] = str(int(enajenante['porcDerecho']) * 100 / sum_porc_derecho)
+
+        for adquirente in self.adquirentes_data:
+            adquirente['porcDerecho'] = str(int(adquirente['porcDerecho']) * 100 / sum_porc_derecho)
+
+    def remove_owners_with_zero_ownership(self):
+        self.enajenantes_data = [enajenante for enajenante in self.enajenantes_data if int(enajenante['porcDerecho']) != 0]
+        self.adquirentes_data = [adquirente for adquirente in self.adquirentes_data if int(adquirente['porcDerecho']) != 0]
+
+    def distribute_remaining_percentage(self, remaining_percentage):
+        owners_with_zero_ownership = [enajenante for enajenante in self.enajenantes_data if int(enajenante['porcDerecho']) == 0] + [adquirente for adquirente in self.adquirentes_data if int(adquirente['porcDerecho']) == 0]
+        num_owners_with_zero_ownership = len(owners_with_zero_ownership)
+
+        if num_owners_with_zero_ownership > 0:
+            portion = remaining_percentage / num_owners_with_zero_ownership
+            for owner in owners_with_zero_ownership:
+                owner['porcDerecho'] = str(portion)
 
 """
 def procesar_escenario_3(self, last_initial_year):
