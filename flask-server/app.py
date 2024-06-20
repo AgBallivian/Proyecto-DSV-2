@@ -4,7 +4,7 @@ import json
 import pymysql
 from algoritmo import form_solver
 from collections import defaultdict
-from config import Config 
+from config import Config
 from carga_datos import cargar_regiones, cargar_comunas
 
 app = Flask(__name__)
@@ -43,27 +43,21 @@ def crear_formulario():
             if key.startswith('enajenantes'):
                 index = int(key.split('[')[1].split(']')[0])
                 field = key.split('[')[2].split(']')[0]
-                
                 if len(enajenantes_data) <= index:
                     enajenantes_data.append({'RUNRUT': None, 'porcDerecho': None})
-                
                 if field == 'RUNRUT':
                     enajenantes_data[index]['RUNRUT'] = value[0]
                 elif field == 'porcDerecho':
                     enajenantes_data[index]['porcDerecho'] = value[0]
-            
             elif key.startswith('adquirentes'):
                 index = int(key.split('[')[1].split(']')[0])
-                field = key.split('[')[2].split(']')[0]
-                
+                field = key.split('[')[2].split(']')[0]                
                 if len(adquirentes_data) <= index:
                     adquirentes_data.append({'RUNRUT': None, 'porcDerecho': None})
-                
                 if field == 'RUNRUT':
                     adquirentes_data[index]['RUNRUT'] = value[0]
                 elif field == 'porcDerecho':
                     adquirentes_data[index]['porcDerecho'] = value[0]
-        
         data = {
             'CNE': cne,
             'bienRaiz': {
@@ -280,3 +274,4 @@ def aplicar_filtros(region_id, comuna_id, block_number, property_number, year):
 
 if __name__ == '__main__':
     app.run(debug=True, port=8000, host='0.0.0.0')
+    

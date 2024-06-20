@@ -3,18 +3,7 @@ import json
 import pymysql
 from Queries import *
 
-#revisar
-# QUERY_OBTENER_SUMA_PORC_DERECHO_SQL = """
-# SELECT SUM(porcDerecho) AS sum
-# FROM Multipropietarios
-# WHERE com_man_pred='{com_man_pred}'
-#   AND RUNRUT IN {run_rut_enajenantes}
-# """
-#Mover esto a otro archivo
-def formatear_runrut_enajenantes(runrut_enajenantes):
-    return str(runrut_enajenantes).replace("[", "(").replace("]", ")")
-
-class form_solver(): 
+class form_solver():
     def __init__(self, formulario, connection):
         self.formulario = formulario
         self.cne = int(formulario['CNE'])
@@ -26,23 +15,26 @@ class form_solver():
         self.numero_inscripcion = int(formulario['nroInscripcion'])
         self.connection = connection
 
-        try:
+        if formulario['enajenantes'] != []:
             self.enajenantes_data = formulario['enajenantes']
-        except:
+        else:
             self.enajenantes_data = []
-        try:
+        if formulario['adquirentes'] != []:
             self.adquirentes_data = formulario['adquirentes']
-        except:
+        else:
             self.adquirentes_data = []
-            
+
     def _ejecutar_query(self, cursor, query):
         cursor.execute(query)
         return cursor.fetchall()
 
     def obtener_numer_de_atencion(self):
+        """
+        ola
+        """
         connect = self.connection()
         try:
-            with connect.cursor() as cursor:   
+            with connect.cursor() as cursor:
                 cursor.execute(QUERY_ALL_FORMULARIOS)
                 formularios = cursor.fetchall()
                 return len(formularios)
@@ -56,19 +48,18 @@ class form_solver():
     def add_formulario(self):
         connect = self.connection()
         try:
-            with connect.cursor() as cursor:               
+            with connect.cursor() as cursor:
                 cursor.execute(QUERY_ALL_FORMULARIOS)
                 formularios = cursor.fetchall()
                 numero_de_atencion = len(formularios) + 1
-                
                 cursor.execute(QUERY_INSERTAR_FORM, (
-                    numero_de_atencion, 
-                    self.cne, 
-                    self.comuna, 
-                    self.manzana, 
-                    self.predio, 
-                    self.fojas, 
-                    self.fecha_inscripcion, 
+                    numero_de_atencion,
+                    self.cne,
+                    self.comuna,
+                    self.manzana,
+                    self.predio,
+                    self.fojas,
+                    self.fecha_inscripcion,
                     self.numero_inscripcion
                 ))
             connect.commit()
@@ -90,9 +81,9 @@ class form_solver():
                 # Insert enajenantes data into the 'enajenantes' table
                 for num_enajenante, enajenante in enumerate(self.enajenantes_data):
                     cursor.execute(QUERY_INSERTAR_ENAJENANTES, (
-                        (id + num_enajenante), 
-                        numero_de_atencion, 
-                        enajenante['RUNRUT'], 
+                        (id + num_enajenante),
+                        numero_de_atencion,
+                        enajenante['RUNRUT'],
                         enajenante['porcDerecho']
                 ))
             connect.commit()
@@ -116,8 +107,8 @@ class form_solver():
                 for num_adquirente, adquirente in enumerate(self.adquirentes_data):
                     cursor.execute(QUERY_INSERTAR_ADQUIRENTES, (
                         (id + num_adquirente),
-                        numero_de_atencion, 
-                        adquirente['RUNRUT'], 
+                        numero_de_atencion,
+                        adquirente['RUNRUT'],
                         int(adquirente['porcDerecho'])
                     ))
                 connect.commit()
@@ -133,14 +124,13 @@ class form_solver():
         com_man_pred = self._construir_com_man_pred()
 
         for enajenante in self.enajenantes_data:
-            self._insert_enajenantes_to_multipropietarios(id_multipropietario, com_man_pred, enajenante)
+            self._insert_enajenantes_to_multipropietarios(id_multipropietario,
+             com_man_pred, enajenante)
             id_multipropietario += 1
 
         for adquirente in self.adquirentes_data:
             self._insert_adquirientes_to_multipropietarios(id_multipropietario, com_man_pred, adquirente)
             id_multipropietario += 1
-        
-
     def obtener_ano_inscripcion(self):
         return int(self.fecha_inscripcion.split("-")[0])
 
@@ -230,7 +220,6 @@ class form_solver():
             return jsonify({"error": str(e)}), INTERNAL_SERVER_ERROR
         finally:
             connect.close()
-    
     def _construir_query_obtener_multipropietarios(self, com_man_pred):
         return QUERY_OBTENER_MULTIPROPIETARIOS_SQL.format(com_man_pred=com_man_pred)
 
@@ -333,9 +322,6 @@ class form_solver():
         self.add_all(numero_de_atencion)
         return True
 
-    def procesar_escenario_3(self, last_initial_year):
-        pass
-
     def eliminar_antiguos_y_reemplazar(self, last_initial_year):
         self.delete_multipropietarios_antiguos(last_initial_year)
         numero_de_atencion = self.add_formulario()
@@ -350,13 +336,13 @@ class form_solver():
         if self.cne == COMPRAVENTA:
             self.procesar_escenario_compraventa()
         elif self.cne == REGULARIZACION_DE_PATRIMONIO:
-            self.procesar_escenario_regularizacion_patrimonio()
+            self._procesar_escenario_regularizacion_patrimonio()
 
     def procesar_escenario_compraventa(self):
         # TODO: Implementar lógica para el escenario de compraventa
         pass
 
-    def procesar_escenario_regularizacion_patrimonio(self):
+    def _procesar_escenario_regularizacion_patrimonio(self):
         count_multipropietario = self.obtener_multipropietarios()
         if count_multipropietario == 0:
             self.procesar_escenario_1()
@@ -376,11 +362,6 @@ class form_solver():
     def procesar_escenario_2(self, last_initial_year):
         print("Escenario 2")
         self.actualizar_vigencia(last_initial_year)
-
-    def procesar_escenario_3(self, last_initial_year):
-        print("Es menor pero este escenario no esta listo")
-        # TODO: Implementar lógica para el escenario 3
-        pass
 
     def procesar_escenario_4(self, last_initial_year):
         print("Escenario 4")
@@ -411,3 +392,99 @@ class form_solver():
             porc_derecho = int(adquirente.get('porcDerecho', 0))
             if porc_derecho != 0:
                 adquirente['porcDerecho'] = str(porc_derecho * sum_porc_derecho_enajenante / 100)
+
+"""
+def procesar_escenario_3(self, last_initial_year):
+        # 1. Select the multipropietario record(s) registered after the new form's year and store them in a temporary object or variable.
+        old_records = self.select_multipropietarios_after_year(last_initial_year)
+
+        # 2. Delete from the Multipropietarios table the records that have an Ano_vigencia_inicial greater than or equal to the new form's year.
+        self.delete_multipropietarios_antiguos(last_initial_year)
+
+        # 3. Re-process the forms in chronological order, including the old form (stored in the temporary object) and the new form(s).
+        processed_records = []
+        processed_records.extend(old_records)
+        new_record = self.process_new_form()
+        processed_records.append(new_record)
+
+        # 4. Insert the re-processed form data (including the old form and the new form(s)) into the Multipropietarios table.
+        self.insert_multipropietarios(processed_records)
+
+    def select_multipropietarios_after_year(self, last_initial_year):
+        connect = self.connection()
+        try:
+            with connect.cursor() as cursor:
+                com_man_pred = self._construir_com_man_pred()
+                query = f"SELECT * FROM Multipropietarios WHERE Ano_vigencia_inicial >= {last_initial_year} AND com_man_pred = '{com_man_pred}' ORDER BY Ano_vigencia_inicial ASC"
+                cursor.execute(query)
+                old_records = cursor.fetchall()
+                return old_records
+        except Exception as e:
+            connect.rollback()
+            print("Error: ", str(e))
+            return []
+        finally:
+            connect.close()
+
+    def _delete_multipropietarios_antiguos(self, last_initial_year):
+        connect = self.connection()
+        try:
+            with connect.cursor() as cursor:
+                com_man_pred = self._construir_com_man_pred()
+                query = QUERY_DELETE_MULTIPROPIETARIOS.format(last_initial_year=last_initial_year, com_man_pred=com_man_pred)
+                cursor.execute(query)
+            connect.commit()
+        except Exception as e:
+            connect.rollback()
+            print("Error: ", str(e))
+        finally:
+            connect.close()
+
+    def _process_new_form(self):
+        # Implement the logic to process the new form data
+        # Set Ano_vigencia_final to self.obtener_ano_inscripcion() - 1
+        new_record = {
+            'com_man_pred': self._construir_com_man_pred(),
+            'RUNRUT': None,  # Set RUNRUT for each enajenante/adquirente
+            'porcDerecho': None,  # Set porcDerecho for each enajenante/adquirente
+            'Fojas': self.fojas,
+            'Ano_inscripcion': self.obtener_ano_inscripcion(),
+            'Numero_inscripcion': self.numero_inscripcion,
+            'Fecha_de_inscripcion': self.fecha_inscripcion,
+            'Ano_vigencia_inicial': self.obtener_ano_inscripcion(),
+            'Ano_vigencia_final': self.obtener_ano_inscripcion() - 1,
+            'Tipo': None  # Set 'Enajenante' or 'Adquirente'
+        }
+
+        # Process enajenantes
+        for enajenante in self.enajenantes_data:
+            enajenante_record = new_record.copy()
+            enajenante_record['RUNRUT'] = enajenante['RUNRUT']
+            enajenante_record['porcDerecho'] = enajenante['porcDerecho']
+            enajenante_record['Tipo'] = 'Enajenante'
+            # Add enajenante_record to the list of processed records
+
+        # Process adquirentes
+        for adquirente in self.adquirentes_data:
+            adquirente_record = new_record.copy()
+            adquirente_record['RUNRUT'] = adquirente['RUNRUT']
+            adquirente_record['porcDerecho'] = adquirente['porcDerecho']
+            adquirente_record['Tipo'] = 'Adquirente'
+            # Add adquirente_record to the list of processed records
+
+        return processed_records
+
+    def insert_multipropietarios(self, processed_records):
+        connect = self.connection()
+        try:
+            with connect.cursor() as cursor:
+                for record in processed_records:
+                    query = f"INSERT INTO Multipropietarios (com_man_pred, RUNRUT, porcDerecho, Fojas, Ano_inscripcion, Numero_inscripcion, Fecha_de_inscripcion, Ano_vigencia_inicial, Ano_vigencia_final, Tipo) VALUES ('{record['com_man_pred']}', '{record['RUNRUT']}', {record['porcDerecho']}, {record['Fojas']}, {record['Ano_inscripcion']}, {record['Numero_inscripcion']}, '{record['Fecha_de_inscripcion']}', {record['Ano_vigencia_inicial']}, {record['Ano_vigencia_final']}, '{record['Tipo']}')"
+                    cursor.execute(query)
+            connect.commit()
+        except Exception as e:
+            connect.rollback()
+            print("Error: ", str(e))
+        finally:
+            connect.close()
+"""

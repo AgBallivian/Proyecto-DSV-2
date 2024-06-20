@@ -2,6 +2,13 @@ import pymysql
 import csv
 import os
 
+QUERY_INSERT_MULTIPROPIETARIOS = """
+        INSERT INTO Multipropietarios (id, com_man_pred, RUNRUT, porcDerecho,
+                                        Fojas, Ano_inscripcion, Numero_inscripcion, Fecha_de_inscripcion,
+                                        Ano_vigencia_inicial, Ano_vigencia_final, Tipo)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+    """
+
 # Configuration
 #MYSQL_HOST = 'db'
 #MYSQL_ROOT_USER = 'root'
@@ -138,29 +145,19 @@ def insert_default_data():
         with connection.cursor() as cursor:
             # Eliminar datos existentes
             cursor.execute("DELETE FROM Multipropietarios")
-
-            # Insertar datos challa en la tabla 'multipropietario'
             multipropietario_data = [
                 (1, '394-514-23', "123456789", 50.00, 1, 2021, 1, '2021-01-01', 2021, None, "Enjante"),
                 (2, '8-54-456', "987654321", 75.50, 2, 2022, 2, '2022-02-15', 2022, None, "Adquirente"),
                 (3, '7-22-22', "456789012", 100.00, 3, 2023, 3, '2023-03-30', 2023, None, "Adquirente")
             ]
 
-            sql = """
-                INSERT INTO Multipropietarios (id, com_man_pred, RUNRUT, porcDerecho,
-                                              Fojas, Ano_inscripcion, Numero_inscripcion, Fecha_de_inscripcion,
-                                              Ano_vigencia_inicial, Ano_vigencia_final, Tipo)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-            """
+            sql = QUERY_INSERT_MULTIPROPIETARIOS
             cursor.executemany(sql, multipropietario_data)
 
-        connection.commit()
-    
+        connection.commit()    
         with connection.cursor() as cursor:
             # Eliminar datos existentes de la tabla 'formulario'
             cursor.execute("DELETE FROM formulario")
-
-            # Insertar datos challa en la tabla 'formulario'
             formulario_data = [
                 (1, 8, 13101, 514, 23, 100, '2023-06-01', 1),
                 (2, 99, 11214, 54, 456, 200, '2023-06-02', 2),
@@ -182,8 +179,6 @@ def insert_default_data():
         with connection.cursor() as cursor:
             # Eliminar datos existentes
             cursor.execute("DELETE FROM Enajenantes")
-
-            # Insertar datos challa en la tabla 'Enajenantes'
             Enajenantes_data = [
                 (1, 1, "123456789", 50),
                 (2, 1, "125212885", 25),
@@ -206,8 +201,6 @@ def insert_default_data():
         with connection.cursor() as cursor:
             # Eliminar datos existentes
             cursor.execute("DELETE FROM Adquirentes")
-
-            # Insertar datos challa en la tabla 'Adquirentes'
             Adquirentes_data = [
                 (1, 1, "552405920", 100),
                 (2, 1, "621975923", 75),
@@ -269,5 +262,6 @@ def cargar_datos_desde_csv():
 if __name__ == '__main__':
     create_database()
     create_tables()
-    insert_default_data()  
+    insert_default_data()
     cargar_datos_desde_csv()
+    
