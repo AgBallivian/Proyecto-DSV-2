@@ -60,3 +60,5 @@ QUERY_INSERTAR_ADQUIRENTES_MULTIPROPIETARIO_SQL = """
                                     Ano_vigencia_final, Tipo)
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
     """
+
+QUERY_CONNECTOR = """ WHERE  AND """

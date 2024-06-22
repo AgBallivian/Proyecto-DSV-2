@@ -6,6 +6,7 @@ from algoritmo import form_solver
 from collections import defaultdict
 from config import Config
 from carga_datos import cargar_regiones, cargar_comunas
+from Queries import QUERY_CONNECTOR
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": ["http://localhost:8000"]}})
@@ -27,64 +28,74 @@ def index():
 
 @app.route('/crear_formulario', methods=['GET', 'POST'])
 def crear_formulario():
-    if request.method == 'POST':
-        cne = request.form['cne']
-        comuna = request.form['comuna']
-        manzana = request.form['manzana']
-        predio = request.form['predio']
-        fojas = request.form['fojas']
-        fecha_inscripcion = request.form['fecha_inscripcion']
-        numero_inscripcion = request.form['numero_inscripcion']
+    if request.method != 'POST':
+        return render_template('crear_formulario.html')
 
-        enajenantes_data = []
-        adquirentes_data = []
+    datos_formulario = extraer_datos_formulario(request.form)
+    datos = preparar_datos(datos_formulario)
 
-        for key, value in request.form.lists():
-            if key.startswith('enajenantes'):
-                index = int(key.split('[')[1].split(']')[0])
-                field = key.split('[')[2].split(']')[0]
-                if len(enajenantes_data) <= index:
-                    enajenantes_data.append({'RUNRUT': None, 'porcDerecho': None})
-                if field == 'RUNRUT':
-                    enajenantes_data[index]['RUNRUT'] = value[0]
-                elif field == 'porcDerecho':
-                    enajenantes_data[index]['porcDerecho'] = value[0]
-            elif key.startswith('adquirentes'):
-                index = int(key.split('[')[1].split(']')[0])
-                field = key.split('[')[2].split(']')[0]                
-                if len(adquirentes_data) <= index:
-                    adquirentes_data.append({'RUNRUT': None, 'porcDerecho': None})
-                if field == 'RUNRUT':
-                    adquirentes_data[index]['RUNRUT'] = value[0]
-                elif field == 'porcDerecho':
-                    adquirentes_data[index]['porcDerecho'] = value[0]
-        data = {
-            'CNE': cne,
-            'bienRaiz': {
-                'comuna': comuna,
-                'manzana': manzana,
-                'predio': predio
-            },
-            'enajenantes': enajenantes_data,
-            'adquirentes': adquirentes_data,
-            'fojas': fojas,
-            'fechaInscripcion': fecha_inscripcion,
-            'nroInscripcion': numero_inscripcion
-        }
+    formulario = procesar_formulario(datos)
 
-        # print(data)
-        formulario = form_solver(data, obtener_conexion_db)
-        formulario.determinar_y_procesar_escenario()
-        formulario.ajustar_porcentajes_adquirentes()
+    numero_de_atencion = formulario.obtener_numer_de_atencion()
+    if numero_de_atencion:
+        return redirect(url_for('ver_formulario', id=numero_de_atencion))
+    
+    return render_template('error.html', mensaje="Error al procesar el formulario.")
 
-        numero_de_atencion = formulario.obtener_numer_de_atencion()
-        if numero_de_atencion:
-            return redirect(url_for('ver_formulario', id=numero_de_atencion))
-        else:
-            return render_template('error.html', mensaje="Error al procesar el formulario.")
+def extraer_datos_formulario(formulario):
+    return {
+        'cne': formulario['cne'],
+        'comuna': formulario['comuna'],
+        'manzana': formulario['manzana'],
+        'predio': formulario['predio'],
+        'fojas': formulario['fojas'],
+        'fecha_inscripcion': formulario['fecha_inscripcion'],
+        'numero_inscripcion': formulario['numero_inscripcion'],
+        'listas_formulario': formulario.lists()
+    }
 
-    return render_template('crear_formulario.html')
+def preparar_datos(datos_formulario):
+    datos_enajenantes = procesar_datos_participantes(datos_formulario['listas_formulario'], 'enajenantes')
+    datos_adquirentes = procesar_datos_participantes(datos_formulario['listas_formulario'], 'adquirentes')
 
+    return {
+        'CNE': datos_formulario['cne'],
+        'bienRaiz': {
+            'comuna': datos_formulario['comuna'],
+            'manzana': datos_formulario['manzana'],
+            'predio': datos_formulario['predio']
+        },
+        'enajenantes': datos_enajenantes,
+        'adquirentes': datos_adquirentes,
+        'fojas': datos_formulario['fojas'],
+        'fechaInscripcion': datos_formulario['fecha_inscripcion'],
+        'nroInscripcion': datos_formulario['numero_inscripcion']
+    }
+
+def procesar_datos_participantes(listas_formulario, tipo_participante):
+    datos_participante = []
+    for clave, valor in listas_formulario:
+        if clave.startswith(tipo_participante):
+            indice, campo = analizar_clave(clave)
+            asegurar_existencia_participante(datos_participante, indice)
+            datos_participante[indice][campo] = valor[0]
+    return datos_participante
+
+def analizar_clave(clave):
+    partes = clave.split('[')
+    indice = int(partes[1].split(']')[0])
+    campo = partes[2].split(']')[0]
+    return indice, campo
+
+def asegurar_existencia_participante(datos_participante, indice):
+    while len(datos_participante) <= indice:
+        datos_participante.append({'RUNRUT': None, 'porcDerecho': None})
+
+def procesar_formulario(datos):
+    formulario = form_solver(datos, obtener_conexion_db)
+    formulario.determinar_y_procesar_escenario()
+    formulario.ajustar_porcentajes_adquirentes()
+    return formulario
 
 @app.route('/subir_json', methods=['GET', 'POST'])
 def subir_json():
@@ -148,7 +159,7 @@ def ver_todos_multipropietarios():
             multipropietarios_sql = "SELECT * FROM Multipropietarios"
             filtros = aplicar_filtros(region_id, comuna_id, block_number, property_number, year)
             if filtros:
-                multipropietarios_sql += " WHERE " + " AND ".join(filtros)
+                multipropietarios_sql += QUERY_CONNECTOR.join(filtros)
 
             cursor.execute(multipropietarios_sql)
             multipropietarios = cursor.fetchall()
@@ -182,7 +193,7 @@ def ver_multipropietarios_filtrados():
         condiciones.append(f"Fojas = {fojas}")
 
     if condiciones:
-        consulta += " WHERE " + " AND ".join(condiciones)
+        consulta += QUERY_CONNECTOR.join(condiciones)
 
     connection = obtener_conexion_db()
     try:
