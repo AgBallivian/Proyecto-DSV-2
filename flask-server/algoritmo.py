@@ -1,7 +1,15 @@
-from flask import request, jsonify
-import json
-import pymysql
-from Queries import *
+from flask import jsonify
+from Queries import (
+    QUERY_ALL_FORMULARIOS, QUERY_INSERTAR_FORM, INTERNAL_SERVER_ERROR,
+    QUERY_ALL_ENAJENANTES, QUERY_INSERTAR_ENAJENANTES, QUERY_ALL_ADQUIRENTES,
+    QUERY_INSERTAR_ADQUIRENTES, QUERY_ID_MULTIPROPIETARIOS,
+    QUERY_UPDATE_MULTIPROPIETARIO_SQL, QUERY_DELETE_MULTIPROPIETARIOS,
+    QUERY_OBTENER_MULTIPROPIETARIOS_SQL, QUERY_INSERTAR_ENAJENANTES_MULTIPROPIETARIO_SQL,
+    QUERY_INSERTAR_ADQUIRENTES_MULTIPROPIETARIO_SQL,
+    COMPRAVENTA, REGULARIZACION_DE_PATRIMONIO, QUERY_OBTENER_ULT_ANO_INIT
+    )
+
+ERROR_MESSAGE = "Error "
 
 class form_solver():
     def __init__(self, formulario, connection):
@@ -29,9 +37,6 @@ class form_solver():
         return cursor.fetchall()
 
     def obtener_numer_de_atencion(self):
-        """
-        ola
-        """
         connect = self.connection()
         try:
             with connect.cursor() as cursor:
@@ -40,7 +45,7 @@ class form_solver():
                 return len(formularios)
         except Exception as e:
             connect.rollback()
-            print("error: ", e)
+            print(ERROR_MESSAGE, e)
             raise e
         finally:
             connect.close()
@@ -77,11 +82,11 @@ class form_solver():
                 #Obtain next id from 'enajenantes' table
                 cursor.execute(QUERY_ALL_ENAJENANTES)
                 enajenantes = cursor.fetchall()
-                id = len(enajenantes) + 1
+                enjante_id = len(enajenantes) + 1
                 # Insert enajenantes data into the 'enajenantes' table
                 for num_enajenante, enajenante in enumerate(self.enajenantes_data):
                     cursor.execute(QUERY_INSERTAR_ENAJENANTES, (
-                        (id + num_enajenante),
+                        (enjante_id + num_enajenante),
                         numero_de_atencion,
                         enajenante['RUNRUT'],
                         enajenante['porcDerecho']
@@ -102,11 +107,11 @@ class form_solver():
                 #Obtain next id from 'Adquirentes' table
                 cursor.execute(QUERY_ALL_ADQUIRENTES)
                 adquirentes = cursor.fetchall()
-                id = len(adquirentes) + 1
+                adquirentes_id = len(adquirentes) + 1
                 # Insert adquirentes data into the 'Adquirentes' table
                 for num_adquirente, adquirente in enumerate(self.adquirentes_data):
                     cursor.execute(QUERY_INSERTAR_ADQUIRENTES, (
-                        (id + num_adquirente),
+                        (adquirentes_id + num_adquirente),
                         numero_de_atencion,
                         adquirente['RUNRUT'],
                         int(adquirente['porcDerecho'])
@@ -143,7 +148,7 @@ class form_solver():
                 return id_multipropietario[0]["id"] + 1 if id_multipropietario else 0
         except Exception as e:
             connect.rollback()
-            print("error: ", e)
+            print(ERROR_MESSAGE, e)
             return jsonify({"error": str(e)}), INTERNAL_SERVER_ERROR
         finally:
             connect.close()
@@ -163,7 +168,7 @@ class form_solver():
                 return True
         except Exception as e:
             connect.rollback()
-            print("error: ", e)
+            print(ERROR_MESSAGE, e)
             return jsonify({"error": str(e)}), INTERNAL_SERVER_ERROR
         finally:
             connect.close()
@@ -194,7 +199,7 @@ class form_solver():
                 return True
         except Exception as e:
             connect.rollback()
-            print("error: ", e)
+            print(ERROR_MESSAGE, e)
             return jsonify({"error": str(e)}), INTERNAL_SERVER_ERROR
         finally:
             connect.close()
@@ -216,7 +221,7 @@ class form_solver():
                 return self._obtener_count_multipropietarios(multipropietarios)
         except Exception as e:
             connect.rollback()
-            print("error: ", e)
+            print(ERROR_MESSAGE, e)
             return jsonify({"error": str(e)}), INTERNAL_SERVER_ERROR
         finally:
             connect.close()
@@ -240,7 +245,7 @@ class form_solver():
                 connect.commit()
         except Exception as e:
             connect.rollback()
-            print("error: ", e)
+            print(ERROR_MESSAGE, e)
             return jsonify({"error": str(e)}), INTERNAL_SERVER_ERROR
         finally:
             connect.close()
@@ -269,7 +274,7 @@ class form_solver():
                 connect.commit()
         except Exception as e:
             connect.rollback()
-            print("error: ", e)
+            print(ERROR_MESSAGE, e)
             return jsonify({"error": str(e)}), INTERNAL_SERVER_ERROR
         finally:
             connect.close()
@@ -299,7 +304,7 @@ class form_solver():
                 return self._obtener_ano_desde_query(last_initial_year_query)
         except Exception as e:
             connect.rollback()
-            print("error: ", e)
+            print(ERROR_MESSAGE, e)
             return jsonify({"error": str(e)}), INTERNAL_SERVER_ERROR
         finally:
             connect.close()
@@ -469,7 +474,7 @@ def procesar_escenario_3(self, last_initial_year):
                 return old_records
         except Exception as e:
             connect.rollback()
-            print("Error: ", str(e))
+            print(ERROR_MESSAGE, str(e))
             return []
         finally:
             connect.close()
@@ -484,7 +489,7 @@ def procesar_escenario_3(self, last_initial_year):
             connect.commit()
         except Exception as e:
             connect.rollback()
-            print("Error: ", str(e))
+            print(ERROR_MESSAGE, str(e))
         finally:
             connect.close()
 
