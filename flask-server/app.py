@@ -7,6 +7,7 @@ from collections import defaultdict
 from config import Config
 from carga_datos import cargar_regiones, cargar_comunas
 from Queries import QUERY_CONNECTOR
+from Errores import (ERROR_RUT_INVALIDO)
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": ["http://localhost:8000"]}})
@@ -31,14 +32,15 @@ def crear_formulario():
     if request.method != 'POST':
         return render_template('crear_formulario.html')
 
-    datos_formulario = extraer_datos_formulario(request.form)
-    datos = preparar_datos(datos_formulario)
-
-    formulario = procesar_formulario(datos)
-
-    numero_de_atencion = formulario.obtener_numer_de_atencion()
-    if numero_de_atencion:
-        return redirect(url_for('ver_formulario', id=numero_de_atencion))
+    try:
+        datos_formulario = extraer_datos_formulario(request.form)
+        datos = preparar_datos(datos_formulario)
+        formulario = procesar_formulario(datos)
+        numero_de_atencion = formulario.obtener_numer_de_atencion()
+        if numero_de_atencion:
+            return redirect(url_for('ver_formulario', id=numero_de_atencion))
+    except ValueError as e:
+        return render_template('crear_formulario.html', error=str(e))
     
     return render_template('error.html', mensaje="Error al procesar el formulario.")
 
@@ -73,6 +75,7 @@ def preparar_datos(datos_formulario):
     }
 
 def procesar_datos_participantes(listas_formulario, tipo_participante):
+    #Aqui hacer procesamiento del rut
     datos_participante = []
     for clave, valor in listas_formulario:
         if clave.startswith(tipo_participante):
@@ -92,6 +95,7 @@ def asegurar_existencia_participante(datos_participante, indice):
         datos_participante.append({'RUNRUT': None, 'porcDerecho': None})
 
 def procesar_formulario(datos):
+    validar_runrut(datos['enajenantes'])
     formulario = form_solver(datos, obtener_conexion_db)
     formulario.determinar_y_procesar_escenario()
     formulario.ajustar_porcentajes_adquirentes()
@@ -107,14 +111,10 @@ def subir_json():
             result = datos_json.get("F2890", [])
             errores = []
             for datos in result:
-                print(datos)
                 try:
-                    formulario = form_solver(datos, obtener_conexion_db)
-                    formulario.determinar_y_procesar_escenario()
-                    formulario.ajustar_porcentajes_adquirentes()
-
-                except Exception as e:
-                    errores.append(str(e))
+                    procesar_formulario(datos)
+                except ValueError as e:
+                    errores.append(f"Error en formulario: {str(e)}")
             if errores:
                 return render_template('subir_json.html', errores=errores)
             else:
@@ -282,6 +282,41 @@ def aplicar_filtros(region_id, comuna_id, block_number, property_number, year):
         filtros.append(f"(Ano_vigencia_final IS NULL OR Ano_vigencia_final >= {year}) AND Ano_vigencia_inicial <= {year}")
 
     return filtros
+
+def validar_runrut(datos):
+    for dato in datos:
+        if dato["RUNRUT"]:
+            runrut_ingresado = dato["RUNRUT"]
+            if not validar_formato_runrut(runrut_ingresado):
+                raise ValueError(f"RUT inválido: {runrut_ingresado}. El formato debe ser XXXXXXXX-X")
+            if not validar_digito_verificador(runrut_ingresado):
+                raise ValueError(f"RUT inválido: {runrut_ingresado}. El dígito verificador no es correcto")
+    return True
+
+def validar_formato_runrut(runrut):
+    return runrut.count("-") == 1
+
+def validar_digito_verificador(runrut):
+    digitos_rut, digito_verificador = runrut.split("-")
+    suma = calcular_suma_digitos(digitos_rut)
+    resto = suma % 11
+    verificador = obtener_verificador_runrut(resto)
+    return str(verificador) == digito_verificador
+
+def calcular_suma_digitos(digitos_rut):
+    suma = 0
+    multiplicador = 2
+    for digito in reversed(digitos_rut):
+        suma += int(digito) * multiplicador
+        multiplicador = multiplicador + 1 if multiplicador < 7 else 2
+    return suma
+
+def obtener_verificador_runrut(resto):
+    if resto == 0:
+        return 11
+    if resto == 1:
+        return "K"
+    return 11 - resto
 
 if __name__ == '__main__':
     app.run(debug=True, port=8000, host='0.0.0.0')
