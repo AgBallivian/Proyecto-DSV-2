@@ -2,7 +2,7 @@
 
 ## Requisitos
 
-- Docker Desktop instalado y en ejecución
+-   Docker Desktop instalado y en ejecución
 
 ## Ejecución
 
@@ -29,3 +29,18 @@ docker-compose down
 Esto detendrá y eliminará los contenedores.
 
 Recuerda que la primera vez que ejecutes `docker-compose up --build`, el proceso puede demorar algunos minutos, ya que Docker descargará las imágenes base y construirá las imágenes personalizadas. En ejecuciones posteriores, el proceso será más rápido gracias al caché de imágenes.
+
+## Tests
+
+Para ejecturar los tests:
+Asegura de tener pytest instalado:
+
+```
+pip3 install pytest pytest-cov
+```
+
+Desde la carpeta ROOT del proyecto:
+
+```
+pytest
+```
