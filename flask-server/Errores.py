@@ -1,2 +1,3 @@
 ERROR_MESSAGE = "Error "
-ERROR_RUT_INVALIDO = "Rut invalido: El RUN/RUT ingresado no tiene el formato correcto (Ej: 12345678-9)"
+ERROR_RUT_INVALIDO = "RUT inválido: {runrut_ingresado}. El formato debe ser XXXXXXXX-X "
+ERROR_RUT_VERIFICADOR = "RUT inválido: {runrut_ingresado}. El dígito verificador no es correcto"

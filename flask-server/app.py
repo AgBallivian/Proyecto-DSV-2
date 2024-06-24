@@ -8,7 +8,7 @@ from config import Config
 from carga_datos import cargar_regiones, cargar_comunas
 from Queries import QUERY_CONNECTOR
 from DBmanager import obtener_multipropietarios_filtrados, obtener_numer_de_atencion
-from Errores import (ERROR_RUT_INVALIDO)
+from Errores import (ERROR_RUT_INVALIDO, ERROR_RUT_VERIFICADOR)
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": ["http://localhost:8000"]}})
@@ -297,9 +297,9 @@ def validar_runrut(datos):
         if dato["RUNRUT"]:
             runrut_ingresado = dato["RUNRUT"]
             if not validar_formato_runrut(runrut_ingresado):
-                raise ValueError(f"RUT inválido: {runrut_ingresado}. El formato debe ser XXXXXXXX-X")
+                raise ValueError(ERROR_RUT_INVALIDO.format(runrut_ingresado))
             if not validar_digito_verificador(runrut_ingresado):
-                raise ValueError(f"RUT inválido: {runrut_ingresado}. El dígito verificador no es correcto")
+                raise ValueError(ERROR_RUT_VERIFICADOR.format(runrut_ingresado))
     return True
 
 def validar_formato_runrut(runrut):
