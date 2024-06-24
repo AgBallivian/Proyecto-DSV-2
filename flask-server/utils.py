@@ -20,3 +20,6 @@ def obtener_total_porcentaje(transactions):
     for transaction in transactions:
         total += int(transaction['porcDerecho'])
     return total
+
+def _obtener_count_multipropietarios(multipropietarios):
+    return multipropietarios[0]['COUNT(*)']

@@ -2,7 +2,7 @@ from flask import jsonify
 import pymysql
 
 from config import Config
-from utils import _construir_com_man_pred, _obtener_count_Transferencias, _obtener_ano_desde_query, obtener_ano_inscripcion
+from utils import _construir_com_man_pred, _obtener_count_Transferencias, _obtener_ano_desde_query, obtener_ano_inscripcion, _obtener_count_multipropietarios
 from Queries import (
     QUERY_ALL_FORMULARIOS, QUERY_INSERTAR_FORM, INTERNAL_SERVER_ERROR,
     QUERY_ALL_ENAJENANTES, QUERY_INSERTAR_ENAJENANTES, QUERY_ALL_ADQUIRENTES,
@@ -11,7 +11,8 @@ from Queries import (
     QUERY_OBTENER_TRANSFERENCIAS_SQL, QUERY_INSERTAR_ENAJENANTES_TRANSFERENCIAS_SQL,
     QUERY_INSERTAR_ADQUIRENTES_TRANSFERENCIAS_SQL,
     COMPRAVENTA, REGULARIZACION_DE_PATRIMONIO, QUERY_OBTENER_ULT_ANO_INIT, QUERY_CONNECTOR,
-    QUERY_AGREGAR_MULTIPROPIETARIO, QUERY_OBTENER_ID_MULTIPROPIETARIOS_SQL, QUERY_ACTUALIZAR_MULTIPROPIETARIO
+    QUERY_AGREGAR_MULTIPROPIETARIO, QUERY_OBTENER_ID_MULTIPROPIETARIOS_SQL, QUERY_ACTUALIZAR_MULTIPROPIETARIO,
+    QUERY_OBTENER_MULTIPROPIETARIOSS_SQL
     )
 
 ERROR_MESSAGE = "Error "
@@ -157,22 +158,6 @@ def _obtener_siguiente_id_Transferencias():
     finally:
         connect.close()
 
-def _actualizar_multipropietarios_por_vigencia(last_initial_year_in, comuna, manzana, predio, fecha_inscripcion):
-    connect = obtener_conexion_db()
-    try:
-        with connect.cursor() as cursor:
-            com_man_pred = _construir_com_man_pred(comuna, manzana, predio)
-            ano_final = _obtener_ano_final(fecha_inscripcion)
-            query_multipropietarios = _construir_query_actualizar_Transferencias(ano_final, last_initial_year_in, com_man_pred)
-            _ejecutar_query_actualizar_Transferencias(cursor, query_multipropietarios)
-            connect.commit()
-            return True
-    except Exception as e:
-        connect.rollback()
-        print(ERROR_MESSAGE, e)
-        return jsonify({"error": str(e)}), INTERNAL_SERVER_ERROR
-    finally:
-        connect.close()
 
 def _obtener_ano_final(fecha_inscripcion):
     return obtener_ano_inscripcion(fecha_inscripcion) - 1
@@ -445,3 +430,27 @@ def _ejecutar_query_actualizar_multipropietarios(query):
         raise e
     finally:
         connect.close()
+
+def _ejecutar_query_obtener_multipropietarios(comuna, manzana, predio):
+    com_man_pred = _construir_com_man_pred(comuna, manzana, predio)
+    multipropietarios_sql = _construir_query_obtener_Transferencias(com_man_pred)
+    Transferencias = _ejecutar_query(multipropietarios_sql)
+    return _obtener_count_multipropietarios(Transferencias)
+
+def _construir_query_obtener_multipropietarios(com_man_pred):
+    return QUERY_OBTENER_MULTIPROPIETARIOSS_SQL.format(com_man_pred=com_man_pred)
+
+def obtener_multipropietarios_filtrados(region_id, comuna_id, block_number, property_number, year):
+    connection = obtener_conexion_db()
+    try:
+        with connection.cursor() as cursor:
+            multipropietarios_sql = "SELECT * FROM Multipropietarios"
+            filtros = aplicar_filtros(region_id, comuna_id, block_number, property_number, year)
+            if filtros:
+                multipropietarios_sql += QUERY_CONNECTOR.join(filtros)
+
+            cursor.execute(multipropietarios_sql)
+            multipropietarios = cursor.fetchall()
+            return Transferencias
+    finally:
+        connection.close()

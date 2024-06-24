@@ -7,7 +7,7 @@ from collections import defaultdict
 from config import Config
 from carga_datos import cargar_regiones, cargar_comunas
 from Queries import QUERY_CONNECTOR
-from DBmanager import obtener_Transferencias_filtrados, obtener_numer_de_atencion
+from DBmanager import obtener_Transferencias_filtrados, obtener_numer_de_atencion, obtener_multipropietarios_filtrados
 from Errores import (ERROR_RUT_INVALIDO, ERROR_RUT_VERIFICADOR)
 
 app = Flask(__name__)

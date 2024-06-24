@@ -80,3 +80,9 @@ QUERY_ACTUALIZAR_MULTIPROPIETARIO = """
                     AND Ano_vigencia_final IS NULL
                     AND com_man_pred='{com_man_pred}'
                     """
+
+QUERY_OBTENER_MULTIPROPIETARIOSS_SQL = """
+SELECT *
+FROM Multipropietarios
+WHERE com_man_pred={com_man_pred}
+"""
