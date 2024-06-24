@@ -11,7 +11,7 @@
 from DBmanager import (_obtener_siguiente_id_Transferencias, _insert_enajenantes_to_Transferencias,
                         _insert_adquirientes_to_Transferencias, obtener_Transferencias, 
                         add_formulario, add_enajenante, add_adquirente, _actualizar_multipropietarios_por_vigencia,
-                        _obtener_ano_final, obtener_formulario, _obtener_ultimo_ano_inicial,delete_Transferencias_antiguos)
+                        _obtener_ano_final, _obtener_ultimo_ano_inicial,delete_Transferencias_antiguos)
 from utils import (obtener_ano_inscripcion,_construir_com_man_pred, obtener_total_porcentaje)
 from Errores import ERROR_MESSAGE
 
