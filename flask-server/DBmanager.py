@@ -12,7 +12,7 @@ from Queries import (
     QUERY_INSERTAR_ADQUIRENTES_TRANSFERENCIAS_SQL,
     COMPRAVENTA, REGULARIZACION_DE_PATRIMONIO, QUERY_OBTENER_ULT_ANO_INIT, QUERY_CONNECTOR,
     QUERY_AGREGAR_MULTIPROPIETARIO, QUERY_OBTENER_ID_MULTIPROPIETARIOS_SQL, QUERY_ACTUALIZAR_MULTIPROPIETARIO,
-    QUERY_OBTENER_MULTIPROPIETARIOSS_SQL
+    QUERY_OBTENER_MULTIPROPIETARIOSS_SQL, QUERY_DELETE_MULTIPROPIETARIO
     )
 
 ERROR_MESSAGE = "Error "
@@ -454,3 +454,25 @@ def obtener_multipropietarios_filtrados(region_id, comuna_id, block_number, prop
             return multipropietarios
     finally:
         connection.close()
+
+def delete_multipropietario_antiguos(last_initial_year, comuna, manzana, predio):
+    # connect = obtener_conexion_db()
+    # try:
+    #     with connect.cursor() as cursor:
+            com_man_pred = _construir_com_man_pred(comuna, manzana, predio)
+            delete_multipropietario_query = _construir_query_delete_multipropietario(last_initial_year, com_man_pred)
+            _ejecutar_query(delete_multipropietario_query)
+    #         connect.commit()
+    #         return True
+    # except Exception as e:
+    #     connect.rollback()
+    #     print(ERROR_MESSAGE, e)
+    #     return jsonify({"error": str(e)}), INTERNAL_SERVER_ERROR
+    # finally:
+    #     connect.close()
+
+def _construir_query_delete_multipropietario(last_initial_year, com_man_pred):
+    return QUERY_DELETE_MULTIPROPIETARIO.format(
+        last_initial_year=str(last_initial_year),
+        com_man_pred=com_man_pred
+    )

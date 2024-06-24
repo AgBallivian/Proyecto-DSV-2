@@ -86,3 +86,8 @@ SELECT *
 FROM Multipropietarios
 WHERE com_man_pred={com_man_pred}
 """
+
+QUERY_DELETE_MULTIPROPIETARIO = """
+DELETE FROM Multipropietario 
+WHERE Ano_vigencia_inicial = {last_initial_year}
+AND com_man_pred = {com_man_pred}"""
