@@ -379,6 +379,13 @@ class form_solver():
         # TODO: Implementar lógica para el escenario de compraventa
         #Cne = 8
         #fecha de vigencia del form ya subido < a la fecha de inscripcion del nuevo form.
+        is_ghost=False
+        for enajenante in self.enajenantes_data:
+            if(enajenante['porcDerecho'] == 0):
+                is_ghost = True
+                enajenante['porcDerecho'] = 100
+                break
+
         print(self.fecha_inscripcion[:4], "FECHA DE INSCRIPCTION")
         if(_obtener_ano_final(self.fecha_inscripcion) < int(self.fecha_inscripcion[:4])):
             #evaluar escenario 1 y 2
@@ -390,13 +397,12 @@ class form_solver():
             primer_caso = True if total_porc_adquirentes == 100 else False
             segundo_caso = True if total_porc_adquirentes == 0 else False
             tercer_caso = (len(self.enajenantes_data) == 1) and (len(self.adquirentes_data) == 1)
+            
 
 
             if(primer_caso or segundo_caso):
-                is_ghost=False
                 #hacer 100 a cualqueir persona con porcentaje 0
-                if(self.enajenante_data['porcDerecho'] == 0):
-                    self.enajenante_data['porcDerecho'] = 100
+                if(is_ghost):
                     total_porc_enajenantes = 100 #Ghost case
                 porcentaje_igual = total_porc_enajenantes / len(self.adquirentes_data)
 
@@ -413,8 +419,12 @@ class form_solver():
                 #aqui necesito restar enajenante del form viejo con adquirente del form nuevo
                 # numero_de_atencion = _construir_com_man_pred(self.comuna, self.manzana, self.predio)
                 form = obtener_Transferencias(self.comuna, self.manzana, self.predio)
-                porcentaje = form["enajenante"]["porcDerecho"] * adquirente["porcDerecho"] / 100
-                enajenante["porcDerecho"] = enajenante["porcDerecho"] - porcentaje
+                if not is_ghost:
+                    porcentaje = float(form["enajenante"]["porcDerecho"]) * float(adquirente["porcDerecho"]) / 100
+                else:
+                    porcentaje = 100 * float(adquirente["porcDerecho"]) / 100
+
+                enajenante["porcDerecho"] = float(enajenante["porcDerecho"]) - porcentaje
                 adquirente["porcDerecho"] = porcentaje
 
             else:
