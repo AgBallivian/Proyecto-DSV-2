@@ -385,18 +385,25 @@ class form_solver():
 
             total_porc_enajenantes = obtener_total_porcentaje(self.enajenantes_data)
             total_porc_adquirentes = obtener_total_porcentaje(self.adquirentes_data)
-
+            #multipropietarios ver gente del form entrante 
+            # y del form antiguo
             primer_caso = True if total_porc_adquirentes == 100 else False
             segundo_caso = True if total_porc_adquirentes == 0 else False
             tercer_caso = (len(self.enajenantes_data) == 1) and (len(self.adquirentes_data) == 1)
 
 
             if(primer_caso or segundo_caso):
+                is_ghost=False
+                #hacer 100 a cualqueir persona con porcentaje 0
+                if(self.enajenante_data['porcDerecho'] == 0):
+                    self.enajenante_data['porcDerecho'] = 100
+                    total_porc_enajenantes = 100 #Ghost case
                 porcentaje_igual = total_porc_enajenantes / len(self.adquirentes_data)
 
                 for adquirente in self.adquirentes_data:
                     if primer_caso:
-                        adquirente["porcDerecho"] = adquirente["porcDerecho"] * (total_porc_enajenantes / 100)
+                        #cambiar adquirentes por persona de multipropietarios
+                        adquirente["porcDerecho"] = int(adquirente["porcDerecho"]) * (total_porc_enajenantes / 100)
                     elif segundo_caso:
                         adquirente['porcDerecho'] = porcentaje_igual
             elif(tercer_caso):
