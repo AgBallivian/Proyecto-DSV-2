@@ -40,10 +40,10 @@ WHERE com_man_pred='{com_man_pred}'
 QUERY_OBTENER_MULTIPROPIETARIO_SQL = """
 SELECT *
 FROM Multipropietarios
-WHERE com_man_pred='{com_man_pred}'
+WHERE com_man_pred={com_man_pred}
 """
 
-QUERY_OBTENER_ULT_ANO_INIT = "SELECT Ano_vigencia_inicial AS Ano FROM Multipropietarios WHERE com_man_pred='{com_man_pred}' ORDER BY Ano_vigencia_inicial DESC LIMIT 1"
+QUERY_OBTENER_ULT_ANO_INIT = "SELECT Ano_vigencia_inicial AS Ano FROM Multipropietarios WHERE com_man_pred = {com_man_pred} ORDER BY Ano_vigencia_inicial DESC LIMIT 1"
 
 QUERY_INSERTAR_ENAJENANTES_MULTIPROPIETARIO_SQL = """
         INSERT INTO Multipropietarios (id, com_man_pred, RUNRUT, porcDerecho,
