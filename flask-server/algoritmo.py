@@ -401,7 +401,7 @@ class form_solver():
 
 
             if(primer_caso or segundo_caso):
-                #hacer 100 a cualqueir persona con porcentaje 0
+                #hacer 100% a cualqueir persona con porcentaje 0
                 if(is_ghost):
                     total_porc_enajenantes = 100 #Ghost case
                 porcentaje_igual = total_porc_enajenantes / len(self.adquirentes_data)
@@ -435,6 +435,20 @@ class form_solver():
                             if dueños["porDerecho"] <= 0:
                                 #borrar al dueño que tiene 0 porcentaje de derechos
                                 pass
+            if(is_ghost):
+                diferencia = 100 - total_porc_adquirentes
+                #personas con porcentaje equal a 0
+                lista_personas = []
+                lista_personas = [adquirente for adquirente in self.adquirentes_data if float(adquirente["porcDerecho"]) == 0]
+                lista_personas = [enajenante for enajenante in self.enajenantes_data if float(enajenante["porcDerecho"]) == 0]
+
+
+                if (total_porc_adquirentes>100):
+                    for adquirente in self.adquirentes_data:
+                        adquirente["porcDerecho"] = (adquirente["porcDerecho"]/total_porc_adquirentes)*100
+                if(total_porc_adquirentes<100):
+                    for multipropietario in lista_personas:
+                        multipropietario["porcDerecho"] = (diferencia/(len(lista_personas)))
 
 
 
