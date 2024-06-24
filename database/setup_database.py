@@ -2,8 +2,8 @@ import pymysql
 import csv
 import os
 
-QUERY_INSERT_MULTIPROPIETARIOS = """
-        INSERT INTO Multipropietarios (id, com_man_pred, RUNRUT, porcDerecho,
+QUERY_INSERT_TRANSFERENCIAS = """
+        INSERT INTO Transferencias (id, com_man_pred, RUNRUT, porcDerecho,
                                         Fojas, Ano_inscripcion, Numero_inscripcion, Fecha_de_inscripcion,
                                         Ano_vigencia_inicial, Ano_vigencia_final, Tipo)
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
@@ -95,7 +95,7 @@ def create_tables():
 
             # Crear tabla 'Multipropietario'
             cursor.execute("""
-                CREATE TABLE IF NOT EXISTS Multipropietarios (
+                CREATE TABLE IF NOT EXISTS Transferencias (
                     id INT,
                     com_man_pred VARCHAR(100),
                     RUNRUT VARCHAR(100),
@@ -160,22 +160,22 @@ def insert_default_data():
     try:
         with connection.cursor() as cursor:
             # Eliminar datos existentes
-            cursor.execute("DELETE FROM Multipropietarios")
+            cursor.execute("DELETE FROM Transferencias")
 
             # Insertar datos challa en la tabla 'multipropietario'
-            multipropietario_data = [
+            Transferencia_data = [
                 (1, '394-514-23', "123456789", 50.00, 1, 2021, 1, '2021-01-01', 2021, None, "Enjante"),
                 (2, '8-54-456', "987654321", 75.50, 2, 2022, 2, '2022-02-15', 2022, None, "Adquirente"),
                 (3, '7-22-22', "456789012", 100.00, 3, 2023, 3, '2023-03-30', 2023, None, "Adquirente")
             ]
 
             sql = """
-                INSERT INTO Multipropietarios (id, com_man_pred, RUNRUT, porcDerecho,
+                INSERT INTO Transferencias (id, com_man_pred, RUNRUT, porcDerecho,
                                               Fojas, Ano_inscripcion, Numero_inscripcion, Fecha_de_inscripcion,
                                               Ano_vigencia_inicial, Ano_vigencia_final, Tipo)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """
-            cursor.executemany(sql, multipropietario_data)
+            cursor.executemany(sql, Transferencia_data)
 
         connection.commit()    
         with connection.cursor() as cursor:

@@ -18,40 +18,40 @@ QUERY_INSERTAR_ADQUIRENTES = """
                         INSERT INTO Adquirentes (id, Adquirente_id, RUNRUT, porcDerecho)
                         VALUES (%s, %s, %s, %s)
                     """
-QUERY_ID_MULTIPROPIETARIOS = "SELECT id FROM Multipropietarios ORDER BY id DESC LIMIT 1"
-QUERY_UPDATE_MULTIPROPIETARIO_SQL = """
-                    UPDATE Multipropietarios
+QUERY_ID_TRANSFERENCIAS = "SELECT id FROM Transferencias ORDER BY id DESC LIMIT 1"
+QUERY_UPDATE_TRANSFERENCIAS_SQL = """
+                    UPDATE Transferencias
                     SET Ano_vigencia_final={ano_final}
                     WHERE Ano_vigencia_inicial={ano_inicial}
                     AND Ano_vigencia_final IS NULL
                     AND com_man_pred='{com_man_pred}'
                     """
-QUERY_DELETE_MULTIPROPIETARIOS = """
-DELETE FROM Multipropietarios 
+QUERY_DELETE_TRANSFERENCIAS = """
+DELETE FROM Transferencias 
 WHERE Ano_vigencia_inicial = {last_initial_year}
 AND com_man_pred = {com_man_pred}"""
 
-QUERY_OBTENER_MULTIPROPIETARIOS_SQL = """
+QUERY_OBTENER_TRANSFERENCIAS_SQL = """
 SELECT COUNT(*) 
-FROM Multipropietarios
+FROM Transferencias
 WHERE com_man_pred='{com_man_pred}'
 """
 
-QUERY_OBTENER_MULTIPROPIETARIO_SQL = """
+QUERY_OBTENER_TRANSFERENCIAS_SQL = """
 SELECT *
-FROM Multipropietarios
+FROM Transferencias
 WHERE com_man_pred={com_man_pred}
 """
 
-QUERY_OBTENER_ULT_ANO_INIT = "SELECT Ano_vigencia_inicial AS Ano FROM Multipropietarios WHERE com_man_pred = {com_man_pred} ORDER BY Ano_vigencia_inicial DESC LIMIT 1"
+QUERY_OBTENER_ULT_ANO_INIT = "SELECT Ano_vigencia_inicial AS Ano FROM Transferencias WHERE com_man_pred = {com_man_pred} ORDER BY Ano_vigencia_inicial DESC LIMIT 1"
 
-QUERY_INSERTAR_ENAJENANTES_MULTIPROPIETARIO_SQL = """
-        INSERT INTO Multipropietarios (id, com_man_pred, RUNRUT, porcDerecho, Fojas, Ano_inscripcion, Numero_inscripcion, Fecha_de_inscripcion, Ano_vigencia_inicial, Ano_vigencia_final, Tipo)
+QUERY_INSERTAR_ENAJENANTES_TRANSFERENCIAS_SQL = """
+        INSERT INTO Transferencias (id, com_man_pred, RUNRUT, porcDerecho, Fojas, Ano_inscripcion, Numero_inscripcion, Fecha_de_inscripcion, Ano_vigencia_inicial, Ano_vigencia_final, Tipo)
         VALUES ( %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
     """
 
-QUERY_INSERTAR_ADQUIRENTES_MULTIPROPIETARIO_SQL = """
-        INSERT INTO Multipropietarios (id, com_man_pred, RUNRUT, porcDerecho,
+QUERY_INSERTAR_ADQUIRENTES_TRANSFERENCIAS_SQL = """
+        INSERT INTO Transferencias (id, com_man_pred, RUNRUT, porcDerecho,
                                     Fojas, Ano_inscripcion, Numero_inscripcion,
                                     Fecha_de_inscripcion, Ano_vigencia_inicial,
                                     Ano_vigencia_final, Tipo)

@@ -2,17 +2,17 @@
 # from Queries import (
 #     QUERY_ALL_FORMULARIOS, QUERY_INSERTAR_FORM, INTERNAL_SERVER_ERROR,
 #     QUERY_ALL_ENAJENANTES, QUERY_INSERTAR_ENAJENANTES, QUERY_ALL_ADQUIRENTES,
-#     QUERY_INSERTAR_ADQUIRENTES, QUERY_ID_MULTIPROPIETARIOS,
-#     QUERY_UPDATE_MULTIPROPIETARIO_SQL, QUERY_DELETE_MULTIPROPIETARIOS,
-#     QUERY_OBTENER_MULTIPROPIETARIOS_SQL, QUERY_INSERTAR_ENAJENANTES_MULTIPROPIETARIO_SQL,
-#     QUERY_INSERTAR_ADQUIRENTES_MULTIPROPIETARIO_SQL,
+#     QUERY_INSERTAR_ADQUIRENTES, QUERY_ID_TRANSFERENCIAS,
+#     QUERY_UPDATE_TRANSFERENCIAS_SQL, QUERY_DELETE_TRANSFERENCIAS,
+#     QUERY_OBTENER_TRANSFERENCIAS_SQL, QUERY_INSERTAR_ENAJENANTES_TRANSFERENCIAS_SQL,
+#     QUERY_INSERTAR_ADQUIRENTES_TRANSFERENCIAS_SQL,
 #     COMPRAVENTA, REGULARIZACION_DE_PATRIMONIO, QUERY_OBTENER_ULT_ANO_INIT
 #     )
-from DBmanager import (_obtener_siguiente_id_multipropietario, _insert_enajenantes_to_multipropietarios,
-                        _insert_adquirientes_to_multipropietarios, obtener_multipropietarios, 
+from DBmanager import (_obtener_siguiente_id_Transferencias, _insert_enajenantes_to_Transferencias,
+                        _insert_adquirientes_to_Transferencias, obtener_Transferencias, 
                         add_formulario, add_enajenante, add_adquirente, 
-                        _obtener_ano_final, obtener_formulario)
-from utils import (_construir_com_man_pred, obtener_total_porcentaje)
+                        _obtener_ano_final, obtener_formulario, _obtener_ultimo_ano_inicial,delete_Transferencias_antiguos)
+from utils import (obtener_ano_inscripcion,_construir_com_man_pred, obtener_total_porcentaje)
 from Errores import ERROR_MESSAGE
 
 # ERROR_MESSAGE = "Error "
@@ -242,19 +242,19 @@ class form_solver():
     #     return multipropietarios[0]['COUNT(*)']
 #End revisar SUS metodos ---
 
-    def add_multipropietario(self):
-        id_multipropietario = _obtener_siguiente_id_multipropietario()
+    def add_Transferencias(self):
+        id_Transferencia = _obtener_siguiente_id_Transferencias()
         com_man_pred = _construir_com_man_pred(self.comuna, self.manzana, self.predio)
 
         for enajenante in self.enajenantes_data:
-            _insert_enajenantes_to_multipropietarios(id_multipropietario,
+            _insert_enajenantes_to_Transferencias(id_Transferencia,
                 com_man_pred, enajenante, self.fojas, self.fecha_inscripcion, self.numero_inscripcion)
-            id_multipropietario += 1
+            id_Transferencia += 1
 
         for adquirente in self.adquirentes_data:
-            _insert_adquirientes_to_multipropietarios(id_multipropietario,
+            _insert_adquirientes_to_Transferencias(id_Transferencia,
                 com_man_pred, adquirente, self.fojas, self.fecha_inscripcion, self.numero_inscripcion)
-            id_multipropietario += 1
+            id_Transferencia += 1
 
 
     # def _construir_com_man_pred(self):
@@ -345,14 +345,15 @@ class form_solver():
         self.add_all(numero_de_atencion)
 
     def actualizar_vigencia(self, last_initial_year):
-        self._actualizar_multipropietarios_por_vigencia(last_initial_year)
+        # esta commentada def _actualizar_multipropietarios_por_vigencia
+        self._actualizar_Transferencias_por_vigencia(last_initial_year)
 
         numero_de_atencion = add_formulario(self.cne, self.comuna, self.manzana, self.predio, self.fojas, self.fecha_inscripcion, self.numero_inscripcion)
         self.add_all(numero_de_atencion)
         return True
 
     def eliminar_antiguos_y_reemplazar(self, last_initial_year):
-        self.delete_multipropietarios_antiguos(last_initial_year)
+        delete_Transferencias_antiguos(last_initial_year)
         numero_de_atencion = add_formulario(self.cne, self.comuna, self.manzana, self.predio, self.fojas, self.fecha_inscripcion, self.numero_inscripcion)
         self.add_all(numero_de_atencion)
 
@@ -361,17 +362,17 @@ class form_solver():
             add_enajenante(numero_de_atencion, enajenante['RUNRUT'], enajenante['porcDerecho'])
         for adquirente in self.adquirentes_data:
             add_adquirente(numero_de_atencion, adquirente['RUNRUT'], adquirente['porcDerecho'])
-        self.add_multipropietario()
+        self.add_Transferencias()
         # self.handle_enajenante_fantasma()
         
 
     def determinar_y_procesar_escenario(self):
         if self.cne == COMPRAVENTA:
             self.procesar_escenario_compraventa()
-            self.add_multipropietario()
+            self.add_Transferencias()
         elif self.cne == REGULARIZACION_DE_PATRIMONIO:
             self._procesar_escenario_regularizacion_patrimonio()
-            self.add_multipropietario()
+            self.add_Transferencias()
 
 
     
@@ -424,18 +425,18 @@ class form_solver():
 
     def _procesar_escenario_regularizacion_patrimonio(self):
 
-        count_multipropietario = obtener_multipropietarios(self.comuna, self.manzana, self.predio)
+        count_Transferencia = obtener_Transferencias(self.comuna, self.manzana, self.predio)
 
-        count_multipropietario = self.obtener_multipropietarios()
-        print(count_multipropietario)
+        count_Transferencia = obtener_Transferencias()
+        print(count_Transferencia)
 
-        if count_multipropietario == 0:
+        if count_Transferencia == 0:
             self.procesar_escenario_1()
         else:
-            last_initial_year = self._obtener_ultimo_ano_inicial()
-            if last_initial_year < self.obtener_ano_inscripcion():
+            last_initial_year = _obtener_ultimo_ano_inicial()
+            if last_initial_year < obtener_ano_inscripcion():
                 self.procesar_escenario_2(last_initial_year)
-            elif last_initial_year > self.obtener_ano_inscripcion():
+            elif last_initial_year > obtener_ano_inscripcion():
                 #self.procesar_escenario_3(last_initial_year)
                 pass
             else:
