@@ -24,7 +24,7 @@ def obtener_conexion_db():
                                  cursorclass=pymysql.cursors.DictCursor)
     return connection
 
-def _ejecutar_query(query, parameters):
+def _ejecutar_query(query, parameters = None):
     connect = obtener_conexion_db()
     try:
         with connect.cursor() as cursor:
