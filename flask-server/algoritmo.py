@@ -36,6 +36,7 @@ class form_solver():
         else:
             self.adquirentes_data = []
 
+
     # def _ejecutar_query(self, cursor, query):
     #     cursor.execute(query)
     #     return cursor.fetchall()
@@ -158,6 +159,25 @@ class form_solver():
     #     finally:
     #         connect.close()
     
+
+    def _ejecutar_query(self, cursor, query):
+        cursor.execute(query)
+        return cursor.fetchall()
+    
+    def obtener_formulario(self, numero_de_atencion):
+        connect = self.connection()
+        try:
+            with connect.cursor() as cursor:
+                cursor.execute(QUERY_ALL_FORMULARIOS)
+                formularios = cursor.fetchall()
+                return formularios[numero_de_atencion - 1]
+        except Exception as e:
+            connect.rollback()
+            print(ERROR_MESSAGE, e)
+            raise e
+        finally:
+            connect.close()
+
 
 
 #Revisar
@@ -366,12 +386,66 @@ class form_solver():
         elif self.cne == REGULARIZACION_DE_PATRIMONIO:
             self._procesar_escenario_regularizacion_patrimonio()
 
+    def get_total_perc(transactions):
+        total = 0
+        for transaction in transactions:
+            total += transaction['porcDerecho']
+        return total
+    
     def procesar_escenario_compraventa(self):
         # TODO: Implementar lógica para el escenario de compraventa
-        pass
+        #Cne = 8
+        #fecha de vigencia del form ya subido < a la fecha de inscripcion del nuevo form.
+        
+        if(self._obtener_ano_final() < self.fecha_inscripcion):
+            #evaluar escenario 1 y 2
+
+            total_porc_enajenantes = self.get_total_perc(self.enajenantes_data)
+            total_porc_adquirentes = self.get_total_perc(self.adquirentes_data)
+
+            primer_caso = True if total_porc_adquirentes == 100 else False
+            segundo_caso = True if total_porc_adquirentes == 0 else False
+            tercer_caso = (len(self.enajenantes_data) == 1) and (len(self.adquirentes_data) == 1)
+
+
+            if(primer_caso or segundo_caso):
+                porcentaje_igual = total_porc_enajenantes / len(self.adquirentes_data)
+
+                for adquirente in self.adquirentes_data:
+                    if primer_caso:
+                        adquirente["porDerecho"] = adquirente["porDerecho"] * (total_porc_enajenantes / 100)
+                    elif segundo_caso:
+                        adquirente.percentage = porcentaje_igual
+            elif(tercer_caso):
+                #agarrar los primeros de ambos enajenente y adquirientes y darle el porcentaje respectivo al adquirentes y restarle al enajenente
+                adquirente = self.adquirentes_data[0]
+                enajenante = self.enajenantes_data[0]
+                #aqui necesito restar enajenante del form viejo con adquirente del form nuevo
+                numero_de_atencion = self._construir_com_man_pred()
+                form = self.obtener_formulario(numero_de_atencion)
+                porcentaje = form["enajenante"]["porcDerecho"] * adquirente["porcDerecho"] / 100
+                enajenante["porcDerecho"] = enajenante["porcDerecho"] - porcentaje
+                adquirente["porcDerecho"] = porcentaje
+
+            else:
+                for dueños in form["enajenante"]:
+                    for vendiendo in self.enajenantes_data:
+                        if dueños["RUNRUT"] == vendiendo["RUNRUT"]:
+                            dueños["porDerecho"] -= vendiendo["porDerecho"]
+                            if dueños["porDerecho"] <= 0:
+                                #borrar al dueño que tiene 0 porcentaje de derechos
+                                pass
+
+
+
 
     def _procesar_escenario_regularizacion_patrimonio(self):
+
         count_multipropietario = obtener_multipropietarios(self.comuna, self.manzana, self.predio)
+
+        count_multipropietario = self.obtener_multipropietarios()
+        print(count_multipropietario)
+
         if count_multipropietario == 0:
             self.procesar_escenario_1()
         else:
