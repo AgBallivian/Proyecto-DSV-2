@@ -10,7 +10,8 @@ from Queries import (
     QUERY_UPDATE_TRANSFERENCIAS_SQL, QUERY_DELETE_TRANSFERENCIAS,
     QUERY_OBTENER_TRANSFERENCIAS_SQL, QUERY_INSERTAR_ENAJENANTES_TRANSFERENCIAS_SQL,
     QUERY_INSERTAR_ADQUIRENTES_TRANSFERENCIAS_SQL,
-    COMPRAVENTA, REGULARIZACION_DE_PATRIMONIO, QUERY_OBTENER_ULT_ANO_INIT, QUERY_CONNECTOR
+    COMPRAVENTA, REGULARIZACION_DE_PATRIMONIO, QUERY_OBTENER_ULT_ANO_INIT, QUERY_CONNECTOR,
+    QUERY_AGREGAR_MULTIPROPIETARIO, QUERY_OBTENER_ID_MULTIPROPIETARIOS_SQL, QUERY_ACTUALIZAR_MULTIPROPIETARIO
     )
 
 ERROR_MESSAGE = "Error "
@@ -156,22 +157,22 @@ def _obtener_siguiente_id_Transferencias():
     finally:
         connect.close()
 
-# def _actualizar_multipropietarios_por_vigencia(self, last_initial_year_in, comuna, manzana, predio, fecha_inscripcion):
-#     connect = obtener_conexion_db()
-#     try:
-#         with connect.cursor() as cursor:
-#             com_man_pred = self._construir_com_man_pred(comuna, manzana, predio)
-#             ano_final = self._obtener_ano_final(fecha_inscripcion)
-#             query_multipropietarios = self._construir_query_actualizar_multipropietarios(ano_final, last_initial_year_in, com_man_pred)
-#             self._ejecutar_query_actualizar_multipropietarios(cursor, query_multipropietarios)
-#             connect.commit()
-#             return True
-#     except Exception as e:
-#         connect.rollback()
-#         print(ERROR_MESSAGE, e)
-#         return jsonify({"error": str(e)}), INTERNAL_SERVER_ERROR
-#     finally:
-#         connect.close()
+def _actualizar_multipropietarios_por_vigencia(last_initial_year_in, comuna, manzana, predio, fecha_inscripcion):
+    connect = obtener_conexion_db()
+    try:
+        with connect.cursor() as cursor:
+            com_man_pred = _construir_com_man_pred(comuna, manzana, predio)
+            ano_final = _obtener_ano_final(fecha_inscripcion)
+            query_multipropietarios = _construir_query_actualizar_Transferencias(ano_final, last_initial_year_in, com_man_pred)
+            _ejecutar_query_actualizar_Transferencias(cursor, query_multipropietarios)
+            connect.commit()
+            return True
+    except Exception as e:
+        connect.rollback()
+        print(ERROR_MESSAGE, e)
+        return jsonify({"error": str(e)}), INTERNAL_SERVER_ERROR
+    finally:
+        connect.close()
 
 def _obtener_ano_final(fecha_inscripcion):
     return obtener_ano_inscripcion(fecha_inscripcion) - 1
@@ -251,8 +252,6 @@ def obtener_Transferencias_filtrados(region_id, comuna_id, block_number, propert
     finally:
         connection.close()
 
-def _construir_query_obtener_Transferencias(com_man_pred):
-    return QUERY_OBTENER_TRANSFERENCIAS_SQL.format(com_man_pred=com_man_pred)
 
 def aplicar_filtros(region_id, comuna_id, block_number, property_number, year):
     filtros = []
@@ -287,7 +286,7 @@ def _insert_enajenantes_to_Transferencias(id_Transferencia, com_man_pred, enajen
     #     connect.close()
 
 def _construir_query_insertar_enajenantes(id_Transferencia, com_man_pred, enajenante, fojas, fecha_inscripcion, numero_inscripcion):
-    return QUERY_INSERTAR_ENAJENANTES_TRANSFERENCIA_SQL, (
+    return QUERY_INSERTAR_ENAJENANTES_TRANSFERENCIAS_SQL, (
         id_Transferencia,
         com_man_pred,
         enajenante['RUNRUT'],
@@ -367,7 +366,7 @@ def _construir_query_obtener_ultimo_ano_inicial(com_man_pred):
 
 # def _obtener_ano_desde_query(query_result):
 #     return query_result[0]['Ano']
-def obtener_formulario(numero_de_atencion):
+def obtener_multipropietario(numero_de_atencion):
     connect = obtener_conexion_db()
     try:
         with connect.cursor() as cursor:
@@ -381,3 +380,68 @@ def obtener_formulario(numero_de_atencion):
     finally:
         connect.close()
 
+
+def agregar_multipropietario(com_man_pred, RUNRUT, porcDerecho,
+                            Fojas, Ano_inscripcion, Numero_inscripcion,
+                            Fecha_de_inscripcion, Ano_vigencia_inicial):
+    connect = obtener_conexion_db()
+    try:
+        id = _construir_query_obtener_multipropietarios_id(com_man_pred)
+        with connect.cursor() as cursor:
+            cursor.execute(QUERY_AGREGAR_MULTIPROPIETARIO, (id, com_man_pred, RUNRUT, porcDerecho,
+                                    Fojas, Ano_inscripcion, Numero_inscripcion,
+                                    Fecha_de_inscripcion, Ano_vigencia_inicial,
+                                    None))
+            connect.commit()
+    except Exception as e:
+        connect.rollback()
+        print(ERROR_MESSAGE, e)
+        raise e
+    finally:
+        connect.close()
+
+def _construir_query_obtener_multipropietarios_id(com_man_pred):
+        return QUERY_OBTENER_ID_MULTIPROPIETARIOS_SQL.format(com_man_pred=com_man_pred)
+
+def _actualizar_multipropietarios_por_vigencia(last_initial_year_in, comuna, manzana, predio, fecha_inscripcion):
+    connect = obtener_conexion_db()
+    try:
+        with connect.cursor() as cursor:
+            com_man_pred = _construir_com_man_pred(comuna, manzana, predio)
+            ano_final = _obtener_ano_final(fecha_inscripcion)
+            query_multipropietarios = _construir_query_actualizar_multipropietarios(ano_final, last_initial_year_in, com_man_pred)
+            _ejecutar_query_actualizar_multipropietarios(query_multipropietarios)
+            connect.commit()
+            return True
+    except Exception as e:
+        connect.rollback()
+        print(ERROR_MESSAGE, e)
+        return jsonify({"error": str(e)}), INTERNAL_SERVER_ERROR
+    finally:
+        connect.close()
+
+def _construir_query_actualizar_multipropietarios(id_Multipropietario, com_man_pred, enajenante, fojas, fecha_inscripcion, numero_inscripcion):
+    return QUERY_ACTUALIZAR_MULTIPROPIETARIO, (
+        id_Multipropietario,
+        com_man_pred,
+        enajenante['RUNRUT'],
+        enajenante['porcDerecho'],
+        fojas,
+        int(obtener_ano_inscripcion(fecha_inscripcion)),
+        numero_inscripcion,
+        fecha_inscripcion,
+        int(obtener_ano_inscripcion(fecha_inscripcion)),
+        None,
+    )
+
+def _ejecutar_query_actualizar_multipropietarios(query):
+    connect = obtener_conexion_db()
+    try:
+        with connect.cursor() as cursor:
+            print("Number of rows modified: ", cursor.execute(query))
+    except Exception as e:
+        connect.rollback()
+        print(ERROR_MESSAGE, e)
+        raise e
+    finally:
+        connect.close()

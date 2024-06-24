@@ -59,3 +59,24 @@ QUERY_INSERTAR_ADQUIRENTES_TRANSFERENCIAS_SQL = """
     """
 
 QUERY_CONNECTOR = """ WHERE  AND """
+
+QUERY_AGREGAR_MULTIPROPIETARIO = """
+    INSERT INTO Multipropietarios (id, com_man_pred, RUNRUT, porcDerecho,
+                                    Fojas, Ano_inscripcion, Numero_inscripcion,
+                                    Fecha_de_inscripcion, Ano_vigencia_inicial,
+                                    Ano_vigencia_final)
+        VALUES ( %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+"""
+QUERY_OBTENER_ID_MULTIPROPIETARIOS_SQL = """
+SELECT COUNT(*) 
+FROM Multipropietarios
+WHERE com_man_pred='{com_man_pred}'
+"""
+
+QUERY_ACTUALIZAR_MULTIPROPIETARIO = """
+                    UPDATE Multipropietario
+                    SET Ano_vigencia_final={ano_final}
+                    WHERE Ano_vigencia_inicial={ano_inicial}
+                    AND Ano_vigencia_final IS NULL
+                    AND com_man_pred='{com_man_pred}'
+                    """

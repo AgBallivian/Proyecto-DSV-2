@@ -2,12 +2,12 @@ import pymysql
 import csv
 import os
 
-QUERY_INSERT_TRANSFERENCIAS = """
-        INSERT INTO Transferencias (id, com_man_pred, RUNRUT, porcDerecho,
-                                        Fojas, Ano_inscripcion, Numero_inscripcion, Fecha_de_inscripcion,
-                                        Ano_vigencia_inicial, Ano_vigencia_final, Tipo)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-    """
+# QUERY_INSERT_MULTIPROPIETARIOS = """
+#         INSERT INTO Multipropietarios (id, com_man_pred, RUNRUT, porcDerecho,
+#                                         Fojas, Ano_inscripcion, Numero_inscripcion, Fecha_de_inscripcion,
+#                                         Ano_vigencia_inicial, Ano_vigencia_final, Tipo)
+#         VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+#     """
 
 # Configuration
 #MYSQL_HOST = 'db'
@@ -93,7 +93,7 @@ def create_tables():
                 )
             """)
 
-            # Crear tabla 'Multipropietario'
+            # Crear tabla 'Transacciones'
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS Transferencias (
                     id INT,
@@ -128,8 +128,10 @@ def create_tables():
                     FOREIGN KEY (id_region) REFERENCES regiones(id_region)
                 )
             """)
+
+            # Crear tabla 'Multipropietarios'
             cursor.execute("""
-                CREATE TABLE IF NOT EXISTS Temporal (
+                CREATE TABLE IF NOT EXISTS Multipropietarios (
                     id INT,
                     com_man_pred VARCHAR(100),
                     RUNRUT VARCHAR(100),
@@ -140,7 +142,6 @@ def create_tables():
                     Fecha_de_inscripcion TIMESTAMP,
                     Ano_vigencia_inicial INT,
                     Ano_vigencia_final INT,
-                    Tipo VARCHAR(100),
                     PRIMARY KEY (id)
                 )
             """)

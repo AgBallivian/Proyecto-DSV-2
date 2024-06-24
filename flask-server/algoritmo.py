@@ -10,7 +10,7 @@
 #     )
 from DBmanager import (_obtener_siguiente_id_Transferencias, _insert_enajenantes_to_Transferencias,
                         _insert_adquirientes_to_Transferencias, obtener_Transferencias, 
-                        add_formulario, add_enajenante, add_adquirente, 
+                        add_formulario, add_enajenante, add_adquirente, _actualizar_multipropietarios_por_vigencia,
                         _obtener_ano_final, obtener_formulario, _obtener_ultimo_ano_inicial,delete_Transferencias_antiguos)
 from utils import (obtener_ano_inscripcion,_construir_com_man_pred, obtener_total_porcentaje)
 from Errores import ERROR_MESSAGE
@@ -345,8 +345,7 @@ class form_solver():
         self.add_all(numero_de_atencion)
 
     def actualizar_vigencia(self, last_initial_year):
-        # esta commentada def _actualizar_multipropietarios_por_vigencia
-        self._actualizar_Transferencias_por_vigencia(last_initial_year)
+        _actualizar_multipropietarios_por_vigencia(last_initial_year, self.comuna, self.manzana, self.predio, self.fecha_inscripcion)
 
         numero_de_atencion = add_formulario(self.cne, self.comuna, self.manzana, self.predio, self.fojas, self.fecha_inscripcion, self.numero_inscripcion)
         self.add_all(numero_de_atencion)
@@ -405,8 +404,8 @@ class form_solver():
                 adquirente = self.adquirentes_data[0]
                 enajenante = self.enajenantes_data[0]
                 #aqui necesito restar enajenante del form viejo con adquirente del form nuevo
-                numero_de_atencion = _construir_com_man_pred(self.comuna, self.manzana, self.predio)
-                form = obtener_formulario(numero_de_atencion)
+                # numero_de_atencion = _construir_com_man_pred(self.comuna, self.manzana, self.predio)
+                form = obtener_Transferencias(self.comuna, self.manzana, self.predio)
                 porcentaje = form["enajenante"]["porcDerecho"] * adquirente["porcDerecho"] / 100
                 enajenante["porcDerecho"] = enajenante["porcDerecho"] - porcentaje
                 adquirente["porcDerecho"] = porcentaje
