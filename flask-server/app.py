@@ -7,7 +7,7 @@ from collections import defaultdict
 from config import Config
 from carga_datos import cargar_regiones, cargar_comunas
 from Queries import QUERY_CONNECTOR
-from DBmanager import obtener_multipropietarios_filtrados
+from DBmanager import obtener_multipropietarios_filtrados, obtener_numer_de_atencion
 from Errores import (ERROR_RUT_INVALIDO)
 
 app = Flask(__name__)
@@ -37,7 +37,7 @@ def crear_formulario():
         datos_formulario = extraer_datos_formulario(request.form)
         datos = preparar_datos(datos_formulario)
         formulario = procesar_formulario(datos)
-        numero_de_atencion = formulario.obtener_numer_de_atencion()
+        numero_de_atencion = obtener_numer_de_atencion()
         if numero_de_atencion:
             return redirect(url_for('ver_formulario', id=numero_de_atencion))
     except ValueError as e:
@@ -58,9 +58,15 @@ def extraer_datos_formulario(formulario):
     }
 
 def preparar_datos(datos_formulario):
-    datos_enajenantes = procesar_datos_participantes(datos_formulario['listas_formulario'], 'enajenantes')
-    datos_adquirentes = procesar_datos_participantes(datos_formulario['listas_formulario'], 'adquirentes')
-
+    # Convertir el generador en una lista
+    listas_formulario = list(datos_formulario['listas_formulario'])
+    
+    datos_enajenantes = procesar_datos_participantes(listas_formulario, 'enajenantes')
+    datos_adquirentes = procesar_datos_participantes(listas_formulario, 'adquirentes')
+    
+    # print("Datos enajenantes: ", datos_enajenantes)
+    # print("Datos adquirentes: ", datos_adquirentes)
+    
     return {
         'CNE': datos_formulario['cne'],
         'bienRaiz': {
@@ -76,13 +82,13 @@ def preparar_datos(datos_formulario):
     }
 
 def procesar_datos_participantes(listas_formulario, tipo_participante):
-    #Aqui hacer procesamiento del rut
     datos_participante = []
     for clave, valor in listas_formulario:
         if clave.startswith(tipo_participante):
             indice, campo = analizar_clave(clave)
             asegurar_existencia_participante(datos_participante, indice)
             datos_participante[indice][campo] = valor[0]
+    
     return datos_participante
 
 def analizar_clave(clave):
@@ -96,7 +102,8 @@ def asegurar_existencia_participante(datos_participante, indice):
         datos_participante.append({'RUNRUT': None, 'porcDerecho': None})
 
 def procesar_formulario(datos):
-    validar_runrut(datos['enajenantes'])
+    # validar_runrut(datos['enajenantes'])
+    # validar_runrut(datos['adquirentes'])
     formulario = form_solver(datos, obtener_conexion_db)
     formulario.determinar_y_procesar_escenario()
     formulario.ajustar_porcentajes_adquirentes()

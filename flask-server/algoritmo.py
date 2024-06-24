@@ -247,7 +247,8 @@ class form_solver():
             id_multipropietario += 1
 
         for adquirente in self.adquirentes_data:
-            _insert_adquirientes_to_multipropietarios(id_multipropietario, com_man_pred, adquirente)
+            _insert_adquirientes_to_multipropietarios(id_multipropietario,
+                com_man_pred, adquirente, self.fojas, self.fecha_inscripcion, self.numero_inscripcion)
             id_multipropietario += 1
 
 
@@ -335,7 +336,6 @@ class form_solver():
 
 
     def agregar_nuevo_formulario(self):
-        print("1")
         numero_de_atencion = add_formulario(self.cne, self.comuna, self.manzana, self.predio, self.fojas, self.fecha_inscripcion, self.numero_inscripcion)
         self.add_all(numero_de_atencion)
 

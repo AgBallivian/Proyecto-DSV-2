@@ -59,11 +59,3 @@ QUERY_INSERTAR_ADQUIRENTES_MULTIPROPIETARIO_SQL = """
     """
 
 QUERY_CONNECTOR = """ WHERE  AND """
-
-# QUERY_INSERTAR_ENAJENANTES_MULTIPROPIETARIO_SQL = """
-#         INSERT INTO Multipropietarios (id = {id}, com_man_pred = '{com_man_pred}', RUNRUT = '{RUNRUT}', porcDerecho = '{porcDerecho}',
-#                                     Fojas = '{Fojas}', Ano_inscripcion = '{Ano_inscripcion}', Numero_inscripcion = '{Numero_inscripcion}',
-#                                     Fecha_de_inscripcion = '{Fecha_de_inscripcion}', Ano_vigencia_inicial = '{Ano_vigencia_inicial}',
-#                                     Ano_vigencia_final = '{Ano_vigencia_final}', Tipo = '{Tipo}')
-        
-#     """

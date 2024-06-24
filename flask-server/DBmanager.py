@@ -103,7 +103,7 @@ def add_enajenante(numero_de_atencion, runrut, porcentaje_derecho):#cambiar a en
     finally:
         connect.close()
 
-def add_adquirente(adquirentes_id, numero_de_atencion, runrut, porcentaje_derecho):
+def add_adquirente(numero_de_atencion, runrut, porcentaje_derecho):
     connect = obtener_conexion_db()
     try:
         with connect.cursor() as cursor:
@@ -277,7 +277,6 @@ def _insert_enajenantes_to_multipropietarios(id_multipropietario, com_man_pred, 
     # try:
     #     with connect.cursor() as cursor:
             query, parameters = _construir_query_insertar_enajenantes(id_multipropietario, com_man_pred, enajenante, fojas, fecha_inscripcion, numero_inscripcion)
-            print(query, parameters)
             _ejecutar_query(query, parameters)
     #         connect.commit()
     # except Exception as e:
@@ -288,12 +287,6 @@ def _insert_enajenantes_to_multipropietarios(id_multipropietario, com_man_pred, 
     #     connect.close()
 
 def _construir_query_insertar_enajenantes(id_multipropietario, com_man_pred, enajenante, fojas, fecha_inscripcion, numero_inscripcion):
-    # print(type(com_man_pred))
-    # print(type(enajenante['RUNRUT']))
-    # print(type(enajenante['porcDerecho']))
-    # print(type(fojas))
-    # print(type(int(obtener_ano_inscripcion(fecha_inscripcion))))
-    # print(type(numero_inscripcion))
     return QUERY_INSERTAR_ENAJENANTES_MULTIPROPIETARIO_SQL, (
         id_multipropietario,
         com_man_pred,
@@ -325,12 +318,12 @@ def _construir_query_insertar_enajenantes(id_multipropietario, com_man_pred, ena
 #                                     Fecha_de_inscripcion = '{Fecha_de_inscripcion}', Ano_vigencia_inicial = '{Ano_vigencia_inicial}',
 #                                     Ano_vigencia_final = '{Ano_vigencia_final}', Tipo = '{Tipo}')
 
-def _insert_adquirientes_to_multipropietarios(id_multipropietario, com_man_pred, adquirente):
+def _insert_adquirientes_to_multipropietarios(id_multipropietario, com_man_pred, adquirente, fojas, fecha_inscripcion, numero_inscripcion):
     # connect = obtener_conexion_db()
     # try:
     #     with connect.cursor() as cursor:
-            query = _construir_query_insertar_adquirientes(id_multipropietario, com_man_pred, adquirente)
-            _ejecutar_query(query)
+            query, parameters = _construir_query_insertar_adquirientes(id_multipropietario, com_man_pred, adquirente, fojas, fecha_inscripcion, numero_inscripcion)
+            _ejecutar_query(query, parameters)
     #         connect.commit()
     # except Exception as e:
     #     connect.rollback()
@@ -339,7 +332,7 @@ def _insert_adquirientes_to_multipropietarios(id_multipropietario, com_man_pred,
     # finally:
     #     connect.close()
 
-def _construir_query_insertar_adquirientes(self, id_multipropietario, com_man_pred, adquirente, fojas, fecha_inscripcion, numero_inscripcion):
+def _construir_query_insertar_adquirientes(id_multipropietario, com_man_pred, adquirente, fojas, fecha_inscripcion, numero_inscripcion):
     return QUERY_INSERTAR_ADQUIRENTES_MULTIPROPIETARIO_SQL, (
         id_multipropietario,
         com_man_pred,
