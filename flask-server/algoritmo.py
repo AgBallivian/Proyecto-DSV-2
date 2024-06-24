@@ -11,7 +11,8 @@
 from DBmanager import (_obtener_siguiente_id_Transferencias, _insert_enajenantes_to_Transferencias,
                         _insert_adquirientes_to_Transferencias, obtener_Transferencias, 
                         add_formulario, add_enajenante, add_adquirente, _actualizar_multipropietarios_por_vigencia,
-                        _obtener_ano_final, _obtener_ultimo_ano_inicial,delete_Transferencias_antiguos)
+                        _obtener_ano_final, _obtener_ultimo_ano_inicial,delete_Transferencias_antiguos,
+                        obtener_multipropietarios_Comanpred)
 from utils import (obtener_ano_inscripcion,_construir_com_man_pred, obtener_total_porcentaje)
 from Errores import ERROR_MESSAGE
 
@@ -247,6 +248,7 @@ class form_solver():
         com_man_pred = _construir_com_man_pred(self.comuna, self.manzana, self.predio)
 
         for enajenante in self.enajenantes_data:
+            print("entregando enajenante", enajenante)
             _insert_enajenantes_to_Transferencias(id_Transferencia,
                 com_man_pred, enajenante, self.fojas, self.fecha_inscripcion, self.numero_inscripcion)
             id_Transferencia += 1
@@ -378,6 +380,32 @@ class form_solver():
     def procesar_escenario_compraventa(self):
         # TODO: Implementar lógica para el escenario de compraventa
         #Cne = 8
+        #me llega alguien pero no esta en la base de datos
+        #enajenante no esta registrado
+        for enajenante in self.enajenantes_data:
+            multipropietarios = obtener_multipropietarios_Comanpred(
+                _construir_com_man_pred(self.comuna, self.manzana, self.predio),
+                enajenante['RUNRUT'],
+                self.fecha_inscripcion
+            )
+            if not multipropietarios:
+                # Ghost seller scenario
+                is_ghost = True
+                enajenante['porcDerecho'] = 0
+                enajenante['fecha_inscripcion'] = None
+                enajenante['ano'] = None
+                enajenante['numero_inscripcion'] = None
+
+                # You might want to insert this ghost seller into your database here
+                # For example:
+                # insertar_multipropietario(
+                #     com_man_pred=self.com_man_pred,
+                #     runrut=enajenante['RUNRUT'],
+                #     porc_derecho=0,
+                #     ano_vigencia_inicial=self.fecha_inscripcion[:4],
+                #     ano_vigencia_final=None
+                # )
+        print(self.enajenantes_data)
         #fecha de vigencia del form ya subido < a la fecha de inscripcion del nuevo form.
         is_ghost=False
         for enajenante in self.enajenantes_data:
@@ -418,9 +446,9 @@ class form_solver():
                 enajenante = self.enajenantes_data[0]
                 #aqui necesito restar enajenante del form viejo con adquirente del form nuevo
                 # numero_de_atencion = _construir_com_man_pred(self.comuna, self.manzana, self.predio)
-                form = obtener_Transferencias(self.comuna, self.manzana, self.predio)
+                #form = obtener_Transferencias(self.comuna, self.manzana, self.predio)
                 if not is_ghost:
-                    porcentaje = float(form["enajenante"]["porcDerecho"]) * float(adquirente["porcDerecho"]) / 100
+                    porcentaje = float(enajenante["porcDerecho"]) * float(adquirente["porcDerecho"]) / 100
                 else:
                     porcentaje = 100 * float(adquirente["porcDerecho"]) / 100
 

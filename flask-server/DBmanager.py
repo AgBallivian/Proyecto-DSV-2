@@ -12,7 +12,7 @@ from Queries import (
     QUERY_INSERTAR_ADQUIRENTES_TRANSFERENCIAS_SQL,
     COMPRAVENTA, REGULARIZACION_DE_PATRIMONIO, QUERY_OBTENER_ULT_ANO_INIT, QUERY_CONNECTOR,
     QUERY_AGREGAR_MULTIPROPIETARIO, QUERY_OBTENER_ID_MULTIPROPIETARIOS_SQL, QUERY_ACTUALIZAR_MULTIPROPIETARIO,
-    QUERY_OBTENER_MULTIPROPIETARIOSS_SQL, QUERY_DELETE_MULTIPROPIETARIO
+    QUERY_OBTENER_MULTIPROPIETARIO_SQL, QUERY_DELETE_MULTIPROPIETARIO
     )
 
 ERROR_MESSAGE = "Error "
@@ -32,6 +32,7 @@ def _ejecutar_query(query, parameters = None):
         with connect.cursor() as cursor:
             if(parameters):
                 cursor.execute(query, parameters)
+                
             else:
                  cursor.execute(query)
             return cursor.fetchall()
@@ -40,6 +41,7 @@ def _ejecutar_query(query, parameters = None):
         print(ERROR_MESSAGE, e)
         raise e
     finally:
+        connect.commit()
         connect.close()
 
 def obtener_numer_de_atencion():
@@ -270,7 +272,7 @@ def _insert_enajenantes_to_Transferencias(id_Transferencia, com_man_pred, enajen
     # finally:
     #     connect.close()
 
-def _construir_query_insertar_enajenantes(id_Transferencia, com_man_pred, enajenante, fojas, fecha_inscripcion, numero_inscripcion):
+def _construir_query_insertar_enajenantes(id_Transferencia , com_man_pred, enajenante, fojas, fecha_inscripcion, numero_inscripcion):
     return QUERY_INSERTAR_ENAJENANTES_TRANSFERENCIAS_SQL, (
         id_Transferencia,
         com_man_pred,
