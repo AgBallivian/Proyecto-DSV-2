@@ -12,7 +12,7 @@ from Queries import (
     QUERY_INSERTAR_ADQUIRENTES_TRANSFERENCIAS_SQL,
     COMPRAVENTA, REGULARIZACION_DE_PATRIMONIO, QUERY_OBTENER_ULT_ANO_INIT, QUERY_CONNECTOR,
     QUERY_AGREGAR_MULTIPROPIETARIO, QUERY_OBTENER_ID_MULTIPROPIETARIOS_SQL, QUERY_ACTUALIZAR_MULTIPROPIETARIO,
-    QUERY_OBTENER_MULTIPROPIETARIO_SQL, QUERY_DELETE_MULTIPROPIETARIO
+    QUERY_OBTENER_MULTIPROPIETARIOS_SQL,QUERY_OBTENER_MULTIPROPIETARIO_SQL, QUERY_DELETE_MULTIPROPIETARIO
     )
 
 ERROR_MESSAGE = "Error "
@@ -440,7 +440,7 @@ def _ejecutar_query_obtener_multipropietarios(comuna, manzana, predio):
     return _obtener_count_multipropietarios(Transferencias)
 
 def _construir_query_obtener_multipropietarios(com_man_pred):
-    return QUERY_OBTENER_MULTIPROPIETARIOSS_SQL.format(com_man_pred=com_man_pred)
+    return QUERY_OBTENER_MULTIPROPIETARIOS_SQL.format(com_man_pred=com_man_pred)
 
 def obtener_multipropietarios_filtrados(region_id, comuna_id, block_number, property_number, year):
     connection = obtener_conexion_db()
@@ -450,6 +450,24 @@ def obtener_multipropietarios_filtrados(region_id, comuna_id, block_number, prop
             filtros = aplicar_filtros(region_id, comuna_id, block_number, property_number, year)
             if filtros:
                 multipropietarios_sql += QUERY_CONNECTOR.join(filtros)
+
+            cursor.execute(multipropietarios_sql)
+            multipropietarios = cursor.fetchall()
+            return multipropietarios
+    finally:
+        connection.close()
+
+def obtener_multipropietarios_Comanpred(com_man_pred, runrut, fecha_inscripcion):
+    print(com_man_pred,"", runrut,"", fecha_inscripcion)
+    connection = obtener_conexion_db()
+    try:
+        with connection.cursor() as cursor:
+            multipropietarios_sql = QUERY_OBTENER_MULTIPROPIETARIO_SQL.format(
+                 com_man_pred=com_man_pred,
+                 runrut=runrut,
+                 Ano_vigencia_inicial=fecha_inscripcion[:4]
+            )
+            
 
             cursor.execute(multipropietarios_sql)
             multipropietarios = cursor.fetchall()
