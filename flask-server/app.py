@@ -7,6 +7,7 @@ from collections import defaultdict
 from config import Config
 from carga_datos import cargar_regiones, cargar_comunas
 from Queries import QUERY_CONNECTOR
+from DBmanager import obtener_multipropietarios_filtrados
 from Errores import (ERROR_RUT_INVALIDO)
 
 app = Flask(__name__)
@@ -153,20 +154,21 @@ def ver_todos_multipropietarios():
     property_number = request.args.get('property', type=int)
     year = request.args.get('year', type=int)
 
-    connection = obtener_conexion_db()
-    try:
-        with connection.cursor() as cursor:
-            multipropietarios_sql = "SELECT * FROM Multipropietarios"
-            filtros = aplicar_filtros(region_id, comuna_id, block_number, property_number, year)
-            if filtros:
-                multipropietarios_sql += QUERY_CONNECTOR.join(filtros)
+    multipropietarios = obtener_multipropietarios_filtrados(region_id, comuna_id, block_number, property_number, year)
+    # connection = obtener_conexion_db()
+    # try:
+    #     with connection.cursor() as cursor:
+    #         multipropietarios_sql = "SELECT * FROM Multipropietarios"
+    #         filtros = aplicar_filtros(region_id, comuna_id, block_number, property_number, year)
+    #         if filtros:
+    #             multipropietarios_sql += QUERY_CONNECTOR.join(filtros)
 
-            cursor.execute(multipropietarios_sql)
-            multipropietarios = cursor.fetchall()
+    #         cursor.execute(multipropietarios_sql)
+    #         multipropietarios = cursor.fetchall()
 
-        return render_template('ver_todos_multipropietarios.html', multipropietarios=multipropietarios, regiones=regiones, comunas=comunas, region_id=region_id, comuna_id=comuna_id, block_number=block_number, property_number=property_number, year=year)
-    finally:
-        connection.close()
+    # finally:
+    #     connection.close()
+    return render_template('ver_todos_multipropietarios.html', multipropietarios=multipropietarios, regiones=regiones, comunas=comunas, region_id=region_id, comuna_id=comuna_id, block_number=block_number, property_number=property_number, year=year)
 
 @app.route('/ver_multipropietarios_filtrados', methods=['GET'])
 def ver_multipropietarios_filtrados():
@@ -268,20 +270,20 @@ def obtener_adquirentes(id):
     finally:
         connection.close()
 
-def aplicar_filtros(region_id, comuna_id, block_number, property_number, year):
-    filtros = []
-    if region_id:
-        filtros.append(f"com_man_pred IN (SELECT CONCAT(SUBSTRING_INDEX(m.com_man_pred, '-', 1), '-', SUBSTRING_INDEX(SUBSTRING_INDEX(m.com_man_pred, '-', -2), '-', 1), '-', SUBSTRING_INDEX(m.com_man_pred, '-', -1)) FROM Multipropietarios m JOIN comunas c ON SUBSTRING_INDEX(m.com_man_pred, '-', 1) = c.id_comuna WHERE c.id_region = {region_id})")
-    if comuna_id:
-        filtros.append(f"SUBSTRING_INDEX(com_man_pred, '-', 1) = '{comuna_id}'")
-    if block_number:
-        filtros.append(f"SUBSTRING_INDEX(SUBSTRING_INDEX(com_man_pred, '-', -2), '-', 1) = '{block_number}'")
-    if property_number:
-        filtros.append(f"SUBSTRING_INDEX(com_man_pred, '-', -1) = '{property_number}'")
-    if year:
-        filtros.append(f"(Ano_vigencia_final IS NULL OR Ano_vigencia_final >= {year}) AND Ano_vigencia_inicial <= {year}")
+# def aplicar_filtros(region_id, comuna_id, block_number, property_number, year):
+#     filtros = []
+#     if region_id:
+#         filtros.append(f"com_man_pred IN (SELECT CONCAT(SUBSTRING_INDEX(m.com_man_pred, '-', 1), '-', SUBSTRING_INDEX(SUBSTRING_INDEX(m.com_man_pred, '-', -2), '-', 1), '-', SUBSTRING_INDEX(m.com_man_pred, '-', -1)) FROM Multipropietarios m JOIN comunas c ON SUBSTRING_INDEX(m.com_man_pred, '-', 1) = c.id_comuna WHERE c.id_region = {region_id})")
+#     if comuna_id:
+#         filtros.append(f"SUBSTRING_INDEX(com_man_pred, '-', 1) = '{comuna_id}'")
+#     if block_number:
+#         filtros.append(f"SUBSTRING_INDEX(SUBSTRING_INDEX(com_man_pred, '-', -2), '-', 1) = '{block_number}'")
+#     if property_number:
+#         filtros.append(f"SUBSTRING_INDEX(com_man_pred, '-', -1) = '{property_number}'")
+#     if year:
+#         filtros.append(f"(Ano_vigencia_final IS NULL OR Ano_vigencia_final >= {year}) AND Ano_vigencia_inicial <= {year}")
 
-    return filtros
+#     return filtros
 
 def validar_runrut(datos):
     for dato in datos:

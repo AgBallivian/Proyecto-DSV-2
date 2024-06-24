@@ -46,11 +46,8 @@ WHERE com_man_pred='{com_man_pred}'
 QUERY_OBTENER_ULT_ANO_INIT = "SELECT Ano_vigencia_inicial AS Ano FROM Multipropietarios WHERE com_man_pred='{com_man_pred}' ORDER BY Ano_vigencia_inicial DESC LIMIT 1"
 
 QUERY_INSERTAR_ENAJENANTES_MULTIPROPIETARIO_SQL = """
-        INSERT INTO Multipropietarios (id, com_man_pred, RUNRUT, porcDerecho,
-                                    Fojas, Ano_inscripcion, Numero_inscripcion,
-                                    Fecha_de_inscripcion, Ano_vigencia_inicial,
-                                    Ano_vigencia_final, Tipo)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        INSERT INTO Multipropietarios (id, com_man_pred, RUNRUT, porcDerecho, Fojas, Ano_inscripcion, Numero_inscripcion, Fecha_de_inscripcion, Ano_vigencia_inicial, Ano_vigencia_final, Tipo)
+        VALUES ( %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
     """
 
 QUERY_INSERTAR_ADQUIRENTES_MULTIPROPIETARIO_SQL = """
@@ -58,7 +55,15 @@ QUERY_INSERTAR_ADQUIRENTES_MULTIPROPIETARIO_SQL = """
                                     Fojas, Ano_inscripcion, Numero_inscripcion,
                                     Fecha_de_inscripcion, Ano_vigencia_inicial,
                                     Ano_vigencia_final, Tipo)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        VALUES ( %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
     """
 
 QUERY_CONNECTOR = """ WHERE  AND """
+
+# QUERY_INSERTAR_ENAJENANTES_MULTIPROPIETARIO_SQL = """
+#         INSERT INTO Multipropietarios (id = {id}, com_man_pred = '{com_man_pred}', RUNRUT = '{RUNRUT}', porcDerecho = '{porcDerecho}',
+#                                     Fojas = '{Fojas}', Ano_inscripcion = '{Ano_inscripcion}', Numero_inscripcion = '{Numero_inscripcion}',
+#                                     Fecha_de_inscripcion = '{Fecha_de_inscripcion}', Ano_vigencia_inicial = '{Ano_vigencia_inicial}',
+#                                     Ano_vigencia_final = '{Ano_vigencia_final}', Tipo = '{Tipo}')
+        
+#     """

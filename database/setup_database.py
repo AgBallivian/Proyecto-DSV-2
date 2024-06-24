@@ -128,6 +128,22 @@ def create_tables():
                     FOREIGN KEY (id_region) REFERENCES regiones(id_region)
                 )
             """)
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS Temporal (
+                    id INT,
+                    com_man_pred VARCHAR(100),
+                    RUNRUT VARCHAR(100),
+                    porcDerecho INT,
+                    Fojas INT,
+                    Ano_inscripcion INT,
+                    Numero_inscripcion INT,
+                    Fecha_de_inscripcion TIMESTAMP,
+                    Ano_vigencia_inicial INT,
+                    Ano_vigencia_final INT,
+                    Tipo VARCHAR(100),
+                    PRIMARY KEY (id)
+                )
+            """)
 
         connection.commit()
         print("Tables created/replaced successfully.")
@@ -145,13 +161,20 @@ def insert_default_data():
         with connection.cursor() as cursor:
             # Eliminar datos existentes
             cursor.execute("DELETE FROM Multipropietarios")
+
+            # Insertar datos challa en la tabla 'multipropietario'
             multipropietario_data = [
                 (1, '394-514-23', "123456789", 50.00, 1, 2021, 1, '2021-01-01', 2021, None, "Enjante"),
                 (2, '8-54-456', "987654321", 75.50, 2, 2022, 2, '2022-02-15', 2022, None, "Adquirente"),
                 (3, '7-22-22', "456789012", 100.00, 3, 2023, 3, '2023-03-30', 2023, None, "Adquirente")
             ]
 
-            sql = QUERY_INSERT_MULTIPROPIETARIOS
+            sql = """
+                INSERT INTO Multipropietarios (id, com_man_pred, RUNRUT, porcDerecho,
+                                              Fojas, Ano_inscripcion, Numero_inscripcion, Fecha_de_inscripcion,
+                                              Ano_vigencia_inicial, Ano_vigencia_final, Tipo)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """
             cursor.executemany(sql, multipropietario_data)
 
         connection.commit()    
