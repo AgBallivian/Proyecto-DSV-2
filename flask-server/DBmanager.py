@@ -287,7 +287,7 @@ def _insert_enajenantes_to_Transferencias(id_Transferencia, com_man_pred, enajen
     #     connect.close()
 
 def _construir_query_insertar_enajenantes(id_Transferencia, com_man_pred, enajenante, fojas, fecha_inscripcion, numero_inscripcion):
-    return QUERY_INSERTAR_ENAJENANTES_TRANSFERENCIA_SQL, (
+    return QUERY_INSERTAR_ENAJENANTES_TRANSFERENCIAS_SQL, (
         id_Transferencia,
         com_man_pred,
         enajenante['RUNRUT'],

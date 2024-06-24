@@ -150,8 +150,8 @@ def ver_formulario(id):
     adquirentes = obtener_adquirentes(id)
     return render_template('ver_formulario.html', formulario=formulario, enajenantes=enajenantes, adquirentes=adquirentes)
 
-@app.route('/ver_todos_Transferencias', methods=['GET'])
-def ver_todos_Transferencias():
+@app.route('/ver_todos_multipropietarios', methods=['GET'])
+def ver_todos_multipropietarios():
     regiones = cargar_regiones()
     comunas = cargar_comunas()
 
@@ -161,7 +161,7 @@ def ver_todos_Transferencias():
     property_number = request.args.get('property', type=int)
     year = request.args.get('year', type=int)
 
-    Transferencias = obtener_Transferencias_filtrados(region_id, comuna_id, block_number, property_number, year)
+    multipropietarios = obtener_multipropietarios_filtrados(region_id, comuna_id, block_number, property_number, year)
     # connection = obtener_conexion_db()
     # try:
     #     with connection.cursor() as cursor:
@@ -175,10 +175,10 @@ def ver_todos_Transferencias():
 
     # finally:
     #     connection.close()
-    return render_template('ver_todos_multipropietarios.html', Transferencias=Transferencias, regiones=regiones, comunas=comunas, region_id=region_id, comuna_id=comuna_id, block_number=block_number, property_number=property_number, year=year)
+    return render_template('ver_todos_multipropietarios.html', multipropietarios=multipropietarios, regiones=regiones, comunas=comunas, region_id=region_id, comuna_id=comuna_id, block_number=block_number, property_number=property_number, year=year)
 
-@app.route('/ver_Transferencias_filtrados', methods=['GET'])
-def ver_Transferencias_filtrados():
+@app.route('/ver_multipropietarios_filtrados', methods=['GET'])
+def ver_multipropietarios_filtrados():
     regiones = cargar_regiones()
     comunas = cargar_comunas()
 
@@ -189,7 +189,7 @@ def ver_Transferencias_filtrados():
     fojas = request.args.get('fojas')
 
     # Construir la consulta SQL con los filtros
-    consulta = "SELECT * FROM Transferencias"
+    consulta = "SELECT * FROM Multipropietarios"
     condiciones = []
     if id_region:
         comunas_filtradas = [id_comuna for id_comuna, datos in comunas.items() if datos['id_region'] == int(id_region)]
@@ -208,20 +208,20 @@ def ver_Transferencias_filtrados():
     try:
         with connection.cursor() as cursor:
             cursor.execute(consulta)
-            Transferencias = cursor.fetchall()
-        return render_template('ver_todos_multipropietarios.html', Transferencias=Transferencias, regiones=regiones, comunas=comunas)
+            multipropietarios = cursor.fetchall()
+        return render_template('ver_todos_multipropietarios.html', multipropietarios=multipropietarios, regiones=regiones, comunas=comunas)
     finally:
         connection.close()
 
-@app.route('/ver_Transferencia/<int:id>', methods=['GET'])
-def ver_Transferencia(id):
+@app.route('/ver_multipropietario/<int:id>', methods=['GET'])
+def ver_multipropietario(id):
     connection = obtener_conexion_db()
     try:
         with connection.cursor() as cursor:
-            Transferencia_sql = "SELECT * FROM Transferencias WHERE id = %s"
-            cursor.execute(Transferencia_sql, (id,))
-            Transferencia = cursor.fetchone()
-        return render_template('ver_multipropietarios.html', Transferencia=Transferencia)
+            multipropietario_sql = "SELECT * FROM Multipropietarios WHERE id = %s"
+            cursor.execute(multipropietario_sql, (id,))
+            multipropietario = cursor.fetchone()
+        return render_template('ver_multipropietario.html', multipropietario=multipropietario)
     finally:
         connection.close()
 
