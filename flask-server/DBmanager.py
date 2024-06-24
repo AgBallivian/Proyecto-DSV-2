@@ -451,6 +451,6 @@ def obtener_multipropietarios_filtrados(region_id, comuna_id, block_number, prop
 
             cursor.execute(multipropietarios_sql)
             multipropietarios = cursor.fetchall()
-            return Transferencias
+            return multipropietarios
     finally:
         connection.close()
