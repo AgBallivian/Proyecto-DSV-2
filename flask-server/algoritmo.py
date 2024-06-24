@@ -437,12 +437,22 @@ class form_solver():
                                 pass
             if(is_ghost):
                 diferencia = 100 - total_porc_adquirentes
-                #personas con porcentaje equal a 0
                 lista_personas = []
-                lista_personas = [adquirente for adquirente in self.adquirentes_data if float(adquirente["porcDerecho"]) == 0]
-                lista_personas = [enajenante for enajenante in self.enajenantes_data if float(enajenante["porcDerecho"]) == 0]
+                #personas con porcentaje equal a 0
+                for adquirente in self.adquirentes_data:
+                    porcentaje = float(adquirente["porcDerecho"])
+                    if porcentaje <= 0:
+                        adquirente["porcDerecho"] = 0
+                        lista_personas.append(adquirente)
 
+                # Process enajenantes
+                for enajenante in self.enajenantes_data:
+                    porcentaje = float(enajenante["porcDerecho"])
+                    if porcentaje <= 0:
+                        enajenante["porcDerecho"] = 0
+                        lista_personas.append(enajenante)
 
+                #TODO: quitar todas las personas con porcentaje 0
                 if (total_porc_adquirentes>100):
                     for adquirente in self.adquirentes_data:
                         adquirente["porcDerecho"] = (adquirente["porcDerecho"]/total_porc_adquirentes)*100
