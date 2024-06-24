@@ -1,0 +1,27 @@
+{
+  "F2890": [
+    {
+      "CNE": CNE,
+      "bienRaiz": {
+        "comuna": COMUNA,
+        "manzana": MANZANA,
+        "predio": PREDIO
+      },
+      "adquirentes": [
+        {
+          "RUNRUT": "RUT-DV",
+          "porcDerecho": % DERCO
+        }
+      ],
+      "enajenantes": [
+        {
+          "RUNRUT": "RUT-DV",
+          "porcDerecho": % DERCO
+        }
+      ],
+      "fojas": FOJAS,
+      "fechaInscripcion": "F INSC", # formato Y-M-D
+      "nroInscripcion": NÚ
+    },
+  ]
+}

@@ -1,0 +1,97 @@
+{
+  "F2890": [
+    {
+      "nroInscripcion": 444,
+      "bienRaiz": {
+        "comuna": 2,
+        "manzana": 1,
+        "predio": 32
+      },
+      "adquirentes": [
+        {
+          "RUNRUT": "3-5",
+          "porcDerecho": 85
+        },
+        {
+          "RUNRUT": "1-9",
+          "porcDerecho": 15
+        }
+      ],
+      "enajenantes": [],
+      "fojas": 2,
+      "fechaInscripcion": "2021-06-06",
+      "CNE": 99
+    },
+    {
+      "nroInscripcion": 54,
+      "bienRaiz": {
+        "comuna": 2,
+        "manzana": 1,
+        "predio": 32
+      },
+      "adquirentes": [
+        {
+          "RUNRUT": "2-7",
+          "porcDerecho": 50
+        },
+        {
+          "RUNRUT": "1-9",
+          "porcDerecho": 15
+        },
+        {
+          "RUNRUT": "123-6",
+          "porcDerecho": 35
+        }
+      ],
+      "enajenantes": [],
+      "fojas": 35432,
+      "fechaInscripcion": "2014-09-09",
+      "CNE": 99
+    },
+    {
+      "nroInscripcion": 4189,
+      "bienRaiz": {
+        "comuna": 2,
+        "manzana": 1,
+        "predio": 32
+      },
+      "adquirentes": [
+        {
+          "RUNRUT": "234-8",
+          "porcDerecho": 25
+        }
+      ],
+      "enajenantes": [
+        {
+          "RUNRUT": "21-3",
+          "porcDerecho": 25
+        }
+      ],
+      "fojas": 32,
+      "fechaInscripcion": "2018-11-22",
+      "CNE": 8
+    },
+    {
+      "nroInscripcion": 32,
+      "bienRaiz": {
+        "comuna": 2,
+        "manzana": 1,
+        "predio": 32
+      },
+      "adquirentes": [
+        {
+          "RUNRUT": "5-1",
+          "porcDerecho": 1
+        },
+        {
+          "RUNRUT": "6-K",
+          "porcDerecho": 0.01
+        }
+      ],
+      "enajenantes": [],
+      "fojas": 111,
+      "fechaInscripcion": "2019-08-23",
+      "CNE": 99
+    }
+  ]
+}

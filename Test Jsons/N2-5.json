@@ -1,0 +1,130 @@
+{
+  "F2890": [
+    {
+      "nroInscripcion": 5431,
+      "bienRaiz": {
+        "comuna": 1,
+        "manzana": 5,
+        "predio": 32
+      },
+      "adquirentes": [
+        {
+          "RUNRUT": "1-9",
+          "porcDerecho": 41
+        },
+        {
+          "RUNRUT": "2-7",
+          "porcDerecho": 59
+        }
+      ],
+      "enajenantes": [],
+      "fojas": 45,
+      "fechaInscripcion": "2019-05-22",
+      "CNE": 99
+    },
+    {
+      "nroInscripcion": 444,
+      "bienRaiz": {
+        "comuna": 1,
+        "manzana": 5,
+        "predio": 32
+      },
+      "adquirentes": [
+        {
+          "RUNRUT": "10-8",
+          "porcDerecho": 17
+        },
+        {
+          "RUNRUT": "12-4",
+          "porcDerecho": 18
+        }
+      ],
+      "enajenantes": [
+        {
+          "RUNRUT": "1-9",
+          "porcDerecho": 50
+        },
+        {
+          "RUNRUT": "3-5",
+          "porcDerecho": 15
+        }
+      ],
+      "fojas": 2,
+      "fechaInscripcion": "2019-07-18",
+      "CNE": 8
+    },
+    {
+      "nroInscripcion": 684,
+      "bienRaiz": {
+        "comuna": 1,
+        "manzana": 5,
+        "predio": 32
+      },
+      "adquirentes": [
+        {
+          "RUNRUT": "10-8",
+          "porcDerecho": 41
+        }
+      ],
+      "enajenantes": [
+        {
+          "RUNRUT": "2-7",
+          "porcDerecho": 59
+        }
+      ],
+      "fojas": 7653,
+      "fechaInscripcion": "2019-12-01",
+      "CNE": 8
+    },
+    {
+      "nroInscripcion": 34556,
+      "bienRaiz": {
+        "comuna": 1,
+        "manzana": 5,
+        "predio": 32
+      },
+      "adquirentes": [
+        {
+          "RUNRUT": "15-9",
+          "porcDerecho": 50
+        },
+        {
+          "RUNRUT": "1-9",
+          "porcDerecho": 9
+        }
+      ],
+      "enajenantes": [
+        {
+          "RUNRUT": "1-9",
+          "porcDerecho": 59
+        }
+      ],
+      "fojas": 34,
+      "fechaInscripcion": "2021-12-21",
+      "CNE": 8
+    },
+    {
+      "nroInscripcion": 8,
+      "bienRaiz": {
+        "comuna": 1,
+        "manzana": 5,
+        "predio": 32
+      },
+      "adquirentes": [
+        {
+          "RUNRUT": "12-4",
+          "porcDerecho": 157
+        }
+      ],
+      "enajenantes": [
+        {
+          "RUNRUT": "3-5",
+          "porcDerecho": 50
+        }
+      ],
+      "fojas": 876,
+      "fechaInscripcion": "2021-12-23",
+      "CNE": 8
+    }
+  ]
+}
