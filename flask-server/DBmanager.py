@@ -156,25 +156,25 @@ def _obtener_siguiente_id_multipropietario():
     finally:
         connect.close()
 
-def _actualizar_multipropietarios_por_vigencia(self, last_initial_year_in, comuna, manzana, predio, fecha_inscripcion):
-    connect = obtener_conexion_db()
-    try:
-        with connect.cursor() as cursor:
-            com_man_pred = self._construir_com_man_pred(comuna, manzana, predio)
-            ano_final = self._obtener_ano_final(fecha_inscripcion)
-            query_multipropietarios = self._construir_query_actualizar_multipropietarios(ano_final, last_initial_year_in, com_man_pred)
-            self._ejecutar_query_actualizar_multipropietarios(cursor, query_multipropietarios)
-            connect.commit()
-            return True
-    except Exception as e:
-        connect.rollback()
-        print(ERROR_MESSAGE, e)
-        return jsonify({"error": str(e)}), INTERNAL_SERVER_ERROR
-    finally:
-        connect.close()
+# def _actualizar_multipropietarios_por_vigencia(self, last_initial_year_in, comuna, manzana, predio, fecha_inscripcion):
+#     connect = obtener_conexion_db()
+#     try:
+#         with connect.cursor() as cursor:
+#             com_man_pred = self._construir_com_man_pred(comuna, manzana, predio)
+#             ano_final = self._obtener_ano_final(fecha_inscripcion)
+#             query_multipropietarios = self._construir_query_actualizar_multipropietarios(ano_final, last_initial_year_in, com_man_pred)
+#             self._ejecutar_query_actualizar_multipropietarios(cursor, query_multipropietarios)
+#             connect.commit()
+#             return True
+#     except Exception as e:
+#         connect.rollback()
+#         print(ERROR_MESSAGE, e)
+#         return jsonify({"error": str(e)}), INTERNAL_SERVER_ERROR
+#     finally:
+#         connect.close()
 
-# def _obtener_ano_final(fecha_inscripcion):
-#     return obtener_ano_inscripcion(fecha_inscripcion) - 1
+def _obtener_ano_final(fecha_inscripcion):
+    return obtener_ano_inscripcion(fecha_inscripcion) - 1
 
 def _construir_query_actualizar_multipropietarios(ano_final, last_initial_year, com_man_pred):
     return QUERY_UPDATE_MULTIPROPIETARIO_SQL.format(
@@ -367,3 +367,17 @@ def _construir_query_obtener_ultimo_ano_inicial(com_man_pred):
 
 # def _obtener_ano_desde_query(query_result):
 #     return query_result[0]['Ano']
+def obtener_formulario(numero_de_atencion):
+    connect = obtener_conexion_db()
+    try:
+        with connect.cursor() as cursor:
+            cursor.execute(QUERY_ALL_FORMULARIOS)
+            formularios = cursor.fetchall()
+            return formularios[numero_de_atencion - 1]
+    except Exception as e:
+        connect.rollback()
+        print(ERROR_MESSAGE, e)
+        raise e
+    finally:
+        connect.close()
+

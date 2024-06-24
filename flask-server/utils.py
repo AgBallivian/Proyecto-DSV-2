@@ -14,3 +14,9 @@ def obtener_ano_inscripcion(fecha_inscripcion):
 
 def _obtener_ano_final(fecha_inscripcion):
     return obtener_ano_inscripcion(fecha_inscripcion) - 1
+
+def obtener_total_porcentaje(transactions):
+    total = 0
+    for transaction in transactions:
+        total += int(transaction['porcDerecho'])
+    return total
