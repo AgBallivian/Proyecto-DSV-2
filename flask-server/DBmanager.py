@@ -12,7 +12,7 @@ from Queries import (
     QUERY_INSERTAR_ADQUIRENTES_TRANSFERENCIAS_SQL,
     COMPRAVENTA, REGULARIZACION_DE_PATRIMONIO, QUERY_OBTENER_ULT_ANO_INIT, QUERY_CONNECTOR,
     QUERY_AGREGAR_MULTIPROPIETARIO, QUERY_OBTENER_ID_MULTIPROPIETARIOS_SQL, QUERY_ACTUALIZAR_MULTIPROPIETARIO,
-    QUERY_OBTENER_MULTIPROPIETARIOS_SQL,QUERY_OBTENER_MULTIPROPIETARIO_SQL, QUERY_DELETE_MULTIPROPIETARIO
+    QUERY_OBTENER_MULTIPROPIETARIOS_TRANSFERENCIAS_SQL,QUERY_OBTENER_MULTIPROPIETARIO_SQL, QUERY_DELETE_MULTIPROPIETARIO
     )
 
 ERROR_MESSAGE = "Error "
@@ -478,6 +478,17 @@ def obtener_multipropietarios_Comanpred(com_man_pred, runrut, fecha_inscripcion)
             return multipropietarios
     finally:
         connection.close()
+
+def obtener_multipropietario_Comanpred(com_man_pred):
+    # connect = obtener_conexion_db()
+    # try:
+    #     with connect.cursor() as cursor:
+            query = QUERY_OBTENER_MULTIPROPIETARIOS_TRANSFERENCIAS_SQL.format(
+                com_man_pred=com_man_pred
+            )
+            
+            return _ejecutar_query(query) 
+    #         connect.commit()
 
 def delete_multipropietario_antiguos(last_initial_year, comuna, manzana, predio):
     # connect = obtener_conexion_db()

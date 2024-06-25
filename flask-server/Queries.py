@@ -75,10 +75,10 @@ QUERY_ACTUALIZAR_MULTIPROPIETARIO = """
                     AND com_man_pred='{com_man_pred}'
                     """
 
-QUERY_OBTENER_MULTIPROPIETARIOS_SQL = """
+QUERY_OBTENER_MULTIPROPIETARIOS_TRANSFERENCIAS_SQL = """
 SELECT *
-FROM Multipropietarios
-WHERE com_man_pred={com_man_pred}
+FROM Transferencias
+WHERE com_man_pred = '{com_man_pred}'
 """
 
 QUERY_OBTENER_MULTIPROPIETARIO_SQL = """

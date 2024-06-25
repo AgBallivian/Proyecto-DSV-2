@@ -12,7 +12,8 @@ from DBmanager import (_obtener_siguiente_id_Transferencias, _insert_enajenantes
                         _insert_adquirientes_to_Transferencias, obtener_Transferencias, 
                         add_formulario, add_enajenante, add_adquirente, _actualizar_multipropietarios_por_vigencia,
                         _obtener_ano_final, _obtener_ultimo_ano_inicial,delete_Transferencias_antiguos,
-                        obtener_multipropietarios_Comanpred)
+                        obtener_multipropietarios_Comanpred,
+                        obtener_multipropietario_Comanpred)
 from utils import (obtener_ano_inscripcion,_construir_com_man_pred, obtener_total_porcentaje)
 from Errores import ERROR_MESSAGE
 
@@ -406,6 +407,11 @@ class form_solver():
                 #     ano_vigencia_final=None
                 # )
         print(self.enajenantes_data)
+        adquirientes_totales = obtener_multipropietario_Comanpred(
+            str(_construir_com_man_pred(self.comuna, self.manzana, self.predio))
+        )
+        self.adquirentes_data.extend(adquirientes_totales)
+        print("SOY EPICO????",adquirientes_totales)
         #fecha de vigencia del form ya subido < a la fecha de inscripcion del nuevo form.
         is_ghost=False
         for enajenante in self.enajenantes_data:
@@ -452,11 +458,12 @@ class form_solver():
                 else:
                     porcentaje = 100 * float(adquirente["porcDerecho"]) / 100
 
-                enajenante["porcDerecho"] = float(enajenante["porcDerecho"]) - porcentaje
+                if not is_ghost:
+                    enajenante["porcDerecho"] = float(enajenante["porcDerecho"]) - porcentaje
                 adquirente["porcDerecho"] = porcentaje
 
             else:
-                for dueños in form["enajenante"]:
+                for dueños in adquirientes_totales:
                     for vendiendo in self.enajenantes_data:
                         if dueños["RUNRUT"] == vendiendo["RUNRUT"]:
                             dueños["porDerecho"] -= vendiendo["porDerecho"]
