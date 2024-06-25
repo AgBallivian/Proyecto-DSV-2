@@ -2,18 +2,6 @@ import pymysql
 import csv
 import os
 
-# QUERY_INSERT_MULTIPROPIETARIOS = """
-#         INSERT INTO Multipropietarios (id, com_man_pred, RUNRUT, porcDerecho,
-#                                         Fojas, Ano_inscripcion, Numero_inscripcion, Fecha_de_inscripcion,
-#                                         Ano_vigencia_inicial, Ano_vigencia_final, Tipo)
-#         VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-#     """
-
-# Configuration
-#MYSQL_HOST = 'db'
-#MYSQL_ROOT_USER = 'root'
-
-#Esto solo es para testeo sin docker.
 MYSQL_HOST = 'localhost'
 MYSQL_ROOT_USER = 'root'
 
@@ -29,7 +17,6 @@ def create_database():
 
     try:
         with connection.cursor() as cursor:
-            # Ver si existe la database
             cursor.execute("SHOW DATABASES LIKE %s", (MYSQL_DB,))
             result = cursor.fetchone()
 
@@ -253,15 +240,12 @@ def cargar_datos_desde_csv():
 
     try:
         with connection.cursor() as cursor:
-            # Eliminar datos existentes
             cursor.execute("DELETE FROM regiones")
             cursor.execute("DELETE FROM comunas")
 
-            # Cargar datos desde regiones.csv
             with open(os.path.join(os.path.dirname(__file__), 'csv', 'regiones.csv'), 'r', encoding='utf-8-sig') as csvfile:
                 csvreader = csv.reader(csvfile, delimiter=';')
-                next(csvreader)  # Omitir el encabezado
-
+                next(csvreader)
                 regiones_data = [(int(fila[0]), fila[1]) for fila in csvreader]
 
                 sql = "INSERT INTO regiones (id_region, descripcion) VALUES (%s, %s)"

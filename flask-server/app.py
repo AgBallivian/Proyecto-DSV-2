@@ -64,9 +64,6 @@ def preparar_datos(datos_formulario):
     datos_enajenantes = procesar_datos_participantes(listas_formulario, 'enajenantes')
     datos_adquirentes = procesar_datos_participantes(listas_formulario, 'adquirentes')
     
-    # print("Datos enajenantes: ", datos_enajenantes)
-    # print("Datos adquirentes: ", datos_adquirentes)
-    
     return {
         'CNE': datos_formulario['cne'],
         'bienRaiz': {
@@ -102,8 +99,6 @@ def asegurar_existencia_participante(datos_participante, indice):
         datos_participante.append({'RUNRUT': None, 'porcDerecho': None})
 
 def procesar_formulario(datos):
-    # validar_runrut(datos['enajenantes'])
-    # validar_runrut(datos['adquirentes'])
     formulario = form_solver(datos, obtener_conexion_db)
     formulario.determinar_y_procesar_escenario()
     formulario.ajustar_porcentajes_adquirentes()
@@ -162,27 +157,12 @@ def ver_todos_multipropietarios():
     year = request.args.get('year', type=int)
 
     multipropietarios = obtener_multipropietarios_filtrados(region_id, comuna_id, block_number, property_number, year)
-    # connection = obtener_conexion_db()
-    # try:
-    #     with connection.cursor() as cursor:
-    #         multipropietarios_sql = "SELECT * FROM Multipropietarios"
-    #         filtros = aplicar_filtros(region_id, comuna_id, block_number, property_number, year)
-    #         if filtros:
-    #             multipropietarios_sql += QUERY_CONNECTOR.join(filtros)
-
-    #         cursor.execute(multipropietarios_sql)
-    #         multipropietarios = cursor.fetchall()
-
-    # finally:
-    #     connection.close()
     return render_template('ver_todos_multipropietarios.html', multipropietarios=multipropietarios, regiones=regiones, comunas=comunas, region_id=region_id, comuna_id=comuna_id, block_number=block_number, property_number=property_number, year=year)
 
 @app.route('/ver_multipropietarios_filtrados', methods=['GET'])
 def ver_multipropietarios_filtrados():
     regiones = cargar_regiones()
     comunas = cargar_comunas()
-
-    # Obtener los filtros desde los parámetros de la URL
     id_region = request.args.get('region')
     id_comuna = request.args.get('comuna')
     runrut = request.args.get('runrut')
@@ -276,21 +256,6 @@ def obtener_adquirentes(id):
             return adquirentes
     finally:
         connection.close()
-
-# def aplicar_filtros(region_id, comuna_id, block_number, property_number, year):
-#     filtros = []
-#     if region_id:
-#         filtros.append(f"com_man_pred IN (SELECT CONCAT(SUBSTRING_INDEX(m.com_man_pred, '-', 1), '-', SUBSTRING_INDEX(SUBSTRING_INDEX(m.com_man_pred, '-', -2), '-', 1), '-', SUBSTRING_INDEX(m.com_man_pred, '-', -1)) FROM Multipropietarios m JOIN comunas c ON SUBSTRING_INDEX(m.com_man_pred, '-', 1) = c.id_comuna WHERE c.id_region = {region_id})")
-#     if comuna_id:
-#         filtros.append(f"SUBSTRING_INDEX(com_man_pred, '-', 1) = '{comuna_id}'")
-#     if block_number:
-#         filtros.append(f"SUBSTRING_INDEX(SUBSTRING_INDEX(com_man_pred, '-', -2), '-', 1) = '{block_number}'")
-#     if property_number:
-#         filtros.append(f"SUBSTRING_INDEX(com_man_pred, '-', -1) = '{property_number}'")
-#     if year:
-#         filtros.append(f"(Ano_vigencia_final IS NULL OR Ano_vigencia_final >= {year}) AND Ano_vigencia_inicial <= {year}")
-
-#     return filtros
 
 def validar_runrut(datos):
     for dato in datos:
