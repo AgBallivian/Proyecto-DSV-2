@@ -20,7 +20,7 @@ def cargar_comunas():
     ruta_archivo = os.path.join(os.path.dirname(__file__), 'csv', 'comunas.csv')
     with open(ruta_archivo, 'r', encoding='utf-8-sig') as archivo:
         lector = csv.reader(archivo, delimiter=';')
-        encabezados = next(lector)  
+        encabezados = next(lector)
         for fila in lector:
             id_comuna = int(fila[encabezados.index('id_comuna')])
             id_region = int(fila[encabezados.index('id_region')])

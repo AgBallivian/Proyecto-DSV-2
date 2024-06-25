@@ -1,0 +1,54 @@
+{
+  "F2890": [
+    {
+      "_comment": "5",
+      "CNE": 99,
+      "bienRaiz": {
+        "comuna": 77,
+        "manzana": 68,
+        "predio": 32
+      },
+      "adquirentes": [
+        {
+          "RUNRUT": "3-5",
+          "porcDerecho": 50
+        },
+        {
+          "RUNRUT": "1-9",
+          "porcDerecho": 50
+        }
+      ],
+      "fojas": 2,
+      "fechaInscripcion": "2021-06-08",
+      "nroInscripcion": 444
+    },
+   	{
+      "_comment": "5",
+      "CNE": 8,
+      "bienRaiz": {
+        "comuna": 77,
+        "manzana": 68,
+        "predio": 32
+      },
+      "enajenantes": [
+        {
+          "RUNRUT": "1-9",
+          "porcDerecho": 25
+        }
+      ],
+      "adquirentes": [
+        {
+          "RUNRUT": "11-6",
+          "porcDerecho": 12.5
+        },
+        {
+          "RUNRUT": "12-4",
+          "porcDerecho": 12.5
+        }
+      ],
+      "fojas": 2,
+      "fechaInscripcion": "2024-07-01",
+      "nroInscripcion": 10001
+    }
+    ]
+}

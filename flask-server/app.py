@@ -4,8 +4,11 @@ import json
 import pymysql
 from algoritmo import form_solver
 from collections import defaultdict
-from config import Config 
+from config import Config
 from carga_datos import cargar_regiones, cargar_comunas
+from Queries import QUERY_CONNECTOR
+from DBmanager import obtener_Transferencias_filtrados, obtener_numer_de_atencion, obtener_multipropietarios_filtrados
+from Errores import (ERROR_RUT_INVALIDO, ERROR_RUT_VERIFICADOR)
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": ["http://localhost:8000"]}})
@@ -27,70 +30,84 @@ def index():
 
 @app.route('/crear_formulario', methods=['GET', 'POST'])
 def crear_formulario():
-    if request.method == 'POST':
-        cne = request.form['cne']
-        comuna = request.form['comuna']
-        manzana = request.form['manzana']
-        predio = request.form['predio']
-        fojas = request.form['fojas']
-        fecha_inscripcion = request.form['fecha_inscripcion']
-        numero_inscripcion = request.form['numero_inscripcion']
+    if request.method != 'POST':
+        return render_template('crear_formulario.html')
 
-        enajenantes_data = []
-        adquirentes_data = []
-
-        for key, value in request.form.lists():
-            if key.startswith('enajenantes'):
-                index = int(key.split('[')[1].split(']')[0])
-                field = key.split('[')[2].split(']')[0]
-                
-                if len(enajenantes_data) <= index:
-                    enajenantes_data.append({'RUNRUT': None, 'porcDerecho': None})
-                
-                if field == 'RUNRUT':
-                    enajenantes_data[index]['RUNRUT'] = value[0]
-                elif field == 'porcDerecho':
-                    enajenantes_data[index]['porcDerecho'] = value[0]
-            
-            elif key.startswith('adquirentes'):
-                index = int(key.split('[')[1].split(']')[0])
-                field = key.split('[')[2].split(']')[0]
-                
-                if len(adquirentes_data) <= index:
-                    adquirentes_data.append({'RUNRUT': None, 'porcDerecho': None})
-                
-                if field == 'RUNRUT':
-                    adquirentes_data[index]['RUNRUT'] = value[0]
-                elif field == 'porcDerecho':
-                    adquirentes_data[index]['porcDerecho'] = value[0]
-        
-        data = {
-            'CNE': cne,
-            'bienRaiz': {
-                'comuna': comuna,
-                'manzana': manzana,
-                'predio': predio
-            },
-            'enajenantes': enajenantes_data,
-            'adquirentes': adquirentes_data,
-            'fojas': fojas,
-            'fechaInscripcion': fecha_inscripcion,
-            'nroInscripcion': numero_inscripcion
-        }
-
-        # print(data)
-        formulario = form_solver(data, obtener_conexion_db)
-        formulario.determinar_y_procesar_escenario()
-        formulario.ajustar_porcentajes_adquirentes()
-
-        numero_de_atencion = formulario.obtener_numer_de_atencion()
+    try:
+        datos_formulario = extraer_datos_formulario(request.form)
+        datos = preparar_datos(datos_formulario)
+        formulario = procesar_formulario(datos)
+        numero_de_atencion = obtener_numer_de_atencion()
         if numero_de_atencion:
             return redirect(url_for('ver_formulario', id=numero_de_atencion))
-        else:
-            return render_template('error.html', mensaje="Error al procesar el formulario.")
+    except ValueError as e:
+        return render_template('crear_formulario.html', error=str(e))
+    
+    return render_template('error.html', mensaje="Error al procesar el formulario.")
 
-    return render_template('crear_formulario.html')
+def extraer_datos_formulario(formulario):
+    return {
+        'cne': formulario['cne'],
+        'comuna': formulario['comuna'],
+        'manzana': formulario['manzana'],
+        'predio': formulario['predio'],
+        'fojas': formulario['fojas'],
+        'fecha_inscripcion': formulario['fecha_inscripcion'],
+        'numero_inscripcion': formulario['numero_inscripcion'],
+        'listas_formulario': formulario.lists()
+    }
 
+def preparar_datos(datos_formulario):
+    # Convertir el generador en una lista
+    listas_formulario = list(datos_formulario['listas_formulario'])
+    
+    datos_enajenantes = procesar_datos_participantes(listas_formulario, 'enajenantes')
+    datos_adquirentes = procesar_datos_participantes(listas_formulario, 'adquirentes')
+    
+    # print("Datos enajenantes: ", datos_enajenantes)
+    # print("Datos adquirentes: ", datos_adquirentes)
+    
+    return {
+        'CNE': datos_formulario['cne'],
+        'bienRaiz': {
+            'comuna': datos_formulario['comuna'],
+            'manzana': datos_formulario['manzana'],
+            'predio': datos_formulario['predio']
+        },
+        'enajenantes': datos_enajenantes,
+        'adquirentes': datos_adquirentes,
+        'fojas': datos_formulario['fojas'],
+        'fechaInscripcion': datos_formulario['fecha_inscripcion'],
+        'nroInscripcion': datos_formulario['numero_inscripcion']
+    }
+
+def procesar_datos_participantes(listas_formulario, tipo_participante):
+    datos_participante = []
+    for clave, valor in listas_formulario:
+        if clave.startswith(tipo_participante):
+            indice, campo = analizar_clave(clave)
+            asegurar_existencia_participante(datos_participante, indice)
+            datos_participante[indice][campo] = valor[0]
+    
+    return datos_participante
+
+def analizar_clave(clave):
+    partes = clave.split('[')
+    indice = int(partes[1].split(']')[0])
+    campo = partes[2].split(']')[0]
+    return indice, campo
+
+def asegurar_existencia_participante(datos_participante, indice):
+    while len(datos_participante) <= indice:
+        datos_participante.append({'RUNRUT': None, 'porcDerecho': None})
+
+def procesar_formulario(datos):
+    # validar_runrut(datos['enajenantes'])
+    # validar_runrut(datos['adquirentes'])
+    formulario = form_solver(datos, obtener_conexion_db)
+    formulario.determinar_y_procesar_escenario()
+    formulario.ajustar_porcentajes_adquirentes()
+    return formulario
 
 @app.route('/subir_json', methods=['GET', 'POST'])
 def subir_json():
@@ -102,14 +119,10 @@ def subir_json():
             result = datos_json.get("F2890", [])
             errores = []
             for datos in result:
-                print(datos)
                 try:
-                    formulario = form_solver(datos, obtener_conexion_db)
-                    formulario.determinar_y_procesar_escenario()
-                    formulario.ajustar_porcentajes_adquirentes()
-
-                except Exception as e:
-                    errores.append(str(e))
+                    procesar_formulario(datos)
+                except ValueError as e:
+                    errores.append(f"Error en formulario: {str(e)}")
             if errores:
                 return render_template('subir_json.html', errores=errores)
             else:
@@ -148,20 +161,21 @@ def ver_todos_multipropietarios():
     property_number = request.args.get('property', type=int)
     year = request.args.get('year', type=int)
 
-    connection = obtener_conexion_db()
-    try:
-        with connection.cursor() as cursor:
-            multipropietarios_sql = "SELECT * FROM Multipropietarios"
-            filtros = aplicar_filtros(region_id, comuna_id, block_number, property_number, year)
-            if filtros:
-                multipropietarios_sql += " WHERE " + " AND ".join(filtros)
+    multipropietarios = obtener_multipropietarios_filtrados(region_id, comuna_id, block_number, property_number, year)
+    # connection = obtener_conexion_db()
+    # try:
+    #     with connection.cursor() as cursor:
+    #         multipropietarios_sql = "SELECT * FROM Multipropietarios"
+    #         filtros = aplicar_filtros(region_id, comuna_id, block_number, property_number, year)
+    #         if filtros:
+    #             multipropietarios_sql += QUERY_CONNECTOR.join(filtros)
 
-            cursor.execute(multipropietarios_sql)
-            multipropietarios = cursor.fetchall()
+    #         cursor.execute(multipropietarios_sql)
+    #         multipropietarios = cursor.fetchall()
 
-        return render_template('ver_todos_multipropietarios.html', multipropietarios=multipropietarios, regiones=regiones, comunas=comunas, region_id=region_id, comuna_id=comuna_id, block_number=block_number, property_number=property_number, year=year)
-    finally:
-        connection.close()
+    # finally:
+    #     connection.close()
+    return render_template('ver_todos_multipropietarios.html', multipropietarios=multipropietarios, regiones=regiones, comunas=comunas, region_id=region_id, comuna_id=comuna_id, block_number=block_number, property_number=property_number, year=year)
 
 @app.route('/ver_multipropietarios_filtrados', methods=['GET'])
 def ver_multipropietarios_filtrados():
@@ -188,7 +202,7 @@ def ver_multipropietarios_filtrados():
         condiciones.append(f"Fojas = {fojas}")
 
     if condiciones:
-        consulta += " WHERE " + " AND ".join(condiciones)
+        consulta += QUERY_CONNECTOR.join(condiciones)
 
     connection = obtener_conexion_db()
     try:
@@ -263,20 +277,56 @@ def obtener_adquirentes(id):
     finally:
         connection.close()
 
-def aplicar_filtros(region_id, comuna_id, block_number, property_number, year):
-    filtros = []
-    if region_id:
-        filtros.append(f"com_man_pred IN (SELECT CONCAT(SUBSTRING_INDEX(m.com_man_pred, '-', 1), '-', SUBSTRING_INDEX(SUBSTRING_INDEX(m.com_man_pred, '-', -2), '-', 1), '-', SUBSTRING_INDEX(m.com_man_pred, '-', -1)) FROM Multipropietarios m JOIN comunas c ON SUBSTRING_INDEX(m.com_man_pred, '-', 1) = c.id_comuna WHERE c.id_region = {region_id})")
-    if comuna_id:
-        filtros.append(f"SUBSTRING_INDEX(com_man_pred, '-', 1) = '{comuna_id}'")
-    if block_number:
-        filtros.append(f"SUBSTRING_INDEX(SUBSTRING_INDEX(com_man_pred, '-', -2), '-', 1) = '{block_number}'")
-    if property_number:
-        filtros.append(f"SUBSTRING_INDEX(com_man_pred, '-', -1) = '{property_number}'")
-    if year:
-        filtros.append(f"(Ano_vigencia_final IS NULL OR Ano_vigencia_final >= {year}) AND Ano_vigencia_inicial <= {year}")
+# def aplicar_filtros(region_id, comuna_id, block_number, property_number, year):
+#     filtros = []
+#     if region_id:
+#         filtros.append(f"com_man_pred IN (SELECT CONCAT(SUBSTRING_INDEX(m.com_man_pred, '-', 1), '-', SUBSTRING_INDEX(SUBSTRING_INDEX(m.com_man_pred, '-', -2), '-', 1), '-', SUBSTRING_INDEX(m.com_man_pred, '-', -1)) FROM Multipropietarios m JOIN comunas c ON SUBSTRING_INDEX(m.com_man_pred, '-', 1) = c.id_comuna WHERE c.id_region = {region_id})")
+#     if comuna_id:
+#         filtros.append(f"SUBSTRING_INDEX(com_man_pred, '-', 1) = '{comuna_id}'")
+#     if block_number:
+#         filtros.append(f"SUBSTRING_INDEX(SUBSTRING_INDEX(com_man_pred, '-', -2), '-', 1) = '{block_number}'")
+#     if property_number:
+#         filtros.append(f"SUBSTRING_INDEX(com_man_pred, '-', -1) = '{property_number}'")
+#     if year:
+#         filtros.append(f"(Ano_vigencia_final IS NULL OR Ano_vigencia_final >= {year}) AND Ano_vigencia_inicial <= {year}")
 
-    return filtros
+#     return filtros
+
+def validar_runrut(datos):
+    for dato in datos:
+        if dato["RUNRUT"]:
+            runrut_ingresado = dato["RUNRUT"]
+            if not validar_formato_runrut(runrut_ingresado):
+                raise ValueError(ERROR_RUT_INVALIDO.format(runrut_ingresado))
+            if not validar_digito_verificador(runrut_ingresado):
+                raise ValueError(ERROR_RUT_VERIFICADOR.format(runrut_ingresado))
+    return True
+
+def validar_formato_runrut(runrut):
+    return runrut.count("-") == 1
+
+def validar_digito_verificador(runrut):
+    digitos_rut, digito_verificador = runrut.split("-")
+    suma = calcular_suma_digitos(digitos_rut)
+    resto = suma % 11
+    verificador = obtener_verificador_runrut(resto)
+    return str(verificador) == digito_verificador
+
+def calcular_suma_digitos(digitos_rut):
+    suma = 0
+    multiplicador = 2
+    for digito in reversed(digitos_rut):
+        suma += int(digito) * multiplicador
+        multiplicador = multiplicador + 1 if multiplicador < 7 else 2
+    return suma
+
+def obtener_verificador_runrut(resto):
+    if resto == 0:
+        return 11
+    if resto == 1:
+        return "K"
+    return 11 - resto
 
 if __name__ == '__main__':
     app.run(debug=True, port=8000, host='0.0.0.0')
+    

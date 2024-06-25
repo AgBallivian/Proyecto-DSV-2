@@ -3,8 +3,16 @@
 {% block title %}Crear Formulario{% endblock %}
 
 {% block content %}
-  {{ super() }}
+{{ super() }}
 
+<div class="container mt-4">
+  <h1>Crear Formulario</h1>
+  
+  {% if error %}
+    <div class="alert alert-danger" role="alert">
+      {{ error }}
+    </div>
+  {% endif %}
   <div class="container mt-4">
     <h1>Crear Formulario</h1>
     <form method="post" action="{{ url_for('crear_formulario') }}">
