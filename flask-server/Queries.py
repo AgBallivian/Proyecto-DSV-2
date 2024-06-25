@@ -32,12 +32,6 @@ WHERE Ano_vigencia_inicial = {last_initial_year}
 AND com_man_pred = {com_man_pred}"""
 
 QUERY_OBTENER_TRANSFERENCIAS_SQL = """
-SELECT COUNT(*) 
-FROM Transferencias
-WHERE com_man_pred='{com_man_pred}'
-"""
-
-QUERY_OBTENER_TRANSFERENCIAS_SQL = """
 SELECT *
 FROM Transferencias
 WHERE com_man_pred={com_man_pred}

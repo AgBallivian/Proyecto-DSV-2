@@ -27,6 +27,7 @@ def obtener_conexion_db():
     return connection
 
 def _ejecutar_query(query, parameters = None):
+    print("HOLA SOY QUERY: ",query, parameters)
     connect = obtener_conexion_db()
     try:
         with connect.cursor() as cursor:
@@ -208,15 +209,17 @@ def _construir_query_delete_Transferencias(last_initial_year, com_man_pred):
 
 def obtener_Transferencias(comuna, manzana, predio):
     # connect = obtener_conexion_db()
-    # try:
+    try:
     #     with connect.cursor() as cursor:
-            com_man_pred = _construir_com_man_pred(comuna, manzana, predio)
-            Transferencia_sql = _construir_query_obtener_Transferencias(com_man_pred)
-            Transferencias = _ejecutar_query(Transferencia_sql)
-            return _obtener_count_Transferencias(Transferencias)
-    # except Exception as e:
+        com_man_pred = _construir_com_man_pred(comuna, manzana, predio)
+        Transferencias = _ejecutar_query(QUERY_OBTENER_TRANSFERENCIAS_SQL.format(com_man_pred=com_man_pred))
+        if(_obtener_count_Transferencias(Transferencias)):
+            return  True
+    
+    except Exception as e:
     #     connect.rollback()
-    #     print(ERROR_MESSAGE, e)
+        print(ERROR_MESSAGE, e)
+        return False
     #     return jsonify({"error": str(e)}), INTERNAL_SERVER_ERROR
     # finally:
     #     connect.close()
@@ -340,6 +343,7 @@ def _obtener_ultimo_ano_inicial(comuna, manzana, predio):
             com_man_pred = _construir_com_man_pred(comuna, manzana, predio)
             query = _construir_query_obtener_ultimo_ano_inicial(com_man_pred)
             last_initial_year_query = _ejecutar_query( query)
+            print(last_initial_year_query)
             return _obtener_ano_desde_query(last_initial_year_query)
     # except Exception as e:
     #     connect.rollback()

@@ -495,14 +495,15 @@ class form_solver():
 
         count_Transferencia = obtener_Transferencias(self.comuna, self.manzana, self.predio)
 
-        count_Transferencia = obtener_Transferencias()
-        print(count_Transferencia)
+        #count_Transferencia = obtener_Transferencias()
+        print(count_Transferencia,"",self.fecha_inscripcion)
 
-        if count_Transferencia == 0:
+        if not count_Transferencia:
             self.procesar_escenario_1()
         else:
-            last_initial_year = _obtener_ultimo_ano_inicial()
-            if last_initial_year < obtener_ano_inscripcion():
+            last_initial_year = _obtener_ultimo_ano_inicial(self.comuna, self.manzana, self.predio)
+            print("Last initial year: ", last_initial_year)
+            if last_initial_year < self.fecha_inscripcion[:4]:
                 self.procesar_escenario_2(last_initial_year)
             elif last_initial_year > obtener_ano_inscripcion():
                 #self.procesar_escenario_3(last_initial_year)
