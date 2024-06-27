@@ -4,6 +4,13 @@ REGULARIZACION_DE_PATRIMONIO = 99
 QUERY_ALL_ENAJENANTES = "SELECT * FROM Enajenantes"
 QUERY_ALL_FORMULARIOS = "SELECT * FROM formulario"
 QUERY_ALL_ADQUIRENTES = "SELECT * FROM Adquirentes"
+QUERY_ALL_MULTIPROPIETARIOS = "SELECT * FROM Multipropietarios"
+QUERY_ALL_TRANSFERENCIAS = "SELECT * FROM Transferencias"
+QUERY_FORMULARIO_FILTER_ID = "SELECT * FROM Multipropietarios WHERE id = %s"
+QUERY_FORMULARIO_FILTER_NUM_ATENCION =  "SELECT * FROM formulario WHERE Numero_de_atencion = %s"
+QUERY_ENAJENANTES_INFO = "SELECT RUNRUT, porcDerecho FROM Enajenantes WHERE enajenante_id = %s"
+QUERY_ADQUIRENTES_INFO = "SELECT RUNRUT, porcDerecho FROM Adquirentes WHERE Adquirente_id = %s"
+
 QUERY_INSERTAR_FORM = """
                     INSERT INTO formulario (
                         Numero_de_atencion, CNE, Comuna, Manzana, Predio, Fojas, Fecha_de_inscripcion, Numero_de_insripcion
@@ -93,7 +100,7 @@ SELECT *
 FROM Multipropietarios
 WHERE com_man_pred={com_man_pred}
 AND RUNRUT={runrut}
-AND Ano_vigencia_inicial={Ano_vigencia_inicial}
+AND Ano_vigencia_inicial={ano_vigencia_inicial}
 """
 
 QUERY_DELETE_MULTIPROPIETARIO = """

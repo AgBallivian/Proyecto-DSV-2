@@ -1,10 +1,10 @@
-from DBmanager import (_obtener_siguiente_id_Transferencias, _insert_enajenantes_to_Transferencias,
-                        _insert_adquirientes_to_Transferencias, obtener_Transferencias, 
-                        add_formulario, add_enajenante, add_adquirente, _actualizar_multipropietarios_por_vigencia,
-                        _obtener_ano_final, _obtener_ultimo_ano_inicial,delete_Transferencias_antiguos,
-                        obtener_multipropietarios_Comanpred,
+from DBmanager import (_obtener_siguiente_id_transferencias, _insert_enajenantes_to_transferencias,
+                        _insert_adquirientes_to_transferencias, obtener_transferencias, 
+                        agregar_formulario, agregar_enajenante, agregar_adquirente, _actualizar_multipropietarios_por_vigencia,
+                        _obtener_ano_final, _obtener_ultimo_ano_inicial,delete_transferencias_antiguos,
+                        obtener_multipropietarios_commanpred,
                         actualizar_transferia_por_vigencia,
-                        obtener_multipropietario_transferencias_Comanpred)
+                        obtener_multipropietario_transferencias_commanpred)
 from utils import (obtener_ano_inscripcion,_construir_com_man_pred, obtener_total_porcentaje)
 from Errores import ERROR_MESSAGE
 COMPRAVENTA = 8
@@ -31,59 +31,58 @@ class form_solver():
         else:
             self.adquirentes_data = []
 
-    def add_Transferencias(self):
-        id_Transferencia = _obtener_siguiente_id_Transferencias()
+    def agregar_transferencias(self):
+        id_transferencia = _obtener_siguiente_id_transferencias()
         com_man_pred = _construir_com_man_pred(self.comuna, self.manzana, self.predio)
 
         for enajenante in self.enajenantes_data:
-            print("entregando enajenante", enajenante)
-            _insert_enajenantes_to_Transferencias(id_Transferencia,
+            _insert_enajenantes_to_transferencias(id_transferencia,
                 com_man_pred, enajenante, self.fojas, self.fecha_inscripcion, self.numero_inscripcion)
-            id_Transferencia += 1
+            id_transferencia += 1
 
         for adquirente in self.adquirentes_data:
-            _insert_adquirientes_to_Transferencias(id_Transferencia,
+            _insert_adquirientes_to_transferencias(id_transferencia,
                 com_man_pred, adquirente, self.fojas, self.fecha_inscripcion, self.numero_inscripcion)
-            id_Transferencia += 1
+            id_transferencia += 1
 
     def agregar_nuevo_formulario(self):
-        numero_de_atencion = add_formulario(self.cne, self.comuna, self.manzana, self.predio, self.fojas, self.fecha_inscripcion, self.numero_inscripcion)
+        numero_de_atencion = agregar_formulario(self.cne, self.comuna, self.manzana, self.predio, self.fojas, self.fecha_inscripcion, self.numero_inscripcion)
         self.add_all(numero_de_atencion)
 
     def actualizar_vigencia(self, last_initial_year):
         _actualizar_multipropietarios_por_vigencia(last_initial_year, self.comuna, self.manzana, self.predio, self.fecha_inscripcion)
 
-        numero_de_atencion = add_formulario(self.cne, self.comuna, self.manzana, self.predio, self.fojas, self.fecha_inscripcion, self.numero_inscripcion)
+        numero_de_atencion = agregar_formulario(self.cne, self.comuna, self.manzana, self.predio, self.fojas, self.fecha_inscripcion, self.numero_inscripcion)
         self.add_all(numero_de_atencion)
         return True
 
     def eliminar_antiguos_y_reemplazar(self, last_initial_year):
-        delete_Transferencias_antiguos(last_initial_year)
-        numero_de_atencion = add_formulario(self.cne, self.comuna, self.manzana, self.predio, self.fojas, self.fecha_inscripcion, self.numero_inscripcion)
+        delete_transferencias_antiguos(last_initial_year)
+        numero_de_atencion = agregar_formulario(self.cne, self.comuna, self.manzana, self.predio, self.fojas, self.fecha_inscripcion, self.numero_inscripcion)
         self.add_all(numero_de_atencion)
 
     def add_all(self, numero_de_atencion):
         for enajenante in self.enajenantes_data:
-            add_enajenante(numero_de_atencion, enajenante['RUNRUT'], enajenante['porcDerecho'])
+            agregar_enajenante(numero_de_atencion, enajenante['RUNRUT'], enajenante['porcDerecho'])
         for adquirente in self.adquirentes_data:
-            add_adquirente(numero_de_atencion, adquirente['RUNRUT'], adquirente['porcDerecho'])
-        self.add_Transferencias()
+            agregar_adquirente(numero_de_atencion, adquirente['RUNRUT'], adquirente['porcDerecho'])
+        self.agregar_transferencias()
         # self.handle_enajenante_fantasma()
         
 
     def determinar_y_procesar_escenario(self):
         if self.cne == COMPRAVENTA:
             self.procesar_escenario_compraventa()
-            self.add_Transferencias()
+            self.agregar_transferencias()
         elif self.cne == REGULARIZACION_DE_PATRIMONIO:
             self._procesar_escenario_regularizacion_patrimonio()
-            self.add_Transferencias()
+            self.agregar_transferencias()
 
 
     
     def procesar_escenario_compraventa(self):
         for enajenante in self.enajenantes_data:
-            multipropietarios = obtener_multipropietarios_Comanpred(
+            multipropietarios = obtener_multipropietarios_commanpred(
                 _construir_com_man_pred(self.comuna, self.manzana, self.predio),
                 enajenante['RUNRUT'],
                 self.fecha_inscripcion
@@ -95,21 +94,19 @@ class form_solver():
                 enajenante['ano'] = None
                 enajenante['numero_inscripcion'] = None
 
-        print(self.enajenantes_data)
-
         #aqui tengo a todos los registrados en la base de datos
         #hasta el momento
         com_man_pred = str(_construir_com_man_pred(self.comuna, self.manzana, self.predio))
-        Datos_temporales_totales = obtener_multipropietario_transferencias_Comanpred(
+        datos_temporales_totales = obtener_multipropietario_transferencias_commanpred(
             com_man_pred
         )
         #de la lista de datos temporal seleciono solamente a los 
         # que tienen igual rut que lso enajentantes entrantes
-        lista_dueños = []
-        for personas in Datos_temporales_totales:
+        lista_duenos = []
+        for personas in datos_temporales_totales:
             for enajenante in self.enajenantes_data:
                 if(enajenante['RUNRUT'] == personas['RUNRUT']):
-                    lista_dueños.append(personas)
+                    lista_duenos.append(personas)
         
 
         is_ghost=False
@@ -120,7 +117,7 @@ class form_solver():
                 break
         #año final del formulario
             #aqui se guardaria el porcentaje de los enajentantes de la base de datos
-            total_porc_enajenantes = obtener_total_porcentaje(lista_dueños)
+            total_porc_enajenantes = obtener_total_porcentaje(lista_duenos)
             total_porc_adquirentes = obtener_total_porcentaje(self.adquirentes_data)
             primer_caso = True if total_porc_adquirentes == 100 else False
             segundo_caso = True if total_porc_adquirentes == 0 else False
@@ -129,13 +126,12 @@ class form_solver():
             if(primer_caso or segundo_caso):
                 #para el caso 1 se debe actualizar la vigencia del año inicial en la base de datos temporal, osea en la variable donde se estan guardando
                 #luegose borra los enajenantes del temporal y se reparte el porcentaje en los nuevos adquirientes
-                #finalmente se le agrega a todos las personas del comanpred de la base de datos fecha de vigencia -1 al año de inscripcion del nuevo formulario
+                #finalmente se le agrega a todos las personas del commanpred de la base de datos fecha de vigencia -1 al año de inscripcion del nuevo formulario
                 if(is_ghost):
                     total_porc_enajenantes = 100 
                 porcentaje_igual = 100 / len(self.adquirentes_data)
 
                 if primer_caso:
-                    print(int(self.fecha_inscripcion[:4]))
                     actualizar_transferia_por_vigencia(com_man_pred,  int(self.fecha_inscripcion[:4]) - 1)
                     for adquirente in self.adquirentes_data:
                         adquirente["porcDerecho"] = float(adquirente["porcDerecho"]) * (total_porc_enajenantes / 100)
@@ -158,11 +154,11 @@ class form_solver():
                 adquirente["porcDerecho"] = porcentaje
 
             else:
-                for dueños in lista_dueños:
+                for duenos in lista_duenos:
                     for vendiendo in self.enajenantes_data:
-                        if dueños["RUNRUT"] == vendiendo["RUNRUT"]:
-                            dueños["porDerecho"] -= vendiendo["porDerecho"]
-                            if dueños["porDerecho"] <= 0:
+                        if duenos["RUNRUT"] == vendiendo["RUNRUT"]:
+                            duenos["porDerecho"] -= vendiendo["porDerecho"]
+                            if duenos["porDerecho"] <= 0:
                                 pass
             if(is_ghost):
                 diferencia = 100 - total_porc_adquirentes
@@ -186,14 +182,12 @@ class form_solver():
 
     def _procesar_escenario_regularizacion_patrimonio(self):
 
-        count_Transferencia = obtener_Transferencias(self.comuna, self.manzana, self.predio)
-        print(count_Transferencia,"",self.fecha_inscripcion)
+        count_transferencia = obtener_transferencias(self.comuna, self.manzana, self.predio)
 
-        if not count_Transferencia:
+        if not count_transferencia:
             self.procesar_escenario_1()
         else:
             last_initial_year = _obtener_ultimo_ano_inicial(self.comuna, self.manzana, self.predio)
-            print("Last initial year: ", last_initial_year)
             if last_initial_year < self.fecha_inscripcion[:4]:
                 self.procesar_escenario_2(last_initial_year)
             elif last_initial_year > obtener_ano_inscripcion():
@@ -215,7 +209,7 @@ class form_solver():
 
     def ajustar_porcentajes_adquirentes(self):
         sum_porc_derecho_adquirente = self._calcular_suma_porc_derecho_adquirente()
-        print("Suma de porcentajes de derecho de adquirentes: " + str(sum_porc_derecho_adquirente))
+        # print("Suma de porcentajes de derecho de adquirentes: " + str(sum_porc_derecho_adquirente))
 
         if sum_porc_derecho_adquirente == 100:
             run_rut_enajenantes = self._obtener_run_rut_enajenantes()

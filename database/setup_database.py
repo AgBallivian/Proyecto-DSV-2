@@ -151,7 +151,7 @@ def insert_default_data():
             cursor.execute("DELETE FROM Transferencias")
 
             # Insertar datos challa en la tabla 'multipropietario'
-            Transferencia_data = [
+            transferencia_data = [
                 (1, '394-514-23', "123456789", 50.00, 1, 2021, 1, '2021-01-01', 2021, None, "Enjante"),
                 (2, '8-54-456', "987654321", 75.50, 2, 2022, 2, '2022-02-15', 2022, None, "Adquirente"),
                 (3, '7-22-22', "456789012", 100.00, 3, 2023, 3, '2023-03-30', 2023, None, "Adquirente")
@@ -163,7 +163,7 @@ def insert_default_data():
                                               Ano_vigencia_inicial, Ano_vigencia_final, Tipo)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """
-            cursor.executemany(sql, Transferencia_data)
+            cursor.executemany(sql, transferencia_data)
 
         connection.commit()    
         with connection.cursor() as cursor:
@@ -190,7 +190,7 @@ def insert_default_data():
         with connection.cursor() as cursor:
             # Eliminar datos existentes
             cursor.execute("DELETE FROM Enajenantes")
-            Enajenantes_data = [
+            enajenantes_data = [
                 (1, 1, "123456789", 50),
                 (2, 1, "125212885", 25),
                 (3, 1, "268957861", 25),
@@ -205,14 +205,14 @@ def insert_default_data():
                                         RUNRUT, porcDerecho)
                 VALUES (%s, %s, %s, %s)
             """
-            cursor.executemany(sql, Enajenantes_data)
+            cursor.executemany(sql, enajenantes_data)
 
         connection.commit()
 
         with connection.cursor() as cursor:
             # Eliminar datos existentes
             cursor.execute("DELETE FROM Adquirentes")
-            Adquirentes_data = [
+            adquirentes_data = [
                 (1, 1, "552405920", 100),
                 (2, 1, "621975923", 75),
                 (3, 2, "625157514", 25),
@@ -224,7 +224,7 @@ def insert_default_data():
                                         RUNRUT, porcDerecho)
                 VALUES (%s, %s, %s, %s)
             """
-            cursor.executemany(sql, Adquirentes_data)
+            cursor.executemany(sql, adquirentes_data)
 
         connection.commit()
 

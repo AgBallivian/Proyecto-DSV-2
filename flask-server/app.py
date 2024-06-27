@@ -6,9 +6,12 @@ from algoritmo import form_solver
 from collections import defaultdict
 from config import Config
 from carga_datos import cargar_regiones, cargar_comunas
-from Queries import QUERY_CONNECTOR
-from DBmanager import obtener_Transferencias_filtrados, obtener_numer_de_atencion, obtener_multipropietarios_filtrados
+from Queries import QUERY_CONNECTOR, QUERY_ALL_FORMULARIOS, QUERY_FORMULARIO_FILTER_ID, QUERY_ALL_MULTIPROPIETARIOS, QUERY_FORMULARIO_FILTER_NUM_ATENCION, QUERY_ENAJENANTES_INFO, QUERY_ADQUIRENTES_INFO
+from DBmanager import obtener_transferencias_filtrados, obtener_numer_de_atencion, obtener_multipropietarios_filtrados
 from Errores import (ERROR_RUT_INVALIDO, ERROR_RUT_VERIFICADOR)
+
+INDEX_ARG = '['
+CAMPO_ARG = ']'
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": ["http://localhost:8000"]}})
@@ -89,9 +92,10 @@ def procesar_datos_participantes(listas_formulario, tipo_participante):
     return datos_participante
 
 def analizar_clave(clave):
-    partes = clave.split('[')
-    indice = int(partes[1].split(']')[0])
-    campo = partes[2].split(']')[0]
+    print("analizando claves",clave, type(clave))
+    partes = clave.split(INDEX_ARG)
+    indice = int(partes[1].split(CAMPO_ARG)[0])
+    campo = partes[2].split(CAMPO_ARG)[0]
     return indice, campo
 
 def asegurar_existencia_participante(datos_participante, indice):
@@ -169,7 +173,7 @@ def ver_multipropietarios_filtrados():
     fojas = request.args.get('fojas')
 
     # Construir la consulta SQL con los filtros
-    consulta = "SELECT * FROM Multipropietarios"
+    consulta = QUERY_ALL_MULTIPROPIETARIOS
     condiciones = []
     if id_region:
         comunas_filtradas = [id_comuna for id_comuna, datos in comunas.items() if datos['id_region'] == int(id_region)]
@@ -198,14 +202,14 @@ def ver_multipropietario(id):
     connection = obtener_conexion_db()
     try:
         with connection.cursor() as cursor:
-            multipropietario_sql = "SELECT * FROM Multipropietarios WHERE id = %s"
-            cursor.execute(multipropietario_sql, (id,))
+            # multipropietario_sql = "SELECT * FROM Multipropietarios WHERE id = %s"
+            cursor.execute(QUERY_FORMULARIO_FILTER_ID, (id,))
             multipropietario = cursor.fetchone()
         return render_template('ver_multipropietario.html', multipropietario=multipropietario)
     finally:
         connection.close()
 
-def obtener_formularios(filtros):
+def obtener_formularios(filtros):#cambiar
     connection = obtener_conexion_db()
     search_filters = ""
     if any(v is not None for v in list(filtros.values())):
@@ -215,10 +219,9 @@ def obtener_formularios(filtros):
                 search_filters += f"{key} = {filtros[key]} AND "
         search_filters = search_filters[:-5]
 
-    formulario_sql = f"SELECT * FROM formulario{search_filters}"
     try:
         with connection.cursor() as cursor:
-            cursor.execute(formulario_sql)
+            cursor.execute(QUERY_ALL_FORMULARIOS.format(search_filters))
             formularios = cursor.fetchall()
             return formularios
     finally:
@@ -226,10 +229,10 @@ def obtener_formularios(filtros):
 
 def obtener_formulario(id):
     connection = obtener_conexion_db()
-    formulario_sql = f"SELECT * FROM formulario WHERE Numero_de_atencion = {id}"
+    # formulario_sql = f"SELECT * FROM formulario WHERE Numero_de_atencion = {id}"
     try:
         with connection.cursor() as cursor:
-            cursor.execute(formulario_sql)
+            cursor.execute(QUERY_FORMULARIO_FILTER_NUM_ATENCION, (id,))
             formulario = cursor.fetchone()
             return formulario
     finally:
@@ -237,10 +240,10 @@ def obtener_formulario(id):
 
 def obtener_enajenantes(id):
     connection = obtener_conexion_db()
-    enajenantes_sql = f"SELECT RUNRUT, porcDerecho FROM Enajenantes WHERE enajenante_id = {id}"
+    # enajenantes_sql = "SELECT RUNRUT, porcDerecho FROM Enajenantes WHERE enajenante_id = %s"
     try:
         with connection.cursor() as cursor:
-            cursor.execute(enajenantes_sql)
+            cursor.execute(QUERY_ENAJENANTES_INFO, (id,))
             enajenantes = cursor.fetchall()
             return enajenantes
     finally:
@@ -248,10 +251,10 @@ def obtener_enajenantes(id):
 
 def obtener_adquirentes(id):
     connection = obtener_conexion_db()
-    adquirentes_sql = f"SELECT RUNRUT, porcDerecho FROM Adquirentes WHERE Adquirente_id = {id}"
+    # adquirentes_sql = "SELECT RUNRUT, porcDerecho FROM Adquirentes WHERE Adquirente_id = %s"
     try:
         with connection.cursor() as cursor:
-            cursor.execute(adquirentes_sql)
+            cursor.execute(QUERY_ADQUIRENTES_INFO, (id,))
             adquirentes = cursor.fetchall()
             return adquirentes
     finally:

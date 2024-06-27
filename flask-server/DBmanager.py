@@ -2,7 +2,7 @@ from flask import jsonify
 import pymysql
 
 from config import Config
-from utils import _construir_com_man_pred, _obtener_count_Transferencias, _obtener_ano_desde_query, obtener_ano_inscripcion, _obtener_count_multipropietarios
+from utils import _construir_com_man_pred, _obtener_count_transferencias, _obtener_ano_desde_query, obtener_ano_inscripcion, _obtener_count_multipropietarios
 from Queries import (
     QUERY_ALL_FORMULARIOS, QUERY_INSERTAR_FORM, INTERNAL_SERVER_ERROR,
     QUERY_ALL_ENAJENANTES, QUERY_INSERTAR_ENAJENANTES, QUERY_ALL_ADQUIRENTES,
@@ -13,7 +13,8 @@ from Queries import (
     COMPRAVENTA, REGULARIZACION_DE_PATRIMONIO, QUERY_OBTENER_ULT_ANO_INIT, QUERY_CONNECTOR,
     QUERY_AGREGAR_MULTIPROPIETARIO, QUERY_OBTENER_ID_MULTIPROPIETARIOS_SQL, QUERY_ACTUALIZAR_MULTIPROPIETARIO,
     QUERY_ACTUALIZAR_TRANSFERENCIAS,
-    QUERY_OBTENER_MULTIPROPIETARIOS_TRANSFERENCIAS_SQL,QUERY_OBTENER_MULTIPROPIETARIO_SQL, QUERY_DELETE_MULTIPROPIETARIO
+    QUERY_OBTENER_MULTIPROPIETARIOS_TRANSFERENCIAS_SQL,QUERY_OBTENER_MULTIPROPIETARIO_SQL, QUERY_DELETE_MULTIPROPIETARIO,
+    QUERY_ALL_MULTIPROPIETARIOS, QUERY_ALL_TRANSFERENCIAS
     )
 
 ERROR_MESSAGE = "Error "
@@ -28,7 +29,6 @@ def obtener_conexion_db():
     return connection
 
 def _ejecutar_query(query, parameters = None):
-    print("HOLA SOY QUERY: ",query, parameters)
     connect = obtener_conexion_db()
     try:
         with connect.cursor() as cursor:
@@ -60,7 +60,7 @@ def obtener_numer_de_atencion():
     finally:
         connect.close()
 
-def add_formulario(cne, comuna, manzana, predio, fojas, fecha_inscripcion, numero_inscripcion):
+def agregar_formulario(cne, comuna, manzana, predio, fojas, fecha_inscripcion, numero_inscripcion):
     connect = obtener_conexion_db()
     try:
         with connect.cursor() as cursor:
@@ -85,7 +85,7 @@ def add_formulario(cne, comuna, manzana, predio, fojas, fecha_inscripcion, numer
     finally:
         connect.close()
 
-def add_enajenante(numero_de_atencion, runrut, porcentaje_derecho):#cambiar a enajenante{id:id, num:num, runrut:runrut, procderecho:porcderecho}
+def agregar_enajenante(numero_de_atencion, runrut, porcentaje_derecho):
     connect = obtener_conexion_db()
     try:
         with connect.cursor() as cursor:
@@ -109,7 +109,7 @@ def add_enajenante(numero_de_atencion, runrut, porcentaje_derecho):#cambiar a en
     finally:
         connect.close()
 
-def add_adquirente(numero_de_atencion, runrut, porcentaje_derecho):
+def agregar_adquirente(numero_de_atencion, runrut, porcentaje_derecho):
     connect = obtener_conexion_db()
     try:
         with connect.cursor() as cursor:
@@ -132,7 +132,7 @@ def add_adquirente(numero_de_atencion, runrut, porcentaje_derecho):
     finally:
         connect.close()
 
-# def add_multipropietario(self):
+# def agregar_multipropietario(self):
 #     id_multipropietario = _obtener_siguiente_id_multipropietario()
 #     com_man_pred = self._construir_com_man_pred()
 
@@ -148,13 +148,13 @@ def add_adquirente(numero_de_atencion, runrut, porcentaje_derecho):
 # def obtener_ano_inscripcion(self):
 #     return int(self.fecha_inscripcion.split("-")[0])
 
-def _obtener_siguiente_id_Transferencias():
+def _obtener_siguiente_id_transferencias():
     connect = obtener_conexion_db()
     try:
         with connect.cursor() as cursor:
             cursor.execute(QUERY_ID_TRANSFERENCIAS)
-            id_Transferencias = cursor.fetchall()
-            return id_Transferencias[0]["id"] + 1 if id_Transferencias else 0
+            id_transferencias = cursor.fetchall()
+            return id_transferencias[0]["id"] + 1 if id_transferencias else 0
     except Exception as e:
         connect.rollback()
         print(ERROR_MESSAGE, e)
@@ -166,14 +166,14 @@ def _obtener_siguiente_id_Transferencias():
 def _obtener_ano_final(fecha_inscripcion):
     return obtener_ano_inscripcion(fecha_inscripcion) - 1
 
-def _construir_query_actualizar_Transferencias(ano_final, last_initial_year, com_man_pred):
+def _construir_query_actualizar_transferencias(ano_final, last_initial_year, com_man_pred):
     return QUERY_UPDATE_TRANSFERENCIAS_SQL.format(
         ano_final=ano_final,
         last_initial_year=last_initial_year,
         com_man_pred=com_man_pred
     )
 
-def _ejecutar_query_actualizar_Transferencias(query):
+def _ejecutar_query_actualizar_transferencias(query):
     connect = obtener_conexion_db()
     try:
         with connect.cursor() as cursor:
@@ -185,12 +185,12 @@ def _ejecutar_query_actualizar_Transferencias(query):
     finally:
         connect.close()
 
-def delete_Transferencias_antiguos(last_initial_year, comuna, manzana, predio):
+def delete_transferencias_antiguos(last_initial_year, comuna, manzana, predio):
     # connect = obtener_conexion_db()
     # try:
     #     with connect.cursor() as cursor:
             com_man_pred = _construir_com_man_pred(comuna, manzana, predio)
-            delete_vigencia_final_query = _construir_query_delete_Transferencias(last_initial_year, com_man_pred)
+            delete_vigencia_final_query = _construir_query_delete_transferencias(last_initial_year, com_man_pred)
             _ejecutar_query(delete_vigencia_final_query)
     #         connect.commit()
     #         return True
@@ -201,20 +201,20 @@ def delete_Transferencias_antiguos(last_initial_year, comuna, manzana, predio):
     # finally:
     #     connect.close()
 
-def _construir_query_delete_Transferencias(last_initial_year, com_man_pred):
+def _construir_query_delete_transferencias(last_initial_year, com_man_pred):
     return QUERY_DELETE_TRANSFERENCIAS.format(
         last_initial_year=str(last_initial_year),
         com_man_pred=com_man_pred
     )
 
 
-def obtener_Transferencias(comuna, manzana, predio):
+def obtener_transferencias(comuna, manzana, predio):
     # connect = obtener_conexion_db()
     try:
     #     with connect.cursor() as cursor:
         com_man_pred = _construir_com_man_pred(comuna, manzana, predio)
-        Transferencias = _ejecutar_query(QUERY_OBTENER_TRANSFERENCIAS_SQL.format(com_man_pred=com_man_pred))
-        if(_obtener_count_Transferencias(Transferencias)):
+        transferencias = _ejecutar_query(QUERY_OBTENER_TRANSFERENCIAS_SQL.format(com_man_pred=com_man_pred))
+        if(_obtener_count_transferencias(transferencias)):
             return  True
     
     except Exception as e:
@@ -224,22 +224,22 @@ def obtener_Transferencias(comuna, manzana, predio):
     #     return jsonify({"error": str(e)}), INTERNAL_SERVER_ERROR
     # finally:
     #     connect.close()
-def _construir_query_obtener_Transferencias(com_man_pred):
+def _construir_query_obtener_transferencias(com_man_pred):
     return QUERY_OBTENER_TRANSFERENCIAS_SQL.format(com_man_pred=com_man_pred)
 
 
-def obtener_Transferencias_filtrados(region_id, comuna_id, block_number, property_number, year):
+def obtener_transferencias_filtrados(region_id, comuna_id, block_number, property_number, year):
     connection = obtener_conexion_db()
     try:
         with connection.cursor() as cursor:
-            Transferencias_sql = "SELECT * FROM Transferencias"
+            transferencias_sql = QUERY_ALL_TRANSFERENCIAS
             filtros = aplicar_filtros(region_id, comuna_id, block_number, property_number, year)
             if filtros:
-                Transferencias_sql += QUERY_CONNECTOR.join(filtros)
+                transferencias_sql += QUERY_CONNECTOR.join(filtros)
 
-            cursor.execute(Transferencias_sql)
-            Transferencias = cursor.fetchall()
-            return Transferencias
+            cursor.execute(transferencias_sql)
+            transferencias = cursor.fetchall()
+            return transferencias
     finally:
         connection.close()
 
@@ -247,7 +247,7 @@ def obtener_Transferencias_filtrados(region_id, comuna_id, block_number, propert
 def aplicar_filtros(region_id, comuna_id, block_number, property_number, year):
     filtros = []
     if region_id:
-        filtros.append(f"com_man_pred IN (SELECT CONCAT(SUBSTRING_INDEX(m.com_man_pred, '-', 1), '-', SUBSTRING_INDEX(SUBSTRING_INDEX(m.com_man_pred, '-', -2), '-', 1), '-', SUBSTRING_INDEX(m.com_man_pred, '-', -1)) FROM Transferencias m JOIN comunas c ON SUBSTRING_INDEX(m.com_man_pred, '-', 1) = c.id_comuna WHERE c.id_region = {region_id})")
+        filtros.append(f"com_man_pred IN (SELECT CONCAT(SUBSTRING_INDEX(m.com_man_pred, '-', 1), '-', SUBSTRING_INDEX(SUBSTRING_INDEX(m.com_man_pred, '-', -2), '-', 1), '-', SUBSTRING_INDEX(m.com_man_pred, '-', -1)) FROM transferencias m JOIN comunas c ON SUBSTRING_INDEX(m.com_man_pred, '-', 1) = c.id_comuna WHERE c.id_region = {region_id})")
     if comuna_id:
         filtros.append(f"SUBSTRING_INDEX(com_man_pred, '-', 1) = '{comuna_id}'")
     if block_number:
@@ -262,11 +262,11 @@ def aplicar_filtros(region_id, comuna_id, block_number, property_number, year):
 # def _obtener_count_multipropietarios(multipropietarios):
 #     return multipropietarios[0]['COUNT(*)']
 
-def _insert_enajenantes_to_Transferencias(id_Transferencia, com_man_pred, enajenante, fojas, fecha_inscripcion, numero_inscripcion):
+def _insert_enajenantes_to_transferencias(id_transferencia, com_man_pred, enajenante, fojas, fecha_inscripcion, numero_inscripcion):
     # connect = obtener_conexion_db()
     # try:
     #     with connect.cursor() as cursor:
-            query, parameters = _construir_query_insertar_enajenantes(id_Transferencia, com_man_pred, enajenante, fojas, fecha_inscripcion, numero_inscripcion)
+            query, parameters = _construir_query_insertar_enajenantes(id_transferencia, com_man_pred, enajenante, fojas, fecha_inscripcion, numero_inscripcion)
             _ejecutar_query(query, parameters)
     #         connect.commit()
     # except Exception as e:
@@ -276,9 +276,9 @@ def _insert_enajenantes_to_Transferencias(id_Transferencia, com_man_pred, enajen
     # finally:
     #     connect.close()
 
-def _construir_query_insertar_enajenantes(id_Transferencia , com_man_pred, enajenante, fojas, fecha_inscripcion, numero_inscripcion):
+def _construir_query_insertar_enajenantes(id_transferencia , com_man_pred, enajenante, fojas, fecha_inscripcion, numero_inscripcion):
     return QUERY_INSERTAR_ENAJENANTES_TRANSFERENCIAS_SQL, (
-        id_Transferencia,
+        id_transferencia,
         com_man_pred,
         enajenante['RUNRUT'],
         enajenante['porcDerecho'],
@@ -294,25 +294,25 @@ def _construir_query_insertar_enajenantes(id_Transferencia , com_man_pred, enaje
     # return QUERY_INSERTAR_ENAJENANTES_MULTIPROPIETARIO_SQL.format(
     #     id = id_multipropietario,
     #     com_man_pred = com_man_pred,
-    #     RUNRUT = enajenante['RUNRUT'],
-    #     porcDerecho = enajenante['porcDerecho'],
-    #     Fojas = fojas,
-    #     Ano_inscripcion = int(obtener_ano_inscripcion(fecha_inscripcion)),
-    #     Numero_inscripcion = numero_inscripcion,
-    #     Fecha_de_inscripcion = fecha_inscripcion,
-    #     Ano_vigencia_inicial = int(obtener_ano_inscripcion(fecha_inscripcion)),
-    #     Ano_vigencia_final = None,
-    #     Tipo = "Enajenante"
-# (id = '{id}', com_man_pred = '{com_man_pred}', RUNRUT = '{RUNRUT}', porcDerecho = '{porcDerecho}',
-#                                     Fojas = '{Fojas}', Ano_inscripcion = '{Ano_inscripcion}', Numero_inscripcion = '{Numero_inscripcion}',
-#                                     Fecha_de_inscripcion = '{Fecha_de_inscripcion}', Ano_vigencia_inicial = '{Ano_vigencia_inicial}',
-#                                     Ano_vigencia_final = '{Ano_vigencia_final}', Tipo = '{Tipo}')
+    #     runrut = enajenante['RUNRUT'],
+    #     porcderecho = enajenante['porcDerecho'],
+    #     fojas = fojas,
+    #     ano_inscripcion = int(obtener_ano_inscripcion(fecha_inscripcion)),
+    #     numero_inscripcion = numero_inscripcion,
+    #     fecha_de_inscripcion = fecha_inscripcion,
+    #     ano_vigencia_inicial = int(obtener_ano_inscripcion(fecha_inscripcion)),
+    #     ano_vigencia_final = None,
+    #     tipo = "Enajenante"
+# (id = '{id}', com_man_pred = '{com_man_pred}', runrut = '{runrut}', porcderecho = '{porcDerecho}',
+#                                     fojas = '{fojas}', ano_inscripcion = '{ano_inscripcion}', numero_inscripcion = '{numero_inscripcion}',
+#                                     fecha_de_inscripcion = '{fecha_de_inscripcion}', ano_vigencia_inicial = '{ano_vigencia_inicial}',
+#                                     ano_vigencia_final = '{ano_vigencia_final}', tipo = '{tipo}')
 
-def _insert_adquirientes_to_Transferencias(id_Transferencia, com_man_pred, adquirente, fojas, fecha_inscripcion, numero_inscripcion):
+def _insert_adquirientes_to_transferencias(id_transferencia, com_man_pred, adquirente, fojas, fecha_inscripcion, numero_inscripcion):
     # connect = obtener_conexion_db()
     # try:
     #     with connect.cursor() as cursor:
-            query, parameters = _construir_query_insertar_adquirientes(id_Transferencia, com_man_pred, adquirente, fojas, fecha_inscripcion, numero_inscripcion)
+            query, parameters = _construir_query_insertar_adquirientes(id_transferencia, com_man_pred, adquirente, fojas, fecha_inscripcion, numero_inscripcion)
             _ejecutar_query(query, parameters)
     #         connect.commit()
     # except Exception as e:
@@ -322,9 +322,9 @@ def _insert_adquirientes_to_Transferencias(id_Transferencia, com_man_pred, adqui
     # finally:
     #     connect.close()
 
-def _construir_query_insertar_adquirientes(id_Transferencia, com_man_pred, adquirente, fojas, fecha_inscripcion, numero_inscripcion):
+def _construir_query_insertar_adquirientes(id_transferencia, com_man_pred, adquirente, fojas, fecha_inscripcion, numero_inscripcion):
     return QUERY_INSERTAR_ADQUIRENTES_TRANSFERENCIAS_SQL, (
-        id_Transferencia,
+        id_transferencia,
         com_man_pred,
         adquirente['RUNRUT'],
         adquirente['porcDerecho'],
@@ -344,7 +344,6 @@ def _obtener_ultimo_ano_inicial(comuna, manzana, predio):
             com_man_pred = _construir_com_man_pred(comuna, manzana, predio)
             query = _construir_query_obtener_ultimo_ano_inicial(com_man_pred)
             last_initial_year_query = _ejecutar_query( query)
-            print(last_initial_year_query)
             return _obtener_ano_desde_query(last_initial_year_query)
     # except Exception as e:
     #     connect.rollback()
@@ -373,16 +372,16 @@ def obtener_multipropietario(numero_de_atencion):
         connect.close()
 
 
-def agregar_multipropietario(com_man_pred, RUNRUT, porcDerecho,
-                            Fojas, Ano_inscripcion, Numero_inscripcion,
-                            Fecha_de_inscripcion, Ano_vigencia_inicial):
+def agregar_multipropietario(com_man_pred, runrut, porcderecho,
+                            fojas, ano_inscripcion, numero_inscripcion,
+                            fecha_de_inscripcion, ano_vigencia_inicial):
     connect = obtener_conexion_db()
     try:
-        id = _construir_query_obtener_multipropietarios_id(com_man_pred)
+        multipropietario_id = _construir_query_obtener_multipropietarios_id(com_man_pred)
         with connect.cursor() as cursor:
-            cursor.execute(QUERY_AGREGAR_MULTIPROPIETARIO, (id, com_man_pred, RUNRUT, porcDerecho,
-                                    Fojas, Ano_inscripcion, Numero_inscripcion,
-                                    Fecha_de_inscripcion, Ano_vigencia_inicial,
+            cursor.execute(QUERY_AGREGAR_MULTIPROPIETARIO, (multipropietario_id, com_man_pred, runrut, porcderecho,
+                                    fojas, ano_inscripcion, numero_inscripcion,
+                                    fecha_de_inscripcion, ano_vigencia_inicial,
                                     None))
             connect.commit()
     except Exception as e:
@@ -398,13 +397,12 @@ def _construir_query_obtener_multipropietarios_id(com_man_pred):
 def _actualizar_multipropietarios_por_vigencia(last_initial_year_in, comuna, manzana, predio, fecha_inscripcion):
     connect = obtener_conexion_db()
     try:
-        with connect.cursor() as cursor:
-            com_man_pred = _construir_com_man_pred(comuna, manzana, predio)
-            ano_final = _obtener_ano_final(fecha_inscripcion)
-            query_multipropietarios = _construir_query_actualizar_multipropietarios(ano_final, last_initial_year_in, com_man_pred)
-            _ejecutar_query_actualizar_multipropietarios(query_multipropietarios)
-            connect.commit()
-            return True
+        com_man_pred = _construir_com_man_pred(comuna, manzana, predio)
+        ano_final = _obtener_ano_final(fecha_inscripcion)
+        query_multipropietarios = _construir_query_actualizar_multipropietarios(ano_final, last_initial_year_in, com_man_pred)
+        _ejecutar_query_actualizar_multipropietarios(query_multipropietarios)
+        connect.commit()
+        return True
     except Exception as e:
         connect.rollback()
         print(ERROR_MESSAGE, e)
@@ -422,9 +420,11 @@ def actualizar_transferia_por_vigencia(com_man_pred, ano_final):
         return jsonify({"error": str(e)}), INTERNAL_SERVER_ERROR
 
 
-def _construir_query_actualizar_multipropietarios(id_Multipropietario, com_man_pred, enajenante, fojas, fecha_inscripcion, numero_inscripcion):
+def _construir_query_actualizar_multipropietarios(ano_final, ano_inicial, com_man_pred):
     return QUERY_ACTUALIZAR_MULTIPROPIETARIO, (
-        
+        ano_final, 
+        ano_inicial, 
+        com_man_pred   
     )
 
 def _ejecutar_query_actualizar_multipropietarios(query):
@@ -441,9 +441,9 @@ def _ejecutar_query_actualizar_multipropietarios(query):
 
 def _ejecutar_query_obtener_multipropietarios(comuna, manzana, predio):
     com_man_pred = _construir_com_man_pred(comuna, manzana, predio)
-    multipropietarios_sql = _construir_query_obtener_Transferencias(com_man_pred)
-    Transferencias = _ejecutar_query(multipropietarios_sql)
-    return _obtener_count_multipropietarios(Transferencias)
+    multipropietarios_sql = _construir_query_obtener_transferencias(com_man_pred)
+    transferencias = _ejecutar_query(multipropietarios_sql)
+    return _obtener_count_multipropietarios(transferencias)
 
 """ def _construir_query_obtener_multipropietarios(com_man_pred):
     return QUERY_OBTENER_MULTIPROPIETARIOS_SQL.format(com_man_pred=com_man_pred)
@@ -452,7 +452,7 @@ def obtener_multipropietarios_filtrados(region_id, comuna_id, block_number, prop
     connection = obtener_conexion_db()
     try:
         with connection.cursor() as cursor:
-            multipropietarios_sql = "SELECT * FROM Multipropietarios"
+            multipropietarios_sql = QUERY_ALL_MULTIPROPIETARIOS
             filtros = aplicar_filtros(region_id, comuna_id, block_number, property_number, year)
             if filtros:
                 multipropietarios_sql += QUERY_CONNECTOR.join(filtros)
@@ -463,8 +463,7 @@ def obtener_multipropietarios_filtrados(region_id, comuna_id, block_number, prop
     finally:
         connection.close()
 
-def obtener_multipropietarios_Comanpred(com_man_pred, runrut, fecha_inscripcion):
-    print(com_man_pred,"", runrut,"", fecha_inscripcion)
+def obtener_multipropietarios_commanpred(com_man_pred, runrut, fecha_inscripcion):
     connection = obtener_conexion_db()
     try:
         with connection.cursor() as cursor:
@@ -481,7 +480,7 @@ def obtener_multipropietarios_Comanpred(com_man_pred, runrut, fecha_inscripcion)
     finally:
         connection.close()
 
-def obtener_multipropietario_transferencias_Comanpred(com_man_pred):
+def obtener_multipropietario_transferencias_commanpred(com_man_pred):
     # connect = obtener_conexion_db()
     # try:
     #     with connect.cursor() as cursor:
