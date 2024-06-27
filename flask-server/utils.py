@@ -18,7 +18,7 @@ def _obtener_ano_final(fecha_inscripcion):
 def obtener_total_porcentaje(transactions):
     total = 0
     for transaction in transactions:
-        total += int(transaction['porcDerecho'])
+        total += float(transaction['porcDerecho'])
     return total
 
 def _obtener_count_multipropietarios(multipropietarios):

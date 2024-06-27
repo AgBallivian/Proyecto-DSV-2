@@ -75,6 +75,13 @@ QUERY_ACTUALIZAR_MULTIPROPIETARIO = """
                     AND com_man_pred='{com_man_pred}'
                     """
 
+QUERY_ACTUALIZAR_TRANSFERENCIAS = """
+                    UPDATE Multipropietario
+                    SET Ano_vigencia_final={ano_final}
+                    WHERE Ano_vigencia_final IS NULL
+                    AND com_man_pred='{com_man_pred}'
+                    """
+
 QUERY_OBTENER_MULTIPROPIETARIOS_TRANSFERENCIAS_SQL = """
 SELECT *
 FROM Transferencias

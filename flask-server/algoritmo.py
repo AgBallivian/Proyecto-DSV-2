@@ -3,7 +3,8 @@ from DBmanager import (_obtener_siguiente_id_Transferencias, _insert_enajenantes
                         add_formulario, add_enajenante, add_adquirente, _actualizar_multipropietarios_por_vigencia,
                         _obtener_ano_final, _obtener_ultimo_ano_inicial,delete_Transferencias_antiguos,
                         obtener_multipropietarios_Comanpred,
-                        obtener_multipropietario_Comanpred)
+                        actualizar_transferia_por_vigencia,
+                        obtener_multipropietario_transferencias_Comanpred)
 from utils import (obtener_ano_inscripcion,_construir_com_man_pred, obtener_total_porcentaje)
 from Errores import ERROR_MESSAGE
 COMPRAVENTA = 8
@@ -95,33 +96,55 @@ class form_solver():
                 enajenante['numero_inscripcion'] = None
 
         print(self.enajenantes_data)
-        adquirientes_totales = obtener_multipropietario_Comanpred(
-            str(_construir_com_man_pred(self.comuna, self.manzana, self.predio))
+
+        #aqui tengo a todos los registrados en la base de datos
+        #hasta el momento
+        com_man_pred = str(_construir_com_man_pred(self.comuna, self.manzana, self.predio))
+        Datos_temporales_totales = obtener_multipropietario_transferencias_Comanpred(
+            com_man_pred
         )
-        self.adquirentes_data.extend(adquirientes_totales)
+        #de la lista de datos temporal seleciono solamente a los 
+        # que tienen igual rut que lso enajentantes entrantes
+        lista_dueños = []
+        for personas in Datos_temporales_totales:
+            for enajenante in self.enajenantes_data:
+                if(enajenante['RUNRUT'] == personas['RUNRUT']):
+                    lista_dueños.append(personas)
+        
+
         is_ghost=False
         for enajenante in self.enajenantes_data:
             if(enajenante['porcDerecho'] == 0):
                 is_ghost = True
                 enajenante['porcDerecho'] = 100
                 break
-        if(_obtener_ano_final(self.fecha_inscripcion) < int(self.fecha_inscripcion[:4])):
-            total_porc_enajenantes = obtener_total_porcentaje(self.enajenantes_data)
+        #año final del formulario
+            #aqui se guardaria el porcentaje de los enajentantes de la base de datos
+            total_porc_enajenantes = obtener_total_porcentaje(lista_dueños)
             total_porc_adquirentes = obtener_total_porcentaje(self.adquirentes_data)
             primer_caso = True if total_porc_adquirentes == 100 else False
             segundo_caso = True if total_porc_adquirentes == 0 else False
             tercer_caso = (len(self.enajenantes_data) == 1) and (len(self.adquirentes_data) == 1)
 
             if(primer_caso or segundo_caso):
+                #para el caso 1 se debe actualizar la vigencia del año inicial en la base de datos temporal, osea en la variable donde se estan guardando
+                #luegose borra los enajenantes del temporal y se reparte el porcentaje en los nuevos adquirientes
+                #finalmente se le agrega a todos las personas del comanpred de la base de datos fecha de vigencia -1 al año de inscripcion del nuevo formulario
                 if(is_ghost):
                     total_porc_enajenantes = 100 
-                porcentaje_igual = total_porc_enajenantes / len(self.adquirentes_data)
+                porcentaje_igual = 100 / len(self.adquirentes_data)
 
-                for adquirente in self.adquirentes_data:
-                    if primer_caso:
-                        adquirente["porcDerecho"] = int(adquirente["porcDerecho"]) * (total_porc_enajenantes / 100)
-                    elif segundo_caso:
-                        adquirente['porcDerecho'] = porcentaje_igual
+                if primer_caso:
+                    print(int(self.fecha_inscripcion[:4]))
+                    actualizar_transferia_por_vigencia(com_man_pred,  int(self.fecha_inscripcion[:4]) - 1)
+                    for adquirente in self.adquirentes_data:
+                        adquirente["porcDerecho"] = float(adquirente["porcDerecho"]) * (total_porc_enajenantes / 100)
+                        
+                elif segundo_caso:
+                    #los adquirientes tienen 0%, por ende, se multiplica el porcentaje de enajenantes de la bbdd por el porcentaje total(100%) dividido pro en numero de adquirentes
+                    for adquirente in self.adquirentes_data:
+                        adquirente['porcDerecho'] = porcentaje_igual * (total_porc_enajenantes / 100)
+
             elif(tercer_caso):
                 adquirente = self.adquirentes_data[0]
                 enajenante = self.enajenantes_data[0]
@@ -135,7 +158,7 @@ class form_solver():
                 adquirente["porcDerecho"] = porcentaje
 
             else:
-                for dueños in adquirientes_totales:
+                for dueños in lista_dueños:
                     for vendiendo in self.enajenantes_data:
                         if dueños["RUNRUT"] == vendiendo["RUNRUT"]:
                             dueños["porDerecho"] -= vendiendo["porDerecho"]
@@ -146,17 +169,17 @@ class form_solver():
                 lista_personas = []
                 for adquirente in self.adquirentes_data:
                     porcentaje = float(adquirente["porcDerecho"])
-                    if porcentaje <= 0:
+                    if float(porcentaje) <= 0:
                         adquirente["porcDerecho"] = 0
                         lista_personas.append(adquirente)
                 for enajenante in self.enajenantes_data:
                     porcentaje = float(enajenante["porcDerecho"])
-                    if porcentaje <= 0:
+                    if float(porcentaje) <= 0:
                         enajenante["porcDerecho"] = 0
                         lista_personas.append(enajenante)
                 if (total_porc_adquirentes>100):
                     for adquirente in self.adquirentes_data:
-                        adquirente["porcDerecho"] = (adquirente["porcDerecho"]/total_porc_adquirentes)*100
+                        adquirente["porcDerecho"] = (float(adquirente["porcDerecho"])/total_porc_adquirentes)*100
                 if(total_porc_adquirentes<100):
                     for multipropietario in lista_personas:
                         multipropietario["porcDerecho"] = (diferencia/(len(lista_personas)))

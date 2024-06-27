@@ -12,6 +12,7 @@ from Queries import (
     QUERY_INSERTAR_ADQUIRENTES_TRANSFERENCIAS_SQL,
     COMPRAVENTA, REGULARIZACION_DE_PATRIMONIO, QUERY_OBTENER_ULT_ANO_INIT, QUERY_CONNECTOR,
     QUERY_AGREGAR_MULTIPROPIETARIO, QUERY_OBTENER_ID_MULTIPROPIETARIOS_SQL, QUERY_ACTUALIZAR_MULTIPROPIETARIO,
+    QUERY_ACTUALIZAR_TRANSFERENCIAS,
     QUERY_OBTENER_MULTIPROPIETARIOS_TRANSFERENCIAS_SQL,QUERY_OBTENER_MULTIPROPIETARIO_SQL, QUERY_DELETE_MULTIPROPIETARIO
     )
 
@@ -411,18 +412,19 @@ def _actualizar_multipropietarios_por_vigencia(last_initial_year_in, comuna, man
     finally:
         connect.close()
 
+def actualizar_transferia_por_vigencia(com_man_pred, ano_final):
+    try:
+        query_multipropietarios = QUERY_ACTUALIZAR_TRANSFERENCIAS.format(ano_final, com_man_pred)
+        _ejecutar_query(query_multipropietarios)
+        return True
+    except Exception as e:
+        print(ERROR_MESSAGE, e)
+        return jsonify({"error": str(e)}), INTERNAL_SERVER_ERROR
+
+
 def _construir_query_actualizar_multipropietarios(id_Multipropietario, com_man_pred, enajenante, fojas, fecha_inscripcion, numero_inscripcion):
     return QUERY_ACTUALIZAR_MULTIPROPIETARIO, (
-        id_Multipropietario,
-        com_man_pred,
-        enajenante['RUNRUT'],
-        enajenante['porcDerecho'],
-        fojas,
-        int(obtener_ano_inscripcion(fecha_inscripcion)),
-        numero_inscripcion,
-        fecha_inscripcion,
-        int(obtener_ano_inscripcion(fecha_inscripcion)),
-        None,
+        
     )
 
 def _ejecutar_query_actualizar_multipropietarios(query):
@@ -443,9 +445,9 @@ def _ejecutar_query_obtener_multipropietarios(comuna, manzana, predio):
     Transferencias = _ejecutar_query(multipropietarios_sql)
     return _obtener_count_multipropietarios(Transferencias)
 
-def _construir_query_obtener_multipropietarios(com_man_pred):
+""" def _construir_query_obtener_multipropietarios(com_man_pred):
     return QUERY_OBTENER_MULTIPROPIETARIOS_SQL.format(com_man_pred=com_man_pred)
-
+ """
 def obtener_multipropietarios_filtrados(region_id, comuna_id, block_number, property_number, year):
     connection = obtener_conexion_db()
     try:
@@ -479,7 +481,7 @@ def obtener_multipropietarios_Comanpred(com_man_pred, runrut, fecha_inscripcion)
     finally:
         connection.close()
 
-def obtener_multipropietario_Comanpred(com_man_pred):
+def obtener_multipropietario_transferencias_Comanpred(com_man_pred):
     # connect = obtener_conexion_db()
     # try:
     #     with connect.cursor() as cursor:
