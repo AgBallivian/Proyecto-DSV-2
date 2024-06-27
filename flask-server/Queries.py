@@ -83,7 +83,7 @@ QUERY_ACTUALIZAR_MULTIPROPIETARIO = """
                     """
 
 QUERY_ACTUALIZAR_TRANSFERENCIAS = """
-                    UPDATE Multipropietario
+                UPDATE Transferencias
                     SET Ano_vigencia_final={ano_final}
                     WHERE Ano_vigencia_final IS NULL
                     AND com_man_pred='{com_man_pred}'

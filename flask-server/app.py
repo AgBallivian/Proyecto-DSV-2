@@ -103,6 +103,7 @@ def asegurar_existencia_participante(datos_participante, indice):
         datos_participante.append({'RUNRUT': None, 'porcDerecho': None})
 
 def procesar_formulario(datos):
+    print("Q PIAJS", datos)
     formulario = form_solver(datos, obtener_conexion_db)
     formulario.determinar_y_procesar_escenario()
     formulario.ajustar_porcentajes_adquirentes()
