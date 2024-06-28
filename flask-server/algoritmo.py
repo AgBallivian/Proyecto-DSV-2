@@ -34,6 +34,7 @@ class form_solver():
     def agregar_transferencias(self):
         id_transferencia = _obtener_siguiente_id_transferencias()
         com_man_pred = _construir_com_man_pred(self.comuna, self.manzana, self.predio)
+        #print(self.enajenantes_data)
         for enajenante in self.enajenantes_data:
             _insert_enajenantes_to_transferencias(id_transferencia,
                 com_man_pred, enajenante, self.fojas, self.fecha_inscripcion, self.numero_inscripcion)
@@ -105,79 +106,92 @@ class form_solver():
                 is_ghost = True
                 enajenante['porcDerecho'] = 100
                 break
-            total_porc_enajenantes = obtener_total_porcentaje(lista_duenos)
-            total_porc_adquirentes = obtener_total_porcentaje(self.adquirentes_data)
-            primer_caso = True if total_porc_adquirentes == 100 else False
-            segundo_caso = True if total_porc_adquirentes == 0 else False
-            tercer_caso = (len(self.enajenantes_data) == 1) and (len(self.adquirentes_data) == 1)
+        total_porc_enajenantes = obtener_total_porcentaje(lista_duenos)
+        total_porc_adquirentes = obtener_total_porcentaje(self.adquirentes_data)
+        primer_caso = True if total_porc_adquirentes == 100 else False
+        segundo_caso = True if total_porc_adquirentes == 0 else False
+        tercer_caso = (len(self.enajenantes_data) == 1) and (len(self.adquirentes_data) == 1)
 
-            if(primer_caso or segundo_caso):
-                if(is_ghost):
-                    total_porc_enajenantes = 100
-                else:
-                    for personas in lista_duenos:
-                            print("SOY PTO",personas)
-                            personas["porcDerecho"] += total_porc_enajenantes 
-                porcentaje_igual = total_porc_enajenantes / len(self.adquirentes_data)
-
-                if primer_caso:
-                    print(str(int(self.fecha_inscripcion[:4]) - 1))
-                    actualizar_transferia_por_vigencia(com_man_pred,  str(int(self.fecha_inscripcion[:4]) - 1))
-                    for adquirente in self.adquirentes_data:
-                        adquirente["porcDerecho"] = float(adquirente
-                        ["porcDerecho"]) * (total_porc_enajenantes / 100)
-                    
-                    for enajenante in self.enajenantes_data:
-                        for personas in lista_duenos:
-                            if(enajenante['RUNRUT'] == personas['RUNRUT']):
-                                self.enajenantes_data.remove(enajenante)
-                    
-                    
-                        
-                elif segundo_caso:
-                    #los adquirientes tienen 0%, por ende, se multiplica el porcentaje de enajenantes de la bbdd por el porcentaje total(100%) dividido pro en numero de adquirentes
-                    for adquirente in self.adquirentes_data:
-                        adquirente['porcDerecho'] = porcentaje_igual * (total_porc_enajenantes / 100)
-
-            elif(tercer_caso):
-                actualizar_transferia_por_vigencia(com_man_pred,  str(int(self.fecha_inscripcion[:4]) - 1))
-                adquirente = self.adquirentes_data[0]
-                enajenante = self.enajenantes_data[0]
-                if not is_ghost:
-                    porcentaje = float(lista_duenos[0]["porcDerecho"]) * float(adquirente["porcDerecho"]) / 100
-                else:
-                    porcentaje = 100 * float(adquirente["porcDerecho"]) / 100
-
-                if not is_ghost:
-                    enajenante["porcDerecho"] = float(lista_duenos[0]["porcDerecho"]) - porcentaje
-                adquirente["porcDerecho"] = porcentaje
-
-            else:
-                for duenos in lista_duenos:
-                    for vendiendo in self.enajenantes_data:
-                        if duenos["RUNRUT"] == vendiendo["RUNRUT"]:
-                            duenos["porDerecho"] -= vendiendo["porDerecho"]
-                            if duenos["porDerecho"] <= 0:
-                                pass
+        if(primer_caso or segundo_caso):
             if(is_ghost):
-                diferencia = 100 - total_porc_adquirentes
-                lista_personas = []
+                total_porc_enajenantes = 100
+            else:
+                for personas in lista_duenos:
+                        print("SOY PTO",personas)
+                        personas["porcDerecho"] += total_porc_enajenantes 
+            porcentaje_igual = total_porc_enajenantes / len(self.adquirentes_data)
+
+            if primer_caso:
+                print(str(int(self.fecha_inscripcion[:4]) - 1))
+                actualizar_transferia_por_vigencia(com_man_pred,  str(int(self.fecha_inscripcion[:4]) - 1))
                 for adquirente in self.adquirentes_data:
-                    porcentaje = float(adquirente["porcDerecho"])
-                    if float(porcentaje) <= 0:
-                        adquirente["porcDerecho"] = 0
-                        lista_personas.append(adquirente)
+                    adquirente["porcDerecho"] = float(adquirente
+                    ["porcDerecho"]) * (total_porc_enajenantes / 100)
+                
                 for enajenante in self.enajenantes_data:
-                    porcentaje = float(enajenante["porcDerecho"])
-                    if float(porcentaje) <= 0:
-                        enajenante["porcDerecho"] = 0
-                        lista_personas.append(enajenante)
-                if (total_porc_adquirentes>100):
-                    for adquirente in self.adquirentes_data:
-                        adquirente["porcDerecho"] = (float(adquirente["porcDerecho"])/total_porc_adquirentes)*100
-                if(total_porc_adquirentes<100):
-                    for multipropietario in lista_personas:
-                        multipropietario["porcDerecho"] = (diferencia/(len(lista_personas)))
+                    for personas in lista_duenos:
+                        if(enajenante['RUNRUT'] == personas['RUNRUT']):
+                            self.enajenantes_data.remove(enajenante)
+                
+                
+                    
+            elif segundo_caso:
+                #los adquirientes tienen 0%, por ende, se multiplica el porcentaje de enajenantes de la bbdd por el porcentaje total(100%) dividido pro en numero de adquirentes
+                for adquirente in self.adquirentes_data:
+                    adquirente['porcDerecho'] = porcentaje_igual * (total_porc_enajenantes / 100)
+
+        elif(tercer_caso):
+            actualizar_transferia_por_vigencia(com_man_pred,  str(int(self.fecha_inscripcion[:4]) - 1))
+            adquirente = self.adquirentes_data[0]
+            enajenante = self.enajenantes_data[0]
+            if not is_ghost:
+                porcentaje = float(lista_duenos[0]["porcDerecho"]) * float(adquirente["porcDerecho"]) / 100
+            else:
+                porcentaje = 100 * float(adquirente["porcDerecho"]) / 100
+
+            if not is_ghost:
+                enajenante["porcDerecho"] = float(lista_duenos[0]["porcDerecho"]) - porcentaje
+            adquirente["porcDerecho"] = porcentaje
+
+        else:
+            actualizar_transferia_por_vigencia(com_man_pred,  str(int(self.fecha_inscripcion[:4]) - 1))
+            #toda la gente con el mismo comapredio
+            for personas in datos_temporales_totales:
+                if personas not in self.enajenantes_data and personas not in self.adquirentes_data:
+                    self.enajenantes_data.append(personas)
+            
+            for dueno in lista_duenos:
+                for index, enajenante in enumerate(self.enajenantes_data[:]):
+                    if dueno["RUNRUT"] == enajenante["RUNRUT"]:
+                        dueno["porcDerecho"] -= float(enajenante["porcDerecho"])
+                        if dueno["porcDerecho"] <= 0:
+                            self.enajenantes_data.remove(enajenante)
+                            break
+                        else:
+                            # Update the value in the original list
+                            self.enajenantes_data[index]["porcDerecho"] = str(dueno["porcDerecho"])
+                        print(f"Updated: index {index}, new porcDerecho: {self.enajenantes_data[index]['porcDerecho']}")
+
+        print(self.enajenantes_data)
+        if(is_ghost):
+            diferencia = 100 - total_porc_adquirentes
+            lista_personas = []
+            for adquirente in self.adquirentes_data:
+                porcentaje = float(adquirente["porcDerecho"])
+                if float(porcentaje) <= 0:
+                    adquirente["porcDerecho"] = 0
+                    lista_personas.append(adquirente)
+            for enajenante in self.enajenantes_data:
+                porcentaje = float(enajenante["porcDerecho"])
+                if float(porcentaje) <= 0:
+                    enajenante["porcDerecho"] = 0
+                    lista_personas.append(enajenante)
+            if (total_porc_adquirentes>100):
+                for adquirente in self.adquirentes_data:
+                    adquirente["porcDerecho"] = (float(adquirente["porcDerecho"])/total_porc_adquirentes)*100
+            if(total_porc_adquirentes<100):
+                for multipropietario in lista_personas:
+                    multipropietario["porcDerecho"] = (diferencia/(len(lista_personas)))
 
     def _procesar_escenario_regularizacion_patrimonio(self):
         print("Procesando escenario de regularización de patrimonio")
