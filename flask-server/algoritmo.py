@@ -4,7 +4,8 @@ from DBmanager import (_obtener_siguiente_id_transferencias, _insert_enajenantes
                         _obtener_ano_final, _obtener_ultimo_ano_inicial,delete_transferencias_antiguos,
                         obtener_multipropietarios_commanpred, _obtener_siguiente_id_multipropietarios,
                         actualizar_transferia_por_vigencia, _insert_enajenantes_to_multipropietarios,
-                        obtener_multipropietario_commanpred, _insert_adquirientes_to_multipropietarios)
+                        obtener_multipropietario_commanpred, _insert_adquirientes_to_multipropietarios,
+                        obtener_numer_de_atencion)
 from utils import (obtener_ano_inscripcion,_construir_com_man_pred, obtener_total_porcentaje)
 from Errores import ERROR_MESSAGE
 COMPRAVENTA = 8
@@ -34,10 +35,10 @@ class form_solver():
         self.agregar_transferencias()
         for adquirente in self.adquirentes_data:
             print(adquirente)
-            agregar_adquirente(self.numero_inscripcion, adquirente["RUNRUT"], adquirente["porcDerecho"])
+            agregar_adquirente(obtener_numer_de_atencion(), adquirente["RUNRUT"], adquirente["porcDerecho"])
         for enajenantes in self.enajenantes_data:
             print(enajenantes)
-            agregar_enajenante(self.numero_inscripcion, enajenantes["RUNRUT"], enajenantes["porcDerecho"])
+            agregar_enajenante(obtener_numer_de_atencion(), enajenantes["RUNRUT"], enajenantes["porcDerecho"])
 
     def agregar_multipropietarios(self):
         id_multipropietario = _obtener_siguiente_id_multipropietarios()

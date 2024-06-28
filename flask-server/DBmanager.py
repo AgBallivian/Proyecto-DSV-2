@@ -94,8 +94,8 @@ def agregar_enajenante(numero_de_atencion, runrut, porcentaje_derecho):
             enjante_id = len(enajenantes) + 1
             # Insert enajenantes data into the 'enajenantes' table
             cursor.execute(QUERY_INSERTAR_ENAJENANTES, (
-                numero_de_atencion,
                 enjante_id,
+                numero_de_atencion,
                 runrut,
                 porcentaje_derecho,
             ))
@@ -116,11 +116,17 @@ def agregar_adquirente(numero_de_atencion, runrut, porcentaje_derecho):
             cursor.execute(QUERY_ALL_ADQUIRENTES)
             adquirentes = cursor.fetchall()
             adquirentes_id = len(adquirentes) + 1
-            print(adquirentes_id)
+            cursor.execute("SELECT * FROM formulario")
+            formularios = cursor.fetchall()
+            print("form",formularios)
             # Insert adquirentes data into the 'Adquirentes' table
-            cursor.execute(QUERY_INSERTAR_ADQUIRENTES, (
+            print(adquirentes_id,
                 numero_de_atencion,
+                runrut,
+                porcentaje_derecho)
+            cursor.execute(QUERY_INSERTAR_ADQUIRENTES, (
                 adquirentes_id,
+                numero_de_atencion,
                 runrut,
                 porcentaje_derecho
             ))
