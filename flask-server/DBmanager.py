@@ -14,7 +14,7 @@ from Queries import (
     QUERY_AGREGAR_MULTIPROPIETARIO, QUERY_OBTENER_ID_MULTIPROPIETARIOS_SQL, QUERY_ACTUALIZAR_MULTIPROPIETARIO,
     QUERY_ACTUALIZAR_TRANSFERENCIAS, QUERY_OBTENER_MULTIPROPIETARIOS_POR_COMMANPRED,
     QUERY_OBTENER_MULTIPROPIETARIO_SQL, QUERY_DELETE_MULTIPROPIETARIO,
-    QUERY_ALL_MULTIPROPIETARIOS, QUERY_ALL_TRANSFERENCIAS, QUERY_ID_MULTIPROPIETARIOS
+    QUERY_ALL_MULTIPROPIETARIOS, QUERY_ALL_TRANSFERENCIAS, QUERY_OBTENER_TRANSFERENCIA_SQL, QUERY_ID_MULTIPROPIETARIOS,QUERY_OBTENER_USUARIO_FORM_TRANSFERENCIAS
     )
 
 ERROR_MESSAGE = "Error in DBmanager:  "
@@ -521,22 +521,40 @@ def obtener_multipropietarios_filtrados(region_id, comuna_id, block_number, prop
     finally:
         connection.close()
 
-def obtener_multipropietarios_commanpred(com_man_pred, runrut, fecha_inscripcion):
-    connection = obtener_conexion_db()
+def obtener_multipropietarios_commanpred(com_man_pred, runrut):
     try:
-        with connection.cursor() as cursor:
             multipropietarios_sql = QUERY_OBTENER_MULTIPROPIETARIO_SQL.format(
                  com_man_pred=com_man_pred,
-                 runrut=runrut,
-                 ano_vigencia_inicial=fecha_inscripcion[:4]
+                 runrut=runrut
             )
-            
 
-            cursor.execute(multipropietarios_sql)
-            multipropietarios = cursor.fetchall()
+            multipropietarios = _ejecutar_query(multipropietarios_sql)
             return multipropietarios
-    finally:
-        connection.close()
+    except Exception as e:
+        print("soy un error",ERROR_MESSAGE, e)
+        return None
+    
+def obtener_transferencias_commanpred(com_man_pred, runrut):
+    try:
+        transferencias_sql = QUERY_OBTENER_TRANSFERENCIA_SQL.format(
+                com_man_pred=com_man_pred,
+                runrut=runrut
+        )
+        transferencias = _ejecutar_query(transferencias_sql)
+        return transferencias
+    except Exception as e:
+        print("soy un error",ERROR_MESSAGE, e)
+        return None
+
+def obtener_usuarios_form():
+    try:
+        transferencias_sql = QUERY_OBTENER_USUARIO_FORM_TRANSFERENCIAS
+        transferencias = _ejecutar_query(transferencias_sql)
+        return transferencias
+    except Exception as e:
+        print("soy un error",ERROR_MESSAGE, e)
+        return None
+
 
 def obtener_multipropietario_commanpred(com_man_pred):
     # connect = obtener_conexion_db()

@@ -5,7 +5,7 @@ from DBmanager import (_obtener_siguiente_id_transferencias, _insert_enajenantes
                         obtener_multipropietarios_commanpred, _obtener_siguiente_id_multipropietarios,
                         actualizar_transferia_por_vigencia, _insert_enajenantes_to_multipropietarios,
                         obtener_multipropietario_commanpred, _insert_adquirientes_to_multipropietarios,
-                        obtener_numer_de_atencion)
+                        obtener_numer_de_atencion, obtener_transferencias_commanpred)
 from utils import (obtener_ano_inscripcion,_construir_com_man_pred, obtener_total_porcentaje)
 from Errores import ERROR_MESSAGE
 COMPRAVENTA = 8
@@ -22,6 +22,7 @@ class form_solver():
         self.fecha_inscripcion = formulario['fechaInscripcion']
         self.numero_inscripcion = int(formulario['nroInscripcion'])
         self.connection = connection
+        self.form_anterior = None
         try:
             self.enajenantes_data = formulario['enajenantes']
         except Exception as e:
@@ -39,6 +40,12 @@ class form_solver():
         for enajenantes in self.enajenantes_data:
             print(enajenantes)
             agregar_enajenante(obtener_numer_de_atencion(), enajenantes["RUNRUT"], enajenantes["porcDerecho"])
+
+    def ultimo_formulario(self):
+        self.form_anterior = (  
+            self.comuna, self.manzana, self.predio, self.fojas, self.cne, self.enajenantes_data, self.adquirentes_data
+        )
+        
 
     def agregar_multipropietarios(self):
         id_multipropietario = _obtener_siguiente_id_multipropietarios()
@@ -77,10 +84,26 @@ class form_solver():
             self.procesar_escenario_compraventa()
         elif self.cne == REGULARIZACION_DE_PATRIMONIO:
             self._procesar_escenario_regularizacion_patrimonio()
+            self.ultimo_formulario()
         self.agregar_multipropietarios()
 
     
     def procesar_escenario_compraventa(self):
+        is_ghost=False
+        for enajenante in self.enajenantes_data:
+            multipropietarios = obtener_transferencias_commanpred(
+                _construir_com_man_pred(self.comuna, self.manzana, self.predio),
+                enajenante['RUNRUT']
+            )
+            print("existo?",multipropietarios)
+            if multipropietarios == None or multipropietarios == ():
+                print("encontre un ghost")
+                is_ghost = True
+                enajenante['porcDerecho'] = 0
+                enajenante['fecha_inscripcion'] = None
+                enajenante['ano'] = None
+                enajenante['numero_inscripcion'] = None
+
         com_man_pred = str(_construir_com_man_pred(self.comuna, self.manzana, self.predio))
         datos_temporales_totales = obtener_multipropietario_commanpred(
             com_man_pred
@@ -92,15 +115,21 @@ class form_solver():
                 if(enajenante['RUNRUT'] == personas['RUNRUT']):
                     lista_duenos.append(personas)
         
-
-
         for enajenante in self.enajenantes_data:
             if(enajenante['porcDerecho'] == 0):
                 is_ghost = True
-                enajenante['porcDerecho'] = 100
+                #enajenante['porcDerecho'] = 100
                 break
         total_porc_enajenantes = obtener_total_porcentaje(lista_duenos)
-        total_porc_adquirentes = obtener_total_porcentaje(self.adquirentes_data)
+        if is_ghost:
+            for adquirente in self.form_anterior["adquirentes"]:
+                for enajenante in self.enajenantes_data:
+                    if(adquirente["RUNRUT"] != enajenante["RUNRUT"]):
+                        self.adquirentes_data.append(adquirente)
+            total_porc_adquirentes = obtener_total_porcentaje(self.adquirentes_data)
+        else:
+            total_porc_adquirentes = obtener_total_porcentaje(self.adquirentes_data)
+
         primer_caso = True if total_porc_adquirentes == 100 else False
         segundo_caso = True if total_porc_adquirentes == 0 else False
         tercer_caso = (len(self.enajenantes_data) == 1) and (len(self.adquirentes_data) == 1)
@@ -110,7 +139,6 @@ class form_solver():
                 total_porc_enajenantes = 100
             else:
                 for personas in lista_duenos:
-                        print("SOY PTO",personas)
                         personas["porcDerecho"] += total_porc_enajenantes 
             porcentaje_igual = total_porc_enajenantes / len(self.adquirentes_data)
 
@@ -147,6 +175,7 @@ class form_solver():
             adquirente["porcDerecho"] = porcentaje
 
         else:
+            print("SOY EL CUARTO CASO")
             actualizar_transferia_por_vigencia(com_man_pred,  str(int(self.fecha_inscripcion[:4]) - 1))
             #toda la gente con el mismo comapredio
             for personas in datos_temporales_totales:
@@ -156,17 +185,31 @@ class form_solver():
             for dueno in lista_duenos:
                 for index, enajenante in enumerate(self.enajenantes_data[:]):
                     if dueno["RUNRUT"] == enajenante["RUNRUT"]:
-                        dueno["porcDerecho"] -= float(enajenante["porcDerecho"])
-                        if dueno["porcDerecho"] <= 0:
-                            self.enajenantes_data.remove(enajenante)
+                        if is_ghost:
+                            dueno["porcDerecho"] -= float(enajenante["porcDerecho"])
+                            print("deja de cumearlo",enajenante["porcDerecho"])
+                            if float(dueno["porcDerecho"]) < 0:
+                                self.enajenantes_data[index]["porcDerecho"] = str(dueno["porcDerecho"])
+                            else:
+                                self.enajenantes_data[index]["porcDerecho"] = 0
                             break
+
                         else:
-                            # Update the value in the original list
+                            dueno["porcDerecho"] -= float(enajenante["porcDerecho"])
+                            if dueno["porcDerecho"] <= 0:
+                                self.enajenantes_data.remove(enajenante)
                             self.enajenantes_data[index]["porcDerecho"] = str(dueno["porcDerecho"])
-                        print(f"Updated: index {index}, new porcDerecho: {self.enajenantes_data[index]['porcDerecho']}")
+                            break
 
         print(self.enajenantes_data)
         if(is_ghost):
+            print("es ghost")
+            #para el caso dos debo tener en cuenta la totalidad del
+            #formulario y multiplicar el porcentaje que se suma 
+            # con todos los adquirientes totales tanto del 99(dueños antiguos)
+            #como los recien ingresados y dividirlo 
+            
+
             diferencia = 100 - total_porc_adquirentes
             lista_personas = []
             for adquirente in self.adquirentes_data:
@@ -182,7 +225,7 @@ class form_solver():
             if (total_porc_adquirentes>100):
                 for adquirente in self.adquirentes_data:
                     adquirente["porcDerecho"] = (float(adquirente["porcDerecho"])/total_porc_adquirentes)*100
-            if(total_porc_adquirentes<100):
+            elif(total_porc_adquirentes<100):
                 for multipropietario in lista_personas:
                     multipropietario["porcDerecho"] = (diferencia/(len(lista_personas)))
 
