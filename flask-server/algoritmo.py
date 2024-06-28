@@ -98,11 +98,12 @@ class form_solver():
         
         subir_formulario = True
         if self.cne == COMPRAVENTA:
-            subir_formulario = self.procesar_escenario_compraventa()
+            self.procesar_escenario_compraventa()
         elif self.cne == REGULARIZACION_DE_PATRIMONIO:
-            self._procesar_escenario_regularizacion_patrimonio()
+            subir_formulario = self._procesar_escenario_regularizacion_patrimonio()
         if subir_formulario:
             self.agregar_transferencias()
+            self.agregar_multipropietarios()
 
 
     
@@ -123,9 +124,11 @@ class form_solver():
                 enajenante['numero_inscripcion'] = None
 
         com_man_pred = str(_construir_com_man_pred(self.comuna, self.manzana, self.predio))
+        
         datos_temporales_totales = obtener_multipropietario_commanpred(
             com_man_pred
         )
+
         print("datos temporales:", datos_temporales_totales)
         lista_duenos = []
         for personas in datos_temporales_totales:
@@ -134,25 +137,21 @@ class form_solver():
                     lista_duenos.append(personas)
         
         for enajenante in self.enajenantes_data:
-            if(enajenante['porcDerecho'] == 0):
+            if(float(enajenante['porcDerecho']) == 0):
                 is_ghost = True
                 #enajenante['porcDerecho'] = 100
                 break
+        print("HOLAAAAAAAAAAAAAAAAAAAA?",is_ghost)
         total_porc_enajenantes = obtener_total_porcentaje(lista_duenos)
-        if is_ghost:
-            for adquirente in self.form_anterior["adquirentes"]:
-                for enajenante in self.enajenantes_data:
-                    if(adquirente["RUNRUT"] != enajenante["RUNRUT"]):
-                        self.adquirentes_data.append(adquirente)
-            total_porc_adquirentes = obtener_total_porcentaje(self.adquirentes_data)
-        else:
-            total_porc_adquirentes = obtener_total_porcentaje(self.adquirentes_data)
+        total_porc_adquirentes = obtener_total_porcentaje(self.adquirentes_data)
 
         primer_caso = True if total_porc_adquirentes == 100 else False
         segundo_caso = True if total_porc_adquirentes == 0 else False
         tercer_caso = (len(self.enajenantes_data) == 1) and (len(self.adquirentes_data) == 1)
+        print(tercer_caso,"",self.enajenantes_data)
 
         if(primer_caso or segundo_caso):
+            print("primer caso y segundo caso")
             if(is_ghost):
                 total_porc_enajenantes = 100
             else:
@@ -180,6 +179,7 @@ class form_solver():
                     adquirente['porcDerecho'] = porcentaje_igual * (total_porc_enajenantes / 100)
 
         elif(tercer_caso):
+            print("tercer caso")
             actualizar_transferia_por_vigencia(com_man_pred,  str(int(self.fecha_inscripcion[:4]) - 1))
             adquirente = self.adquirentes_data[0]
             enajenante = self.enajenantes_data[0]
@@ -193,7 +193,7 @@ class form_solver():
             adquirente["porcDerecho"] = porcentaje
 
         else:
-            print("SOY EL CUARTO CASO")
+            print("SOY EL CUARTO CASO", is_ghost)
             actualizar_transferia_por_vigencia(com_man_pred,  str(int(self.fecha_inscripcion[:4]) - 1))
             #toda la gente con el mismo comapredio
             for personas in datos_temporales_totales:
@@ -221,14 +221,16 @@ class form_solver():
 
         print(self.enajenantes_data)
         if(is_ghost):
-            print("es ghost")
+            print("es ghost", self.adquirentes_data,"" ,  self.enajenantes_data, "", lista_duenos, datos_temporales_totales)
             #para el caso dos debo tener en cuenta la totalidad del
             #formulario y multiplicar el porcentaje que se suma 
             # con todos los adquirientes totales tanto del 99(dueños antiguos)
             #como los recien ingresados y dividirlo 
+            total_porc_mp = sum(float(adquirente["porcDerecho"]) for adquirente in self.adquirentes_data) + sum(float(persona["porcDerecho"]) for persona in datos_temporales_totales if persona not in lista_duenos)
+            print(total_porc_mp)
             
 
-            diferencia = 100 - total_porc_adquirentes
+            diferencia = 100 - total_porc_mp
             lista_personas = []
             for adquirente in self.adquirentes_data:
                 porcentaje = float(adquirente["porcDerecho"])

@@ -519,11 +519,12 @@ def obtener_multipropietarios_commanpred(com_man_pred, runrut):
     
 def obtener_transferencias_commanpred(com_man_pred, runrut):
     try:
-        transferencias_sql = QUERY_OBTENER_TRANSFERENCIA_SQL.format(
+        transferencias_sql = QUERY_OBTENER_MULTIPROPIETARIO_SQL.format(
                 com_man_pred=com_man_pred,
                 runrut=runrut
         )
         transferencias = _ejecutar_query(transferencias_sql)
+        print("EN LA TEORIA",transferencias)
         return transferencias
     except Exception as e:
         print("soy un error",ERROR_MESSAGE, e)
