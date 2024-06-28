@@ -1,0 +1,42 @@
+{
+  "F2890": [
+    {
+      "CNE": 99,
+      "bienRaiz": {
+        "comuna": 1101,
+        "manzana": 12,
+        "predio": 9
+      },
+      "adquirentes": [
+        {
+          "RUNRUT": "2-7",
+          "porcDerecho": 100
+        }
+      ],
+      "fojas": 123,
+      "fechaInscripcion": "2018-06-01",
+      "nroInscripcion": 123
+    },
+    {
+      "CNE": 99,
+      "bienRaiz": {
+        "comuna": 1101,
+        "manzana": 12,
+        "predio": 9
+      },
+      "adquirentes": [
+        {
+          "RUNRUT": "3-5",
+          "porcDerecho": 85
+        },
+        {
+          "RUNRUT": "33-5",
+          "porcDerecho": 15
+        }
+      ],
+      "fojas": 55,
+      "fechaInscripcion": "2018-12-24",
+      "nroInscripcion": 215
+    }
+  ]
+}

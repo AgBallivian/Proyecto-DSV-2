@@ -9,17 +9,17 @@
       },
       "adquirentes": [
         {
-          "RUNRUT": "12345678-9",
+          "RUNRUT": "98765432-1",
           "porcDerecho": 60
         },
         {
-          "RUNRUT": "98765432-1",
+          "RUNRUT": "11111111-1",
           "porcDerecho": 40
         }
       ],
-      "fojas": 123,
-      "fechaInscripcion": "2020-06-15",
-      "nroInscripcion": 456
+      "fojas": 789,
+      "fechaInscripcion": "2022-03-20",
+      "nroInscripcion": 321
     }
   ]
 }

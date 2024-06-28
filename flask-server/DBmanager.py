@@ -2,7 +2,9 @@ from flask import jsonify
 import pymysql
 
 from config import Config
-from utils import _construir_com_man_pred, _obtener_count_transferencias, _obtener_ano_desde_query, obtener_ano_inscripcion, _obtener_count_multipropietarios
+from utils import (_construir_com_man_pred, _deconstruir_com_man_pred,
+                   _obtener_count_transferencias, _obtener_ano_desde_query,
+                     obtener_ano_inscripcion, _obtener_count_multipropietarios)
 from Queries import (
     QUERY_ALL_FORMULARIOS, QUERY_INSERTAR_FORM, INTERNAL_SERVER_ERROR,
     QUERY_ALL_ENAJENANTES, QUERY_INSERTAR_ENAJENANTES, QUERY_ALL_ADQUIRENTES,
@@ -14,7 +16,8 @@ from Queries import (
     QUERY_AGREGAR_MULTIPROPIETARIO, QUERY_OBTENER_ID_MULTIPROPIETARIOS_SQL, QUERY_ACTUALIZAR_MULTIPROPIETARIO,
     QUERY_ACTUALIZAR_TRANSFERENCIAS, QUERY_OBTENER_MULTIPROPIETARIOS_POR_COMMANPRED,
     QUERY_OBTENER_MULTIPROPIETARIO_SQL, QUERY_DELETE_MULTIPROPIETARIO,
-    QUERY_ALL_MULTIPROPIETARIOS, QUERY_ALL_TRANSFERENCIAS, QUERY_OBTENER_TRANSFERENCIA_SQL, QUERY_ID_MULTIPROPIETARIOS,QUERY_OBTENER_USUARIO_FORM_TRANSFERENCIAS
+    QUERY_ALL_MULTIPROPIETARIOS, QUERY_ALL_TRANSFERENCIAS, QUERY_OBTENER_TRANSFERENCIA_SQL, QUERY_ID_MULTIPROPIETARIOS,QUERY_OBTENER_USUARIO_FORM_TRANSFERENCIAS,
+    QUERY_FORMULARIO_COM_MAN_PRED, QUERY_ENAJENANTES_POR_FORMULARIO, QUERY_ADQUIRENTES_POR_FORMULARIO
     )
 
 ERROR_MESSAGE = "Error in DBmanager:  "
@@ -204,21 +207,9 @@ def _ejecutar_query_actualizar_transferencias(query):
     finally:
         connect.close()
 
-def delete_transferencias_antiguos(last_initial_year, comuna, manzana, predio):
-    # connect = obtener_conexion_db()
-    # try:
-    #     with connect.cursor() as cursor:
-            com_man_pred = _construir_com_man_pred(comuna, manzana, predio)
-            delete_vigencia_final_query = _construir_query_delete_transferencias(last_initial_year, com_man_pred)
-            _ejecutar_query(delete_vigencia_final_query)
-    #         connect.commit()
-    #         return True
-    # except Exception as e:
-    #     connect.rollback()
-    #     print(ERROR_MESSAGE, e)
-    #     return jsonify({"error": str(e)}), INTERNAL_SERVER_ERROR
-    # finally:
-    #     connect.close()
+def delete_transferencias_antiguos(last_initial_year, com_man_pred):
+    delete_vigencia_final_query = _construir_query_delete_transferencias(last_initial_year, com_man_pred)
+    _ejecutar_query(delete_vigencia_final_query)
 
 def _construir_query_delete_transferencias(last_initial_year, com_man_pred):
     return QUERY_DELETE_TRANSFERENCIAS.format(
@@ -587,4 +578,58 @@ def _construir_query_delete_multipropietario(last_initial_year, com_man_pred):
     return QUERY_DELETE_MULTIPROPIETARIO.format(
         last_initial_year=str(last_initial_year),
         com_man_pred=com_man_pred
+    )
+
+def obtener_formularios_por_com_man_pred(com_man_pred):
+    try:
+        formularios_raw = _ejecutar_query(_construir_query_obtener_formulario(com_man_pred))
+        formularios = []
+        for formulario in formularios_raw:
+            formulario_procesado = {
+                'CNE': formulario['CNE'],
+                'bienRaiz': {
+                    'comuna': formulario['Comuna'],
+                    'manzana': formulario['Manzana'],
+                    'predio': formulario['Predio']
+                },
+                'fojas': formulario['Fojas'],
+                'fechaInscripcion': formulario['Fecha_de_inscripcion'].strftime('%Y-%m-%d'),
+                'nroInscripcion': formulario['Numero_de_insripcion'],
+                'enajenantes': obtener_enajenantes_por_formulario(formulario['Numero_de_atencion']),
+                'adquirentes': obtener_adquirentes_por_formulario(formulario['Numero_de_atencion'])
+            }
+            formularios.append(formulario_procesado)
+        return formularios
+    except Exception as e:
+        print(f"Error al obtener formularios: {e}")
+        return []
+
+def _construir_query_obtener_formulario(com_man_pred):
+    comuna, manzana, predio = _deconstruir_com_man_pred(com_man_pred)
+    return QUERY_FORMULARIO_COM_MAN_PRED.format(
+        comuna=int(comuna),
+        manzana=int(manzana),
+        predio=int(predio)
+    )
+def obtener_enajenantes_por_formulario(numero_atencion):
+    try:
+        enajenantes = _ejecutar_query(QUERY_ENAJENANTES_POR_FORMULARIO.format(numero_atencion=numero_atencion))
+        return [{'RUNRUT': e['RUNRUT'], 'porcDerecho': float(e['porcDerecho'])} for e in enajenantes]
+    except Exception as e:
+        print(ERROR_MESSAGE, e)
+        return []
+
+def obtener_adquirentes_por_formulario(numero_atencion):
+    try:
+        adquirentes = _ejecutar_query(QUERY_ADQUIRENTES_POR_FORMULARIO.format(numero_atencion=numero_atencion))
+        return [{'RUNRUT': a['RUNRUT'], 'porcDerecho': float(a['porcDerecho'])} for a in adquirentes]
+    except Exception as e:
+        print(ERROR_MESSAGE, e)
+        return []
+def _construir_query_obtener_formulario(com_man_pred):
+    comuna, manzana, predio = _deconstruir_com_man_pred(com_man_pred)
+    return QUERY_FORMULARIO_COM_MAN_PRED.format(
+    comuna=int(comuna),
+    manzana=int(manzana),
+    predio=int(predio)
     )

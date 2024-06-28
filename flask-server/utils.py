@@ -3,6 +3,10 @@
 def _construir_com_man_pred(comuna, manzana, predio):
     return f"{comuna}-{manzana}-{predio}"
 
+def _deconstruir_com_man_pred(com_man_pred):
+    comuna, manzana, predio = com_man_pred.split("-")
+    return comuna, manzana, predio
+
 def _obtener_count_transferencias(transferencias):
     return transferencias[0]['COUNT(*)']
 

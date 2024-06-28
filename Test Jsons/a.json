@@ -10,11 +10,7 @@
       "adquirentes": [
         {
           "RUNRUT": "12345678-9",
-          "porcDerecho": 60
-        },
-        {
-          "RUNRUT": "98765432-1",
-          "porcDerecho": 40
+          "porcDerecho": 100
         }
       ],
       "fojas": 123,

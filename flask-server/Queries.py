@@ -13,6 +13,24 @@ QUERY_ALL_FORMULARIOS = "SELECT * FROM formulario"
 QUERY_FORMULARIO_FILTER_ID = "SELECT * FROM Multipropietarios WHERE id = %s"
 QUERY_FORMULARIO_FILTER_NUM_ATENCION =  "SELECT * FROM formulario WHERE Numero_de_atencion = %s"
 
+QUERY_FORMULARIO_COM_MAN_PRED = """
+SELECT Numero_de_atencion, CNE, Comuna, Manzana, Predio, Fojas, Fecha_de_inscripcion, Numero_de_insripcion 
+FROM formulario 
+WHERE Comuna = '{comuna}' AND
+Manzana = '{manzana}' AND
+Predio = '{predio}'
+ORDER BY Fecha_de_inscripcion
+"""
+
+QUERY_ENAJENANTES_POR_FORMULARIO = """
+SELECT RUNRUT, porcDerecho FROM Enajenantes
+WHERE enajenante_id = '{numero_atencion}'
+"""
+
+QUERY_ADQUIRENTES_POR_FORMULARIO = """
+SELECT RUNRUT, porcDerecho FROM Adquirentes
+WHERE Adquirente_id = '{numero_atencion}'
+"""
 QUERY_INSERTAR_ENAJENANTES_MULTIPROPIETARIOS_SQL = """
         INSERT INTO Multipropietarios (id, com_man_pred, RUNRUT, porcDerecho, Fojas, Ano_inscripcion, Numero_inscripcion, Fecha_de_inscripcion, Ano_vigencia_inicial, Ano_vigencia_final)
         VALUES ( %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
@@ -55,7 +73,7 @@ QUERY_UPDATE_TRANSFERENCIAS_SQL = """
 QUERY_DELETE_TRANSFERENCIAS = """
 DELETE FROM Transferencias 
 WHERE Ano_vigencia_inicial = {last_initial_year}
-AND com_man_pred = {com_man_pred}"""
+AND com_man_pred = '{com_man_pred}'"""
 
 QUERY_OBTENER_TRANSFERENCIAS_SQL = """
 SELECT *
