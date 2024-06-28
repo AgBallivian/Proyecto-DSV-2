@@ -69,7 +69,7 @@ class form_solver():
             self.procesar_escenario_compraventa()
         elif self.cne == REGULARIZACION_DE_PATRIMONIO:
             self._procesar_escenario_regularizacion_patrimonio()
-        self.agregar_ransferencias()
+        self.agregar_transferencias()
 
 
     

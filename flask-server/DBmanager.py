@@ -470,7 +470,7 @@ def obtener_multipropietarios_commanpred(com_man_pred, runrut, fecha_inscripcion
             multipropietarios_sql = QUERY_OBTENER_MULTIPROPIETARIO_SQL.format(
                  com_man_pred=com_man_pred,
                  runrut=runrut,
-                 Ano_vigencia_inicial=fecha_inscripcion[:4]
+                 ano_vigencia_inicial=fecha_inscripcion[:4]
             )
             
 
