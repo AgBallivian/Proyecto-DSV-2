@@ -94,8 +94,8 @@ def agregar_enajenante(numero_de_atencion, runrut, porcentaje_derecho):
             enjante_id = len(enajenantes) + 1
             # Insert enajenantes data into the 'enajenantes' table
             cursor.execute(QUERY_INSERTAR_ENAJENANTES, (
-                enjante_id,
                 numero_de_atencion,
+                enjante_id,
                 runrut,
                 porcentaje_derecho,
             ))
@@ -104,7 +104,7 @@ def agregar_enajenante(numero_de_atencion, runrut, porcentaje_derecho):
     except Exception as e:
         connect.rollback()
         print("Error: ", str(e))
-        return jsonify({"error": str(e)}), INTERNAL_SERVER_ERROR
+        print(ERROR_MESSAGE,QUERY_INSERTAR_ADQUIRENTES, e)
     finally:
         connect.close()
 
@@ -116,10 +116,11 @@ def agregar_adquirente(numero_de_atencion, runrut, porcentaje_derecho):
             cursor.execute(QUERY_ALL_ADQUIRENTES)
             adquirentes = cursor.fetchall()
             adquirentes_id = len(adquirentes) + 1
+            print(adquirentes_id)
             # Insert adquirentes data into the 'Adquirentes' table
             cursor.execute(QUERY_INSERTAR_ADQUIRENTES, (
-                adquirentes_id,
                 numero_de_atencion,
+                adquirentes_id,
                 runrut,
                 porcentaje_derecho
             ))
@@ -127,7 +128,7 @@ def agregar_adquirente(numero_de_atencion, runrut, porcentaje_derecho):
         return "Ingreso el Adquirente"
     except Exception as e:
         connect.rollback()
-        return jsonify({"error": str(e)}), INTERNAL_SERVER_ERROR
+        print(ERROR_MESSAGE,QUERY_INSERTAR_ADQUIRENTES, e)
     finally:
         connect.close()
 

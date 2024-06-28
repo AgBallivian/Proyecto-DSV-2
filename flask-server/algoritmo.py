@@ -32,6 +32,12 @@ class form_solver():
             self.adquirentes_data = []
 
         self.agregar_transferencias()
+        for adquirente in self.adquirentes_data:
+            print(adquirente)
+            agregar_adquirente(self.numero_inscripcion, adquirente["RUNRUT"], adquirente["porcDerecho"])
+        for enajenantes in self.enajenantes_data:
+            print(enajenantes)
+            agregar_enajenante(self.numero_inscripcion, enajenantes["RUNRUT"], enajenantes["porcDerecho"])
 
     def agregar_multipropietarios(self):
         id_multipropietario = _obtener_siguiente_id_multipropietarios()
