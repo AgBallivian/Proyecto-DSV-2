@@ -107,12 +107,23 @@ QUERY_ACTUALIZAR_TRANSFERENCIAS = """
 QUERY_OBTENER_MULTIPROPIETARIO_SQL = """
 SELECT *
 FROM Multipropietarios
-WHERE com_man_pred={com_man_pred}
+WHERE com_man_pred = '{com_man_pred}'
 AND RUNRUT={runrut}
-AND Ano_vigencia_inicial={ano_vigencia_inicial}
+"""
+QUERY_OBTENER_TRANSFERENCIA_SQL = """
+SELECT *
+FROM Transferencias
+WHERE com_man_pred = '{com_man_pred}'
+AND RUNRUT='{runrut}'
 """
 
 QUERY_DELETE_MULTIPROPIETARIO = """
 DELETE FROM Multipropietario 
 WHERE Ano_vigencia_inicial = {last_initial_year}
 AND com_man_pred = {com_man_pred}"""
+
+QUERY_OBTENER_USUARIO_FORM_TRANSFERENCIAS = """
+SELECT *
+FROM Transferencias
+JOIN Formulario
+"""
