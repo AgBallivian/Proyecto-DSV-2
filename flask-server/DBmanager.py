@@ -412,7 +412,7 @@ def _actualizar_multipropietarios_por_vigencia(last_initial_year_in, comuna, man
 
 def actualizar_transferia_por_vigencia(com_man_pred, ano_final):
     try:
-        query_multipropietarios = QUERY_ACTUALIZAR_TRANSFERENCIAS.format(ano_final, com_man_pred)
+        query_multipropietarios = QUERY_ACTUALIZAR_TRANSFERENCIAS.format(ano_final=ano_final, com_man_pred=com_man_pred)
         _ejecutar_query(query_multipropietarios)
         return True
     except Exception as e:

@@ -121,10 +121,17 @@ class form_solver():
                 porcentaje_igual = total_porc_enajenantes / len(self.adquirentes_data)
 
                 if primer_caso:
+                    print(str(int(self.fecha_inscripcion[:4]) - 1))
                     actualizar_transferia_por_vigencia(com_man_pred,  str(int(self.fecha_inscripcion[:4]) - 1))
                     for adquirente in self.adquirentes_data:
-                        adquirente["porcDerecho"] = float(adquirente["porcDerecho"]) * (total_porc_enajenantes / 100)
-                    self.enajenantes_data = [enajenante for enajenante in self.enajenantes_data if enajenante not in lista_duenos]
+                        adquirente["porcDerecho"] = float(adquirente
+                        ["porcDerecho"]) * (total_porc_enajenantes / 100)
+                    
+                    for enajenante in self.enajenantes_data:
+                        for personas in lista_duenos:
+                            if(enajenante['RUNRUT'] == personas['RUNRUT']):
+                                self.enajenantes_data.remove(enajenante)
+                    
                     
                         
                 elif segundo_caso:
@@ -133,15 +140,16 @@ class form_solver():
                         adquirente['porcDerecho'] = porcentaje_igual * (total_porc_enajenantes / 100)
 
             elif(tercer_caso):
+                actualizar_transferia_por_vigencia(com_man_pred,  str(int(self.fecha_inscripcion[:4]) - 1))
                 adquirente = self.adquirentes_data[0]
                 enajenante = self.enajenantes_data[0]
                 if not is_ghost:
-                    porcentaje = float(enajenante["porcDerecho"]) * float(adquirente["porcDerecho"]) / 100
+                    porcentaje = float(lista_duenos[0]["porcDerecho"]) * float(adquirente["porcDerecho"]) / 100
                 else:
                     porcentaje = 100 * float(adquirente["porcDerecho"]) / 100
 
                 if not is_ghost:
-                    enajenante["porcDerecho"] = float(enajenante["porcDerecho"]) - porcentaje
+                    enajenante["porcDerecho"] = float(lista_duenos[0]["porcDerecho"]) - porcentaje
                 adquirente["porcDerecho"] = porcentaje
 
             else:
