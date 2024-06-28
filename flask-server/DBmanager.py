@@ -106,7 +106,6 @@ def agregar_enajenante(numero_de_atencion, runrut, porcentaje_derecho):
         return "Ingreso el enajenante"
     except Exception as e:
         connect.rollback()
-        print("Error: ", str(e))
         print(ERROR_MESSAGE,QUERY_INSERTAR_ADQUIRENTES, e)
     finally:
         connect.close()
@@ -119,14 +118,7 @@ def agregar_adquirente(numero_de_atencion, runrut, porcentaje_derecho):
             cursor.execute(QUERY_ALL_ADQUIRENTES)
             adquirentes = cursor.fetchall()
             adquirentes_id = len(adquirentes) + 1
-            cursor.execute("SELECT * FROM formulario")
-            formularios = cursor.fetchall()
-            print("form",formularios)
             # Insert adquirentes data into the 'Adquirentes' table
-            print(adquirentes_id,
-                numero_de_atencion,
-                runrut,
-                porcentaje_derecho)
             cursor.execute(QUERY_INSERTAR_ADQUIRENTES, (
                 adquirentes_id,
                 numero_de_atencion,

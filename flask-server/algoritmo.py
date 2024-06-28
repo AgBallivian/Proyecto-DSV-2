@@ -37,10 +37,8 @@ class form_solver():
 
         self.agregar_transferencias()
         for adquirente in self.adquirentes_data:
-            print(adquirente)
             agregar_adquirente(obtener_numer_de_atencion(), adquirente["RUNRUT"], adquirente["porcDerecho"])
         for enajenantes in self.enajenantes_data:
-            print(enajenantes)
             agregar_enajenante(obtener_numer_de_atencion(), enajenantes["RUNRUT"], enajenantes["porcDerecho"])
 
     def ultimo_formulario(self):
