@@ -6,6 +6,10 @@ QUERY_ALL_MULTIPROPIETARIOS = "SELECT * FROM Multipropietarios"
 QUERY_OBTENER_ID_MULTIPROPIETARIOS_SQL = "SELECT COUNT(*) FROM Multipropietarios WHERE com_man_pred='{com_man_pred}'"
 QUERY_OBTENER_MULTIPROPIETARIOS_POR_COMMANPRED = "SELECT * FROM Multipropietarios WHERE com_man_pred = '{com_man_pred}'"
 QUERY_ID_MULTIPROPIETARIOS = "SELECT id FROM Multipropietarios ORDER BY id DESC LIMIT 1"
+QUERY_SELECT_MULTIPROPIETARIOS_VIGENTES = """
+SELECT * FROM Multipropietarios
+WHERE com_man_pred = '{com_man_pred}'
+AND Ano_vigencia_final = {ano_vigencia_final}"""
 
 QUERY_ALL_TRANSFERENCIAS = "SELECT * FROM Transferencias"
 
@@ -145,3 +149,7 @@ SELECT *
 FROM Transferencias
 JOIN Formulario
 """
+
+
+
+# query_transferencia = "select * from transferencias where commanpred = x and fechainscrpicon>y ORDER by fechainscripcion"

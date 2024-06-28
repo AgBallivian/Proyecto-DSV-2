@@ -15,7 +15,7 @@ from Queries import (
     QUERY_OBTENER_ULT_ANO_INIT, QUERY_CONNECTOR, QUERY_INSERTAR_ENAJENANTES_MULTIPROPIETARIOS_SQL,
     QUERY_AGREGAR_MULTIPROPIETARIO, QUERY_OBTENER_ID_MULTIPROPIETARIOS_SQL, QUERY_ACTUALIZAR_MULTIPROPIETARIO,
     QUERY_ACTUALIZAR_TRANSFERENCIAS, QUERY_OBTENER_MULTIPROPIETARIOS_POR_COMMANPRED,
-    QUERY_OBTENER_MULTIPROPIETARIO_SQL, QUERY_DELETE_MULTIPROPIETARIO,
+    QUERY_OBTENER_MULTIPROPIETARIO_SQL, QUERY_DELETE_MULTIPROPIETARIO, QUERY_SELECT_MULTIPROPIETARIOS_VIGENTES,
     QUERY_ALL_MULTIPROPIETARIOS, QUERY_ALL_TRANSFERENCIAS, QUERY_OBTENER_TRANSFERENCIA_SQL, QUERY_ID_MULTIPROPIETARIOS,QUERY_OBTENER_USUARIO_FORM_TRANSFERENCIAS,
     QUERY_FORMULARIO_COM_MAN_PRED, QUERY_ENAJENANTES_POR_FORMULARIO, QUERY_ADQUIRENTES_POR_FORMULARIO
     )
@@ -540,14 +540,15 @@ def obtener_usuarios_form():
         return None
 
 
-def obtener_multipropietario_commanpred(com_man_pred):
+def obtener_multipropietarios_vigentes(com_man_pred, ano_vigencia_final):
     # connect = obtener_conexion_db()
     # try:
     #     with connect.cursor() as cursor:
-            query = QUERY_OBTENER_MULTIPROPIETARIOS_POR_COMMANPRED.format(
-                com_man_pred=com_man_pred
+            query = QUERY_SELECT_MULTIPROPIETARIOS_VIGENTES.format(
+                com_man_pred=com_man_pred,
+                ano_vigencia_final =ano_vigencia_final
             )
-            
+            print(query)
             return _ejecutar_query(query) 
     #         connect.commit()
 
