@@ -9,13 +9,13 @@
       },
       "adquirentes": [
         {
-          "RUNRUT": "2-7",
+          "RUNRUT": "12345678-9",
           "porcDerecho": 100
         }
       ],
       "fojas": 123,
-      "fechaInscripcion": "2018-06-01",
-      "nroInscripcion": 123
+      "fechaInscripcion": "2023-06-15",
+      "nroInscripcion": 456
     },
     {
       "CNE": 99,
@@ -26,17 +26,17 @@
       },
       "adquirentes": [
         {
-          "RUNRUT": "3-5",
-          "porcDerecho": 85
+          "RUNRUT": "98765432-1",
+          "porcDerecho": 60
         },
         {
-          "RUNRUT": "33-5",
-          "porcDerecho": 15
+          "RUNRUT": "11111111-1",
+          "porcDerecho": 40
         }
       ],
-      "fojas": 55,
-      "fechaInscripcion": "2018-12-24",
-      "nroInscripcion": 215
+      "fojas": 789,
+      "fechaInscripcion": "2023-12-20",
+      "nroInscripcion": 789
     }
   ]
 }

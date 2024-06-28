@@ -350,12 +350,11 @@ def _insert_adquirientes_to_transferencias(id_transferencia, com_man_pred, adqui
         fecha_inscripcion,
         int(obtener_ano_inscripcion(fecha_inscripcion)),
         None,
-        "Aquirente"
+        "Adquirente"
     )
     _ejecutar_query(query, parameters)
 
 def _insert_adquirientes_to_multipropietarios(id_transferencia, com_man_pred, adquirente, fojas, fecha_inscripcion, numero_inscripcion):
-    # query, parameters = _construir_query_insertar_adquirientes(id_transferencia, com_man_pred, adquirente, fojas, fecha_inscripcion, numero_inscripcion)
     query = QUERY_INSERTAR_ADQUIRENTES_MULTIPROPIETARIOS_SQL
     parameters = (
         id_transferencia,
@@ -504,17 +503,16 @@ def obtener_multipropietarios_filtrados(region_id, comuna_id, block_number, prop
     finally:
         connection.close()
 
-def obtener_multipropietarios_commanpred(com_man_pred, runrut):
+def obtener_multipropietarios_commanpred(com_man_pred):
     try:
             multipropietarios_sql = QUERY_OBTENER_MULTIPROPIETARIO_SQL.format(
                  com_man_pred=com_man_pred,
-                 runrut=runrut
             )
 
             multipropietarios = _ejecutar_query(multipropietarios_sql)
             return multipropietarios
     except Exception as e:
-        print("soy un error",ERROR_MESSAGE, e)
+        print(ERROR_MESSAGE, e)
         return None
     
 def obtener_transferencias_commanpred(com_man_pred, runrut):

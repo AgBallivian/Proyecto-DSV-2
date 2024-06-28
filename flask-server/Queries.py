@@ -130,7 +130,6 @@ QUERY_OBTENER_MULTIPROPIETARIO_SQL = """
 SELECT *
 FROM Multipropietarios
 WHERE com_man_pred = '{com_man_pred}'
-AND RUNRUT={runrut}
 """
 QUERY_OBTENER_TRANSFERENCIA_SQL = """
 SELECT *
