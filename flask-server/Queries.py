@@ -1,14 +1,33 @@
 INTERNAL_SERVER_ERROR = 500
 COMPRAVENTA = 8
 REGULARIZACION_DE_PATRIMONIO = 99
-QUERY_ALL_ENAJENANTES = "SELECT * FROM Enajenantes"
-QUERY_ALL_FORMULARIOS = "SELECT * FROM formulario"
-QUERY_ALL_ADQUIRENTES = "SELECT * FROM Adquirentes"
+
 QUERY_ALL_MULTIPROPIETARIOS = "SELECT * FROM Multipropietarios"
+QUERY_OBTENER_ID_MULTIPROPIETARIOS_SQL = "SELECT COUNT(*) FROM Multipropietarios WHERE com_man_pred='{com_man_pred}'"
+QUERY_OBTENER_MULTIPROPIETARIOS_POR_COMMANPRED = "SELECT * FROM Multipropietarios WHERE com_man_pred = '{com_man_pred}'"
+QUERY_ID_MULTIPROPIETARIOS = "SELECT id FROM Multipropietarios ORDER BY id DESC LIMIT 1"
+
 QUERY_ALL_TRANSFERENCIAS = "SELECT * FROM Transferencias"
+
+QUERY_ALL_FORMULARIOS = "SELECT * FROM formulario"
 QUERY_FORMULARIO_FILTER_ID = "SELECT * FROM Multipropietarios WHERE id = %s"
 QUERY_FORMULARIO_FILTER_NUM_ATENCION =  "SELECT * FROM formulario WHERE Numero_de_atencion = %s"
+
+QUERY_INSERTAR_ENAJENANTES_MULTIPROPIETARIOS_SQL = """
+        INSERT INTO Multipropietarios (id, com_man_pred, RUNRUT, porcDerecho, Fojas, Ano_inscripcion, Numero_inscripcion, Fecha_de_inscripcion, Ano_vigencia_inicial, Ano_vigencia_final)
+        VALUES ( %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+    """
+QUERY_ALL_ENAJENANTES = "SELECT * FROM Enajenantes"
 QUERY_ENAJENANTES_INFO = "SELECT RUNRUT, porcDerecho FROM Enajenantes WHERE enajenante_id = %s"
+
+QUERY_INSERTAR_ADQUIRENTES_MULTIPROPIETARIOS_SQL = """
+        INSERT INTO Multipropietarios (id, com_man_pred, RUNRUT, porcDerecho,
+                                    Fojas, Ano_inscripcion, Numero_inscripcion,
+                                    Fecha_de_inscripcion, Ano_vigencia_inicial,
+                                    Ano_vigencia_final)
+        VALUES ( %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+    """
+QUERY_ALL_ADQUIRENTES = "SELECT * FROM Adquirentes"
 QUERY_ADQUIRENTES_INFO = "SELECT RUNRUT, porcDerecho FROM Adquirentes WHERE Adquirente_id = %s"
 
 QUERY_INSERTAR_FORM = """
@@ -68,11 +87,6 @@ QUERY_AGREGAR_MULTIPROPIETARIO = """
                                     Ano_vigencia_final)
         VALUES ( %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
 """
-QUERY_OBTENER_ID_MULTIPROPIETARIOS_SQL = """
-SELECT COUNT(*) 
-FROM Multipropietarios
-WHERE com_man_pred='{com_man_pred}'
-"""
 
 QUERY_ACTUALIZAR_MULTIPROPIETARIO = """
                     UPDATE Multipropietario
@@ -89,11 +103,6 @@ QUERY_ACTUALIZAR_TRANSFERENCIAS = """
                     AND com_man_pred='{com_man_pred}'
                     """
 
-QUERY_OBTENER_MULTIPROPIETARIOS_TRANSFERENCIAS_SQL = """
-SELECT *
-FROM Transferencias
-WHERE com_man_pred = '{com_man_pred}'
-"""
 
 QUERY_OBTENER_MULTIPROPIETARIO_SQL = """
 SELECT *

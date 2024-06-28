@@ -7,7 +7,7 @@ from collections import defaultdict
 from config import Config
 from carga_datos import cargar_regiones, cargar_comunas
 from Queries import QUERY_CONNECTOR, QUERY_ALL_FORMULARIOS, QUERY_FORMULARIO_FILTER_ID, QUERY_ALL_MULTIPROPIETARIOS, QUERY_FORMULARIO_FILTER_NUM_ATENCION, QUERY_ENAJENANTES_INFO, QUERY_ADQUIRENTES_INFO
-from DBmanager import obtener_transferencias_filtrados, obtener_numer_de_atencion, obtener_multipropietarios_filtrados
+from DBmanager import obtener_transferencias_filtrados, obtener_numer_de_atencion, obtener_multipropietarios_filtrados, agregar_formulario
 from Errores import (ERROR_RUT_INVALIDO, ERROR_RUT_VERIFICADOR)
 
 INDEX_ARG = '['
@@ -92,7 +92,6 @@ def procesar_datos_participantes(listas_formulario, tipo_participante):
     return datos_participante
 
 def analizar_clave(clave):
-    print("analizando claves",clave, type(clave))
     partes = clave.split(INDEX_ARG)
     indice = int(partes[1].split(CAMPO_ARG)[0])
     campo = partes[2].split(CAMPO_ARG)[0]
@@ -103,7 +102,7 @@ def asegurar_existencia_participante(datos_participante, indice):
         datos_participante.append({'RUNRUT': None, 'porcDerecho': None})
 
 def procesar_formulario(datos):
-    print("Q PIAJS", datos)
+    agregar_formulario(datos["CNE"], datos["bienRaiz"]["comuna"], datos["bienRaiz"]["manzana"], datos["bienRaiz"]["predio"], datos["fojas"], datos["fechaInscripcion"], datos["nroInscripcion"])
     formulario = form_solver(datos, obtener_conexion_db)
     formulario.determinar_y_procesar_escenario()
     formulario.ajustar_porcentajes_adquirentes()
@@ -210,7 +209,7 @@ def ver_multipropietario(id):
     finally:
         connection.close()
 
-def obtener_formularios(filtros):#cambiar
+def obtener_formularios(filtros):
     connection = obtener_conexion_db()
     search_filters = ""
     if any(v is not None for v in list(filtros.values())):

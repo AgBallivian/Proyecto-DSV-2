@@ -2,9 +2,9 @@ from DBmanager import (_obtener_siguiente_id_transferencias, _insert_enajenantes
                         _insert_adquirientes_to_transferencias, obtener_transferencias_por_com_man_pred, 
                         agregar_formulario, agregar_enajenante, agregar_adquirente, _actualizar_multipropietarios_por_vigencia,
                         _obtener_ano_final, _obtener_ultimo_ano_inicial,delete_transferencias_antiguos,
-                        obtener_multipropietarios_commanpred,
-                        actualizar_transferia_por_vigencia,
-                        obtener_multipropietario_transferencias_commanpred)
+                        obtener_multipropietarios_commanpred, _obtener_siguiente_id_multipropietarios,
+                        actualizar_transferia_por_vigencia, _insert_enajenantes_to_multipropietarios,
+                        obtener_multipropietario_commanpred, _insert_adquirientes_to_multipropietarios)
 from utils import (obtener_ano_inscripcion,_construir_com_man_pred, obtener_total_porcentaje)
 from Errores import ERROR_MESSAGE
 COMPRAVENTA = 8
@@ -31,68 +31,54 @@ class form_solver():
         else:
             self.adquirentes_data = []
 
+        self.agregar_transferencias()
+
+    def agregar_multipropietarios(self):
+        id_multipropietario = _obtener_siguiente_id_multipropietarios()
+        com_man_pred = _construir_com_man_pred(self.comuna, self.manzana, self.predio)
+        for enajenante in self.enajenantes_data:
+            _insert_enajenantes_to_multipropietarios(id_multipropietario,
+                com_man_pred, enajenante, self.fojas, self.fecha_inscripcion, self.numero_inscripcion)
+            id_multipropietario += 1
+
+        for adquirente in self.adquirentes_data:
+            _insert_adquirientes_to_multipropietarios(id_multipropietario,
+                com_man_pred, adquirente, self.fojas, self.fecha_inscripcion, self.numero_inscripcion)
+            id_multipropietario += 1
+
     def agregar_transferencias(self):
-        id_transferencia = _obtener_siguiente_id_transferencias()
+        id_transferencias = _obtener_siguiente_id_transferencias()
         com_man_pred = _construir_com_man_pred(self.comuna, self.manzana, self.predio)
         #print(self.enajenantes_data)
         for enajenante in self.enajenantes_data:
-            _insert_enajenantes_to_transferencias(id_transferencia,
+            _insert_enajenantes_to_transferencias(id_transferencias,
                 com_man_pred, enajenante, self.fojas, self.fecha_inscripcion, self.numero_inscripcion)
-            id_transferencia += 1
+            id_transferencias += 1
 
         for adquirente in self.adquirentes_data:
-            _insert_adquirientes_to_transferencias(id_transferencia,
+            _insert_adquirientes_to_transferencias(id_transferencias,
                 com_man_pred, adquirente, self.fojas, self.fecha_inscripcion, self.numero_inscripcion)
-            id_transferencia += 1
-
-    def actualizar_vigencia(self, last_initial_year):
-        _actualizar_multipropietarios_por_vigencia(last_initial_year, self.comuna, self.manzana, self.predio, self.fecha_inscripcion)
-
-        numero_de_atencion = agregar_formulario(self.cne, self.comuna, self.manzana, self.predio, self.fojas, self.fecha_inscripcion, self.numero_inscripcion)
-        self.add_all(numero_de_atencion)
-        return True
+            id_transferencias += 1
 
     def eliminar_antiguos_y_reemplazar(self, last_initial_year):
         delete_transferencias_antiguos(last_initial_year)
         agregar_formulario(self.cne, self.comuna, self.manzana, self.predio, self.fojas, self.fecha_inscripcion, self.numero_inscripcion)
 
-    def add_all(self, numero_de_atencion):
-        for enajenante in self.enajenantes_data:
-            agregar_enajenante(numero_de_atencion, enajenante['RUNRUT'], enajenante['porcDerecho'])
-        for adquirente in self.adquirentes_data:
-            agregar_adquirente(numero_de_atencion, adquirente['RUNRUT'], adquirente['porcDerecho'])
-        self.agregar_transferencias()
-        # self.handle_enajenante_fantasma()
-        
 
     def determinar_y_procesar_escenario(self):
         if self.cne == COMPRAVENTA:
             self.procesar_escenario_compraventa()
         elif self.cne == REGULARIZACION_DE_PATRIMONIO:
             self._procesar_escenario_regularizacion_patrimonio()
-        self.agregar_transferencias()
-
+        self.agregar_multipropietarios()
 
     
     def procesar_escenario_compraventa(self):
-        is_ghost=False
-        for enajenante in self.enajenantes_data:
-            multipropietarios = obtener_multipropietarios_commanpred(
-                _construir_com_man_pred(self.comuna, self.manzana, self.predio),
-                enajenante['RUNRUT'],
-                self.fecha_inscripcion
-            )
-            if multipropietarios == None:
-                is_ghost = True
-                enajenante['porcDerecho'] = 0
-                enajenante['fecha_inscripcion'] = None
-                enajenante['ano'] = None
-                enajenante['numero_inscripcion'] = None
-
         com_man_pred = str(_construir_com_man_pred(self.comuna, self.manzana, self.predio))
-        datos_temporales_totales = obtener_multipropietario_transferencias_commanpred(
+        datos_temporales_totales = obtener_multipropietario_commanpred(
             com_man_pred
         )
+        print("datos temporales:", datos_temporales_totales)
         lista_duenos = []
         for personas in datos_temporales_totales:
             for enajenante in self.enajenantes_data:
@@ -198,7 +184,6 @@ class form_solver():
         
         com_man_pred = _construir_com_man_pred(self.comuna, self.manzana, self.predio)
         transferencias_existentes = obtener_transferencias_por_com_man_pred(com_man_pred)
-        print("PRINT DE TRANSFERENCIAS EXISTENTES ALO ", transferencias_existentes)
 
         if not transferencias_existentes:
             return True

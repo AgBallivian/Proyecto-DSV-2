@@ -9,12 +9,12 @@ from Queries import (
     QUERY_INSERTAR_ADQUIRENTES, QUERY_ID_TRANSFERENCIAS,
     QUERY_UPDATE_TRANSFERENCIAS_SQL, QUERY_DELETE_TRANSFERENCIAS,
     QUERY_OBTENER_TRANSFERENCIAS_SQL, QUERY_INSERTAR_ENAJENANTES_TRANSFERENCIAS_SQL,
-    QUERY_INSERTAR_ADQUIRENTES_TRANSFERENCIAS_SQL,
-    COMPRAVENTA, REGULARIZACION_DE_PATRIMONIO, QUERY_OBTENER_ULT_ANO_INIT, QUERY_CONNECTOR,
+    QUERY_INSERTAR_ADQUIRENTES_TRANSFERENCIAS_SQL, QUERY_INSERTAR_ADQUIRENTES_MULTIPROPIETARIOS_SQL,
+    QUERY_OBTENER_ULT_ANO_INIT, QUERY_CONNECTOR, QUERY_INSERTAR_ENAJENANTES_MULTIPROPIETARIOS_SQL,
     QUERY_AGREGAR_MULTIPROPIETARIO, QUERY_OBTENER_ID_MULTIPROPIETARIOS_SQL, QUERY_ACTUALIZAR_MULTIPROPIETARIO,
-    QUERY_ACTUALIZAR_TRANSFERENCIAS,
-    QUERY_OBTENER_MULTIPROPIETARIOS_TRANSFERENCIAS_SQL,QUERY_OBTENER_MULTIPROPIETARIO_SQL, QUERY_DELETE_MULTIPROPIETARIO,
-    QUERY_ALL_MULTIPROPIETARIOS, QUERY_ALL_TRANSFERENCIAS
+    QUERY_ACTUALIZAR_TRANSFERENCIAS, QUERY_OBTENER_MULTIPROPIETARIOS_POR_COMMANPRED,
+    QUERY_OBTENER_MULTIPROPIETARIO_SQL, QUERY_DELETE_MULTIPROPIETARIO,
+    QUERY_ALL_MULTIPROPIETARIOS, QUERY_ALL_TRANSFERENCIAS, QUERY_ID_MULTIPROPIETARIOS
     )
 
 ERROR_MESSAGE = "Error in DBmanager:  "
@@ -34,13 +34,12 @@ def _ejecutar_query(query, parameters = None):
         with connect.cursor() as cursor:
             if(parameters):
                 cursor.execute(query, parameters)
-                
             else:
                  cursor.execute(query)
             return cursor.fetchall()
     except Exception as e:
         connect.rollback()
-        print(ERROR_MESSAGE, e)
+        print(ERROR_MESSAGE, query, e)
         raise e
     finally:
         connect.commit()
@@ -162,6 +161,19 @@ def _obtener_siguiente_id_transferencias():
     finally:
         connect.close()
 
+def _obtener_siguiente_id_multipropietarios():
+    connect = obtener_conexion_db()
+    try:
+        with connect.cursor() as cursor:
+            cursor.execute(QUERY_ID_MULTIPROPIETARIOS)
+            id_multipropietarios = cursor.fetchall()
+            return id_multipropietarios[0]["id"] + 1 if id_multipropietarios else 0
+    except Exception as e:
+        connect.rollback()
+        print(ERROR_MESSAGE, e)
+        return jsonify({"error": str(e)}), INTERNAL_SERVER_ERROR
+    finally:
+        connect.close()
 
 def _obtener_ano_final(fecha_inscripcion):
     return obtener_ano_inscripcion(fecha_inscripcion) - 1
@@ -251,26 +263,11 @@ def aplicar_filtros(region_id, comuna_id, block_number, property_number, year):
 
     return filtros
 
-# def _obtener_count_multipropietarios(multipropietarios):
-#     return multipropietarios[0]['COUNT(*)']
 
 def _insert_enajenantes_to_transferencias(id_transferencia, com_man_pred, enajenante, fojas, fecha_inscripcion, numero_inscripcion):
-    # connect = obtener_conexion_db()
-    # try:
-    #     with connect.cursor() as cursor:
-            query, parameters = _construir_query_insertar_enajenantes(id_transferencia, com_man_pred, enajenante, fojas, fecha_inscripcion, numero_inscripcion)
-            _ejecutar_query(query, parameters)
-    #         connect.commit()
-    # except Exception as e:
-    #     connect.rollback()
-    #     print(ERROR_MESSAGE, e)
-    #     return jsonify({"error": str(e)}), INTERNAL_SERVER_ERROR
-    # finally:
-    #     connect.close()
-
-def _construir_query_insertar_enajenantes(id_transferencia , com_man_pred, enajenante, fojas, fecha_inscripcion, numero_inscripcion):
-    return QUERY_INSERTAR_ENAJENANTES_TRANSFERENCIAS_SQL, (
-        id_transferencia,
+    # query, parameters = _construir_query_insertar_enajenantes(id_transferencia, com_man_pred, enajenante, fojas, fecha_inscripcion, numero_inscripcion)
+    query = QUERY_INSERTAR_ENAJENANTES_TRANSFERENCIAS_SQL
+    parameters = (id_transferencia,
         com_man_pred,
         enajenante['RUNRUT'],
         enajenante['porcDerecho'],
@@ -280,8 +277,57 @@ def _construir_query_insertar_enajenantes(id_transferencia , com_man_pred, enaje
         fecha_inscripcion,
         int(obtener_ano_inscripcion(fecha_inscripcion)),
         None,
-        "Enajenante"
+        "Enajenante")
+    _ejecutar_query(query, parameters)
+
+
+# def _construir_query_insertar_enajenantes(id_transferencia , com_man_pred, enajenante, fojas, fecha_inscripcion, numero_inscripcion):
+#     return QUERY_INSERTAR_ENAJENANTES_TRANSFERENCIAS_SQL, (
+#         id_transferencia,
+#         com_man_pred,
+#         enajenante['RUNRUT'],
+#         enajenante['porcDerecho'],
+#         fojas,
+#         int(obtener_ano_inscripcion(fecha_inscripcion)),
+#         numero_inscripcion,
+#         fecha_inscripcion,
+#         int(obtener_ano_inscripcion(fecha_inscripcion)),
+#         None,
+#         "Enajenante"
+#     )
+
+def _insert_enajenantes_to_multipropietarios(id_transferencia, com_man_pred, enajenante, fojas, fecha_inscripcion, numero_inscripcion):
+    # query, parameters = _construir_query_insertar_enajenantes(id_transferencia, com_man_pred, enajenante, fojas, fecha_inscripcion, numero_inscripcion)
+    query = QUERY_INSERTAR_ENAJENANTES_MULTIPROPIETARIOS_SQL
+    parameters = (
+        id_transferencia,
+        com_man_pred,
+        enajenante['RUNRUT'],
+        enajenante['porcDerecho'],
+        fojas,
+        int(obtener_ano_inscripcion(fecha_inscripcion)),
+        numero_inscripcion,
+        fecha_inscripcion,
+        int(obtener_ano_inscripcion(fecha_inscripcion)),
+        None
     )
+    _ejecutar_query(query, parameters)
+
+
+# def _construir_query_insertar_enajenantes(id_transferencia , com_man_pred, enajenante, fojas, fecha_inscripcion, numero_inscripcion):
+#     return QUERY_INSERTAR_ENAJENANTES_TRANSFERENCIAS_SQL, (
+#         id_transferencia,
+#         com_man_pred,
+#         enajenante['RUNRUT'],
+#         enajenante['porcDerecho'],
+#         fojas,
+#         int(obtener_ano_inscripcion(fecha_inscripcion)),
+#         numero_inscripcion,
+#         fecha_inscripcion,
+#         int(obtener_ano_inscripcion(fecha_inscripcion)),
+#         None,
+#         "Enajenante"
+#     )
 
     # return QUERY_INSERTAR_ENAJENANTES_MULTIPROPIETARIO_SQL.format(
     #     id = id_multipropietario,
@@ -301,21 +347,9 @@ def _construir_query_insertar_enajenantes(id_transferencia , com_man_pred, enaje
 #                                     ano_vigencia_final = '{ano_vigencia_final}', tipo = '{tipo}')
 
 def _insert_adquirientes_to_transferencias(id_transferencia, com_man_pred, adquirente, fojas, fecha_inscripcion, numero_inscripcion):
-    # connect = obtener_conexion_db()
-    # try:
-    #     with connect.cursor() as cursor:
-            query, parameters = _construir_query_insertar_adquirientes(id_transferencia, com_man_pred, adquirente, fojas, fecha_inscripcion, numero_inscripcion)
-            _ejecutar_query(query, parameters)
-    #         connect.commit()
-    # except Exception as e:
-    #     connect.rollback()
-    #     print(ERROR_MESSAGE, e)
-    #     return jsonify({"error": str(e)}), INTERNAL_SERVER_ERROR
-    # finally:
-    #     connect.close()
-
-def _construir_query_insertar_adquirientes(id_transferencia, com_man_pred, adquirente, fojas, fecha_inscripcion, numero_inscripcion):
-    return QUERY_INSERTAR_ADQUIRENTES_TRANSFERENCIAS_SQL, (
+    # query, parameters = _construir_query_insertar_adquirientes(id_transferencia, com_man_pred, adquirente, fojas, fecha_inscripcion, numero_inscripcion)
+    query = QUERY_INSERTAR_ADQUIRENTES_TRANSFERENCIAS_SQL
+    parameters = (
         id_transferencia,
         com_man_pred,
         adquirente['RUNRUT'],
@@ -328,6 +362,40 @@ def _construir_query_insertar_adquirientes(id_transferencia, com_man_pred, adqui
         None,
         "Aquirente"
     )
+    _ejecutar_query(query, parameters)
+
+def _insert_adquirientes_to_multipropietarios(id_transferencia, com_man_pred, adquirente, fojas, fecha_inscripcion, numero_inscripcion):
+    # query, parameters = _construir_query_insertar_adquirientes(id_transferencia, com_man_pred, adquirente, fojas, fecha_inscripcion, numero_inscripcion)
+    query = QUERY_INSERTAR_ADQUIRENTES_MULTIPROPIETARIOS_SQL
+    parameters = (
+        id_transferencia,
+        com_man_pred,
+        adquirente['RUNRUT'],
+        adquirente['porcDerecho'],
+        fojas,
+        int(obtener_ano_inscripcion(fecha_inscripcion)),
+        numero_inscripcion,
+        fecha_inscripcion,
+        int(obtener_ano_inscripcion(fecha_inscripcion)),
+        None,
+    )
+    _ejecutar_query(query, parameters)
+
+
+# def _construir_query_insertar_adquirientes(id_transferencia, com_man_pred, adquirente, fojas, fecha_inscripcion, numero_inscripcion):
+#     return QUERY_INSERTAR_ADQUIRENTES_TRANSFERENCIAS_SQL, (
+#         id_transferencia,
+#         com_man_pred,
+#         adquirente['RUNRUT'],
+#         adquirente['porcDerecho'],
+#         fojas,
+#         int(obtener_ano_inscripcion(fecha_inscripcion)),
+#         numero_inscripcion,
+#         fecha_inscripcion,
+#         int(obtener_ano_inscripcion(fecha_inscripcion)),
+#         None,
+#         "Aquirente"
+#     )
 
 def _obtener_ultimo_ano_inicial(comuna, manzana, predio):
     com_man_pred = _construir_com_man_pred(comuna, manzana, predio)
@@ -463,11 +531,11 @@ def obtener_multipropietarios_commanpred(com_man_pred, runrut, fecha_inscripcion
     finally:
         connection.close()
 
-def obtener_multipropietario_transferencias_commanpred(com_man_pred):
+def obtener_multipropietario_commanpred(com_man_pred):
     # connect = obtener_conexion_db()
     # try:
     #     with connect.cursor() as cursor:
-            query = QUERY_OBTENER_MULTIPROPIETARIOS_TRANSFERENCIAS_SQL.format(
+            query = QUERY_OBTENER_MULTIPROPIETARIOS_POR_COMMANPRED.format(
                 com_man_pred=com_man_pred
             )
             
