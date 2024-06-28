@@ -17,7 +17,7 @@ from Queries import (
     QUERY_ALL_MULTIPROPIETARIOS, QUERY_ALL_TRANSFERENCIAS
     )
 
-ERROR_MESSAGE = "Error "
+ERROR_MESSAGE = "Error in DBmanager:  "
 config = Config()
 
 def obtener_conexion_db():
@@ -208,22 +208,14 @@ def _construir_query_delete_transferencias(last_initial_year, com_man_pred):
     )
 
 
-def obtener_transferencias(comuna, manzana, predio):
-    # connect = obtener_conexion_db()
+def obtener_transferencias_por_com_man_pred(com_man_pred):
     try:
-    #     with connect.cursor() as cursor:
-        com_man_pred = _construir_com_man_pred(comuna, manzana, predio)
         transferencias = _ejecutar_query(QUERY_OBTENER_TRANSFERENCIAS_SQL.format(com_man_pred=com_man_pred))
-        if(_obtener_count_transferencias(transferencias)):
-            return  True
-    
+        return transferencias
+
     except Exception as e:
-    #     connect.rollback()
         print(ERROR_MESSAGE, e)
         return False
-    #     return jsonify({"error": str(e)}), INTERNAL_SERVER_ERROR
-    # finally:
-    #     connect.close()
 def _construir_query_obtener_transferencias(com_man_pred):
     return QUERY_OBTENER_TRANSFERENCIAS_SQL.format(com_man_pred=com_man_pred)
 
@@ -338,19 +330,10 @@ def _construir_query_insertar_adquirientes(id_transferencia, com_man_pred, adqui
     )
 
 def _obtener_ultimo_ano_inicial(comuna, manzana, predio):
-    # connect = obtener_conexion_db()
-    # try:
-    #     with connect.cursor() as cursor:
-            com_man_pred = _construir_com_man_pred(comuna, manzana, predio)
-            query = _construir_query_obtener_ultimo_ano_inicial(com_man_pred)
-            last_initial_year_query = _ejecutar_query( query)
-            return _obtener_ano_desde_query(last_initial_year_query)
-    # except Exception as e:
-    #     connect.rollback()
-    #     print(ERROR_MESSAGE, e)
-    #     return jsonify({"error": str(e)}), INTERNAL_SERVER_ERROR
-    # finally:
-    #     connect.close()
+    com_man_pred = _construir_com_man_pred(comuna, manzana, predio)
+    query = _construir_query_obtener_ultimo_ano_inicial(com_man_pred)
+    last_initial_year_query = _ejecutar_query( query)
+    return _obtener_ano_desde_query(last_initial_year_query)
 
 def _construir_query_obtener_ultimo_ano_inicial(com_man_pred):
     return QUERY_OBTENER_ULT_ANO_INIT.format(com_man_pred=com_man_pred)

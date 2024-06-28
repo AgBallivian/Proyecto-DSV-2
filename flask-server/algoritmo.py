@@ -1,5 +1,5 @@
 from DBmanager import (_obtener_siguiente_id_transferencias, _insert_enajenantes_to_transferencias,
-                        _insert_adquirientes_to_transferencias, obtener_transferencias, 
+                        _insert_adquirientes_to_transferencias, obtener_transferencias_por_com_man_pred, 
                         agregar_formulario, agregar_enajenante, agregar_adquirente, _actualizar_multipropietarios_por_vigencia,
                         _obtener_ano_final, _obtener_ultimo_ano_inicial,delete_transferencias_antiguos,
                         obtener_multipropietarios_commanpred,
@@ -180,31 +180,60 @@ class form_solver():
                         multipropietario["porcDerecho"] = (diferencia/(len(lista_personas)))
 
     def _procesar_escenario_regularizacion_patrimonio(self):
+        print("Procesando escenario de regularización de patrimonio")
+        
+        com_man_pred = _construir_com_man_pred(self.comuna, self.manzana, self.predio)
+        transferencias_existentes = obtener_transferencias_por_com_man_pred(com_man_pred)
+        print("PRINT DE TRANSFERENCIAS EXISTENTES ALO ", transferencias_existentes)
 
-        count_transferencia = obtener_transferencias(self.comuna, self.manzana, self.predio)
-
-        if not count_transferencia:
-            self.procesar_escenario_1()
+        if not transferencias_existentes:
+            return True
+        
+        #PROBAR CON UNA WEA QUE YA ESXISTE IGAL PARA LOS OTROS CASOS
         else:
-            last_initial_year = _obtener_ultimo_ano_inicial(self.comuna, self.manzana, self.predio)
-            if last_initial_year < self.fecha_inscripcion[:4]:
-                self.procesar_escenario_2(last_initial_year)
-            elif last_initial_year > obtener_ano_inscripcion():
-                pass
+            print("Transferencias existentes: ALOALAOALAOLAOALAOALOA")
+            ultimo_ano_inicial_transferencias = _obtener_ultimo_ano_inicial(self.comuna, self.manzana, self.predio)
+            ano_inscripcion_actual = obtener_ano_inscripcion(self.fecha_inscripcion)
+            if ano_inscripcion_actual > ultimo_ano_inicial_transferencias:
+                self.procesar_escenario_2(com_man_pred)
+
+            elif ano_inscripcion_actual < ultimo_ano_inicial_transferencias:
+                self.procesar_escenario_3(com_man_pred, ultimo_ano_inicial_transferencias)
             else:
-                self.procesar_escenario_4(last_initial_year)
+                # Aquí se implementará el escenario 4 en el futuro
+                pass
 
-    def procesar_escenario_1(self):
-        print("Escenario 1")
-        #self.agregar_nuevo_formulario()
+    def procesar_escenario_2(self, com_man_pred):
+        print("Procesando Escenario 2: Llega un formulario posterior")    
+        self._acotar_registros_previos(com_man_pred)
 
-    def procesar_escenario_2(self, last_initial_year):
-        print("Escenario 2")
-        self.actualizar_vigencia(last_initial_year)
+
+    def procesar_escenario_3(self, com_man_pred, ultimo_ano_inicial):
+        print("Procesando Escenario 3: Llega un formulario previo")
+        #TODO: Implementar escenario 3
 
     def procesar_escenario_4(self, last_initial_year):
         print("Escenario 4")
-        self.eliminar_antiguos_y_reemplazar(last_initial_year)
+        #TODO: Implementar escenario 4
+
+    def _insertar_adquirente_en_transferencias(self, com_man_pred, adquirente): 
+        _insert_adquirientes_to_transferencias(
+            id_transferencia=_obtener_siguiente_id_transferencias(),
+            com_man_pred=com_man_pred,
+            adquirente=adquirente,
+            fojas=self.fojas,
+            fecha_inscripcion=self.fecha_inscripcion,
+            numero_inscripcion=self.numero_inscripcion
+        )
+
+    def _acotar_registros_previos(self, com_man_pred):
+        ano_vigencia_final = obtener_ano_inscripcion(self.fecha_inscripcion) - 1
+        actualizar_transferia_por_vigencia(com_man_pred, ano_vigencia_final)
+
+    def _acotar_formulario_entrante(self, com_man_pred, transferencias_existentes):
+        #Obtener el año de inscripción de transferencias mas antiguo
+        pass
+        
 
     def ajustar_porcentajes_adquirentes(self):
         sum_porc_derecho_adquirente = self._calcular_suma_porc_derecho_adquirente()

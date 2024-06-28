@@ -41,10 +41,10 @@ AND com_man_pred = {com_man_pred}"""
 QUERY_OBTENER_TRANSFERENCIAS_SQL = """
 SELECT *
 FROM Transferencias
-WHERE com_man_pred={com_man_pred}
+WHERE com_man_pred='{com_man_pred}'
 """
 
-QUERY_OBTENER_ULT_ANO_INIT = "SELECT Ano_vigencia_inicial AS Ano FROM Transferencias WHERE com_man_pred = {com_man_pred} ORDER BY Ano_vigencia_inicial DESC LIMIT 1"
+QUERY_OBTENER_ULT_ANO_INIT = "SELECT Ano_vigencia_inicial AS Ano FROM Transferencias WHERE com_man_pred = '{com_man_pred}' ORDER BY Ano_vigencia_inicial DESC LIMIT 1"
 
 QUERY_INSERTAR_ENAJENANTES_TRANSFERENCIAS_SQL = """
         INSERT INTO Transferencias (id, com_man_pred, RUNRUT, porcDerecho, Fojas, Ano_inscripcion, Numero_inscripcion, Fecha_de_inscripcion, Ano_vigencia_inicial, Ano_vigencia_final, Tipo)
