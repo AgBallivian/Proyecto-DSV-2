@@ -8,7 +8,7 @@ from DBmanager import (_obtener_siguiente_id_transferencias, _insert_enajenantes
                         obtener_numer_de_atencion, obtener_transferencias_commanpred, obtener_transferencias_desde_ano,
                         _insert_adquirientes_to_transferencias, obtener_formularios_por_com_man_pred,
                         eliminar_multipropietarios_desde_ano, obtener_formulario_por_numero_inscripcion,
-                        obtener_conexion_db, actualizar_multipropietarios_por_vigencia, obtener_transferencias_igual_ano,
+                        obtener_conexion_db, obtener_transferencias_igual_ano,
                         _obtener_ultimo_ano_inscripcion_exclusivo)
 from utils import (obtener_ano_inscripcion,_construir_com_man_pred, obtener_total_porcentaje)
 from Errores import ERROR_MESSAGE
@@ -113,7 +113,7 @@ class form_solver():
     def procesar_escenario_compraventa(self):
         is_ghost=False
         com_man_pred = str(_construir_com_man_pred(self.comuna, self.manzana, self.predio))
-        multipropietarios = obtener_multipropietarios_vigentes(com_man_pred, 'null')
+        multipropietarios = obtener_multipropietarios_vigentes(com_man_pred)
         multipropietarios_runrut = [propietarios["RUNRUT"] for propietarios in multipropietarios]
         print(multipropietarios_runrut)
         for enajenante in self.enajenantes_data:
@@ -155,7 +155,6 @@ class form_solver():
 
             if primer_caso:
                 print(str(int(self.fecha_inscripcion[:4]) - 1))
-                actualizar_transferia_por_vigencia(com_man_pred,  str(int(self.fecha_inscripcion[:4]) - 1))
                 for adquirente in self.adquirentes_data:
                     adquirente["porcDerecho"] = float(adquirente
                     ["porcDerecho"]) * (total_porc_enajenantes / 100)
@@ -174,7 +173,6 @@ class form_solver():
 
         elif(tercer_caso):
             print("tercer caso")
-            actualizar_transferia_por_vigencia(com_man_pred,  str(int(self.fecha_inscripcion[:4]) - 1))
             adquirente = self.adquirentes_data[0]
             enajenante = self.enajenantes_data[0]
             if not is_ghost:
@@ -222,9 +220,7 @@ class form_solver():
             # con todos los adquirientes totales tanto del 99(dueños antiguos)
             #como los recien ingresados y dividirlo 
             total_porc_multipropietarios = sum(float(adquirente["porcDerecho"]) for adquirente in self.adquirentes_data) + sum(float(persona["porcDerecho"]) for persona in multipropietarios if persona not in lista_duenos)
-            print(total_porc_multipropietarios)
-            
-
+            print(total_porc_multipropietarios, multipropietarios)
             diferencia = 100 - total_porc_multipropietarios
             lista_personas_con_0_porc = []
             for adquirente in self.adquirentes_data:
@@ -239,11 +235,22 @@ class form_solver():
                     lista_personas_con_0_porc.append(enajenante)
             if (total_porc_multipropietarios > 100):
                 print("entro a fantasma caso 2")
+                for mp in multipropietarios:
+                    mp["porcDerecho"] = (float(mp["porcDerecho"])/total_porc_multipropietarios)*100
+                    print(float(adquirente['porcDerecho']))
+                print((float(adquirente["porcDerecho"])/total_porc_multipropietarios)*100)
                 for adquirente in self.adquirentes_data:
-                    adquirente["porcDerecho"] = (float(adquirente["porcDerecho"])*total_porc_adquirentes)/100
+                    print(float(adquirente['porcDerecho']))
+                    print(total_porc_multipropietarios)
+
+                    adquirente["porcDerecho"] = (float(adquirente["porcDerecho"])/total_porc_multipropietarios)*100
+                for mp in multipropietarios:
+                    self.adquirentes_data.append(mp)
             elif(total_porc_multipropietarios < 100):
                 for multipropietario in lista_personas_con_0_porc:
                     multipropietario["porcDerecho"] = (diferencia/(len(lista_personas_con_0_porc)))
+        actualizar_multipropietarios_por_vigencia(com_man_pred,  str(int(self.fecha_inscripcion[:4]) - 1))
+        
 
     def _procesar_escenario_regularizacion_patrimonio(self):
         print("Procesando escenario de regularización de patrimonio")

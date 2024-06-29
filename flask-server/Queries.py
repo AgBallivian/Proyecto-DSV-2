@@ -9,7 +9,7 @@ QUERY_ID_MULTIPROPIETARIOS = "SELECT id FROM Multipropietarios ORDER BY id DESC 
 QUERY_SELECT_MULTIPROPIETARIOS_VIGENTES = """
 SELECT * FROM Multipropietarios
 WHERE com_man_pred = '{com_man_pred}'
-AND Ano_vigencia_final = {ano_vigencia_final}
+AND Ano_vigencia_final IS NULL
 """
 
 QUERY_ALL_TRANSFERENCIAS = "SELECT * FROM Transferencias"
@@ -142,6 +142,7 @@ QUERY_OBTENER_MULTIPROPIETARIO_SQL = """
 SELECT *
 FROM Multipropietarios
 WHERE com_man_pred = '{com_man_pred}'
+AND RUNRUT= '{runrut}'
 """
 QUERY_OBTENER_TRANSFERENCIA_SQL = """
 SELECT *

@@ -551,13 +551,12 @@ def obtener_usuarios_form():
         return None
 
 
-def obtener_multipropietarios_vigentes(com_man_pred, ano_vigencia_final):
+def obtener_multipropietarios_vigentes(com_man_pred):
     # connect = obtener_conexion_db()
     # try:
     #     with connect.cursor() as cursor:
             query = QUERY_SELECT_MULTIPROPIETARIOS_VIGENTES.format(
                 com_man_pred=com_man_pred,
-                ano_vigencia_final =ano_vigencia_final
             )
             print(query)
             return _ejecutar_query(query) 
