@@ -1,14 +1,17 @@
 from DBmanager import (_obtener_siguiente_id_transferencias, _insert_enajenantes_to_transferencias,
                         _insert_adquirientes_to_transferencias, obtener_transferencias_por_com_man_pred, 
-                        agregar_formulario, agregar_enajenante, agregar_adquirente, _actualizar_multipropietarios_por_vigencia,
-                        _obtener_ano_final, _obtener_ultimo_ano_inicial,delete_transferencias_antiguos,
+                        agregar_formulario, agregar_enajenante, agregar_adquirente, actualizar_multipropietarios_por_vigencia,
+                        _obtener_ano_final, _obtener_ultimo_ano_inscripcion,delete_transferencias_antiguos,
                         obtener_multipropietarios_commanpred, _obtener_siguiente_id_multipropietarios,
                         actualizar_transferia_por_vigencia, _insert_enajenantes_to_multipropietarios,
                         obtener_multipropietarios_vigentes, _insert_adquirientes_to_multipropietarios,
-                        obtener_numer_de_atencion, obtener_transferencias_commanpred, 
-                        _insert_adquirientes_to_transferencias, obtener_formularios_por_com_man_pred)
+                        obtener_numer_de_atencion, obtener_transferencias_commanpred, obtener_transferencias_desde_ano,
+                        _insert_adquirientes_to_transferencias, obtener_formularios_por_com_man_pred,
+                        eliminar_multipropietarios_desde_ano, obtener_formulario_por_numero_inscripcion,
+                        obtener_conexion_db, actualizar_multipropietarios_por_vigencia)
 from utils import (obtener_ano_inscripcion,_construir_com_man_pred, obtener_total_porcentaje)
 from Errores import ERROR_MESSAGE
+
 COMPRAVENTA = 8
 REGULARIZACION_DE_PATRIMONIO = 99
 
@@ -46,7 +49,6 @@ class form_solver():
             self.comuna, self.manzana, self.predio, self.fojas, self.cne, self.enajenantes_data, self.adquirentes_data
         )
         
-
     def agregar_multipropietarios(self):
         id_multipropietario = _obtener_siguiente_id_multipropietarios()
         com_man_pred = _construir_com_man_pred(self.comuna, self.manzana, self.predio)
@@ -88,13 +90,13 @@ class form_solver():
         
 
     def determinar_y_procesar_escenario(self):
-        formulario_id = (self.cne, self.comuna, self.manzana, self.predio, self.fecha_inscripcion)
+        # formulario_id = (self.cne, self.comuna, self.manzana, self.predio, self.fecha_inscripcion)
         
-        if formulario_id in self.formularios_procesados:
-            print(f"Formulario ya procesado: {formulario_id}")
-            return
+        # if formulario_id in self.formularios_procesados:
+        #     print(f"Formulario ya procesado: {formulario_id}")
+        #     return
 
-        self.formularios_procesados.add(formulario_id)
+        # self.formularios_procesados.add(formulario_id)
         
         subir_formulario = True
         if self.cne == COMPRAVENTA:
@@ -102,7 +104,7 @@ class form_solver():
         elif self.cne == REGULARIZACION_DE_PATRIMONIO:
             subir_formulario = self._procesar_escenario_regularizacion_patrimonio()
         if subir_formulario:
-            self.agregar_transferencias()
+            # self.agregar_transferencias()
             self.agregar_multipropietarios()
 
 
@@ -247,17 +249,16 @@ class form_solver():
         
         com_man_pred = _construir_com_man_pred(self.comuna, self.manzana, self.predio)
         multipropietario_existente = obtener_multipropietarios_commanpred(com_man_pred)
-        print("Multi existentes:", multipropietario_existente)
         if not multipropietario_existente:
             print("Procesando Escenario 1: No hay historia")
             return True
         else:
-            ultimo_ano_inicial_transferencias = _obtener_ultimo_ano_inicial(self.comuna, self.manzana, self.predio)
+            ultimo_ano_inicial_transferencias = _obtener_ultimo_ano_inscripcion(com_man_pred, self.numero_inscripcion)
             ano_inscripcion_actual = obtener_ano_inscripcion(self.fecha_inscripcion)
             if ano_inscripcion_actual > ultimo_ano_inicial_transferencias:
                 self.procesar_escenario_2(com_man_pred)
             elif ano_inscripcion_actual < ultimo_ano_inicial_transferencias:
-                self.procesar_escenario_3(com_man_pred, ano_inscripcion_actual, ultimo_ano_inicial_transferencias)
+                self.procesar_escenario_3(com_man_pred, ano_inscripcion_actual)
             else:
                 self.procesar_escenario_4(com_man_pred, ano_inscripcion_actual)
             return False
@@ -265,30 +266,59 @@ class form_solver():
     def procesar_escenario_2(self, com_man_pred):
         print("Procesando Escenario 2: Llega un formulario posterior")    
         self._acotar_registros_previos(com_man_pred)
+        self.agregar_multipropietarios()
 
-    def procesar_escenario_3(self, com_man_pred, ano_inscripcion_actual, ultimo_ano_inicial_transferencias):
+    def procesar_escenario_3(self, com_man_pred, ano_inscripcion_actual):
         print("Procesando Escenario 3: Llega un formulario previo")
         
         # 1. Guardar los formularios existentes que serán eliminados
-        formularios_existentes = obtener_formularios_por_com_man_pred(com_man_pred)
-        formularios_a_reprocesar = [f for f in formularios_existentes if obtener_ano_inscripcion(str(f['fechaInscripcion'])) >= ano_inscripcion_actual]
+        transferencias_posteriores = obtener_transferencias_desde_ano(com_man_pred, ano_inscripcion_actual)
+        print(transferencias_posteriores)
+        # print(formularios_existentes)
+        # formularios_a_reprocesar = [f for f in formularios_existentes if obtener_ano_inscripcion(str(f['fechaInscripcion'])) >= ano_inscripcion_actual]
         
         # 2. Eliminar registros posteriores al nuevo
-        self._eliminar_registros_posteriores(com_man_pred, ano_inscripcion_actual)
-        
+        eliminar_multipropietarios_desde_ano(ano_inscripcion_actual, com_man_pred)
+
+        numero_inscripcion = transferencias_posteriores[0]["Numero_inscripcion"]
+        formulario_proximo = obtener_formulario_por_numero_inscripcion(numero_inscripcion)
         # 3. Insertar el nuevo registro
-        formulario_actual = (self.cne, self.comuna, self.manzana, self.predio, self.fecha_inscripcion)
-        if formulario_actual not in self.formularios_procesados:
-            self._insertar_nuevo_registro(com_man_pred)
-            self.formularios_procesados.add(formulario_actual)
+        self.agregar_multipropietarios()
+        # formulario_actual = (self.cne, self.comuna, self.manzana, self.predio, self.fecha_inscripcion)
+        self.formulario = formulario_proximo
+        self.cne = int(formulario_proximo['CNE'])
+        self.comuna = int(formulario_proximo['bienRaiz']['comuna'])
+        self.manzana = int(formulario_proximo['bienRaiz']['manzana'])
+        self.predio = int(formulario_proximo['bienRaiz']['predio'])
+        self.fojas = int(formulario_proximo['fojas'])
+        self.fecha_inscripcion = formulario_proximo['fechaInscripcion']
+        self.numero_inscripcion = int(formulario_proximo['nroInscripcion'])
+        self.form_anterior = None
+        try:
+            self.enajenantes_data = formulario_proximo['enajenantes']
+        except Exception as e:
+            self.enajenantes_data = []
+            
+        if formulario_proximo['adquirentes'] != []:
+            self.adquirentes_data = formulario_proximo['adquirentes']
+        else:
+            self.adquirentes_data = []
+        if(transferencias_posteriores):
+            print("a")
+            self.determinar_y_procesar_escenario()
+        # if formulario_actual not in self.formularios_procesados:
+        #     self._insertar_nuevo_registro(com_man_pred)
+        #     self.formularios_procesados.add(formulario_actual)
     
         
         # 4. Reprocesar formularios en orden cronológico
-        self._reprocesar_formularios(formularios_a_reprocesar)
+        # self._reprocesar_formularios(formularios_a_reprocesar)
 
     def procesar_escenario_4(self, com_man_pred, ano_inscripcion_actual):
         print("Procesando Escenario 4: Llega un formulario para el mismo año")
-        
+        # obtener el ano de el formulario que acaba de llegar
+        # obtener todos los formularios de ese ano
+        # guardar solo el ultimo
         # 1. Obtener los formularios existentes para el mismo año
         formularios_existentes = obtener_formularios_por_com_man_pred(com_man_pred)
         formularios_mismo_ano = [f for f in formularios_existentes if obtener_ano_inscripcion(str(f['fechaInscripcion'])) == ano_inscripcion_actual]
@@ -309,7 +339,7 @@ class form_solver():
 
     def _acotar_registros_previos(self, com_man_pred):
         ano_vigencia_final = obtener_ano_inscripcion(self.fecha_inscripcion) - 1
-        actualizar_transferia_por_vigencia(com_man_pred, ano_vigencia_final)
+        actualizar_multipropietarios_por_vigencia(com_man_pred, ano_vigencia_final)
 
     def _ajustar_transferencias_existentes(self, com_man_pred, ano_inscripcion_actual, transferencias_existentes, es_escenario_4=False):
         for transferencia in transferencias_existentes:
@@ -334,9 +364,7 @@ class form_solver():
         formularios = obtener_formularios_por_com_man_pred(com_man_pred)
         return [f for f in formularios if obtener_ano_inscripcion(f['fechaInscripcion']) >= ano_inscripcion_actual]
 
-    def _eliminar_registros_posteriores(self, com_man_pred, ano_inscripcion_actual):
-        delete_transferencias_antiguos(ano_inscripcion_actual, com_man_pred)
-
+        
 
     def _reprocesar_formularios(self, formularios):
         formularios_ordenados = sorted(formularios, key=lambda x: x['fechaInscripcion'])

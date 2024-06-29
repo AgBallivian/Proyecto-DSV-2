@@ -1,4 +1,4 @@
-
+import pymysql
 
 def _construir_com_man_pred(comuna, manzana, predio):
     return f"{comuna}-{manzana}-{predio}"

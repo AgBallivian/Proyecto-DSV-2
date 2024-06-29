@@ -12,12 +12,14 @@ from Queries import (
     QUERY_UPDATE_TRANSFERENCIAS_SQL, QUERY_DELETE_TRANSFERENCIAS,
     QUERY_OBTENER_TRANSFERENCIAS_SQL, QUERY_INSERTAR_ENAJENANTES_TRANSFERENCIAS_SQL,
     QUERY_INSERTAR_ADQUIRENTES_TRANSFERENCIAS_SQL, QUERY_INSERTAR_ADQUIRENTES_MULTIPROPIETARIOS_SQL,
-    QUERY_OBTENER_ULT_ANO_INIT, QUERY_CONNECTOR, QUERY_INSERTAR_ENAJENANTES_MULTIPROPIETARIOS_SQL,
-    QUERY_AGREGAR_MULTIPROPIETARIO, QUERY_OBTENER_ID_MULTIPROPIETARIOS_SQL, QUERY_ACTUALIZAR_MULTIPROPIETARIO,
+    QUERY_CONNECTOR, QUERY_INSERTAR_ENAJENANTES_MULTIPROPIETARIOS_SQL,
+    QUERY_AGREGAR_MULTIPROPIETARIO, QUERY_OBTENER_ID_MULTIPROPIETARIOS_SQL, QUERY_ACTUALIZAR_MULTIPROPIETARIOS_POR_VIGENCIA,
     QUERY_ACTUALIZAR_TRANSFERENCIAS, QUERY_OBTENER_MULTIPROPIETARIOS_POR_COMMANPRED,
     QUERY_OBTENER_MULTIPROPIETARIO_SQL, QUERY_DELETE_MULTIPROPIETARIO, QUERY_SELECT_MULTIPROPIETARIOS_VIGENTES,
     QUERY_ALL_MULTIPROPIETARIOS, QUERY_ALL_TRANSFERENCIAS, QUERY_OBTENER_TRANSFERENCIA_SQL, QUERY_ID_MULTIPROPIETARIOS,QUERY_OBTENER_USUARIO_FORM_TRANSFERENCIAS,
-    QUERY_FORMULARIO_COM_MAN_PRED, QUERY_ENAJENANTES_POR_FORMULARIO, QUERY_ADQUIRENTES_POR_FORMULARIO
+    QUERY_FORMULARIO_COM_MAN_PRED, QUERY_ENAJENANTES_POR_FORMULARIO, QUERY_ADQUIRENTES_POR_FORMULARIO,
+    QUERY_OBTENER_TRANFERENCIAS_DESDE_ANO, QUERY_OBTENER_ULT_ANO_INSCRIPCION_EXCLUSIVO, QUERY_ELIMINAR_FILA_MULTIPROPIETARIOS_DESDE_ANO,
+    QUERY_SELECT_FORMULARIO_NUMERO_INSCRIPCION, QUERY_ACTUALIZAR_MULTIPROPIETARIO
     )
 
 ERROR_MESSAGE = "Error in DBmanager:  "
@@ -106,7 +108,7 @@ def agregar_enajenante(numero_de_atencion, runrut, porcentaje_derecho):
         return "Ingreso el enajenante"
     except Exception as e:
         connect.rollback()
-        print(ERROR_MESSAGE,QUERY_INSERTAR_ADQUIRENTES, e)
+        print(ERROR_MESSAGE, QUERY_INSERTAR_ADQUIRENTES, e)
     finally:
         connect.close()
 
@@ -129,7 +131,7 @@ def agregar_adquirente(numero_de_atencion, runrut, porcentaje_derecho):
         return "Ingreso el Adquirente"
     except Exception as e:
         connect.rollback()
-        print(ERROR_MESSAGE,QUERY_INSERTAR_ADQUIRENTES, e)
+        print(ERROR_MESSAGE, QUERY_INSERTAR_ADQUIRENTES, e)
     finally:
         connect.close()
 
@@ -208,6 +210,12 @@ def _construir_query_delete_transferencias(last_initial_year, com_man_pred):
         last_initial_year=str(last_initial_year),
         com_man_pred=com_man_pred
     )
+
+def eliminar_multipropietarios_desde_ano(ano_inscripcion_actual, com_man_pred):
+    _ejecutar_query(QUERY_ELIMINAR_FILA_MULTIPROPIETARIOS_DESDE_ANO.format(
+        com_man_pred=com_man_pred,
+        ano_inscripcion=ano_inscripcion_actual
+        ))
 
 
 def obtener_transferencias_por_com_man_pred(com_man_pred):
@@ -386,17 +394,19 @@ def _insert_adquirientes_to_multipropietarios(id_transferencia, com_man_pred, ad
 #         "Aquirente"
 #     )
 
-def _obtener_ultimo_ano_inicial(comuna, manzana, predio):
-    com_man_pred = _construir_com_man_pred(comuna, manzana, predio)
-    query = _construir_query_obtener_ultimo_ano_inicial(com_man_pred)
-    last_initial_year_query = _ejecutar_query( query)
+def _obtener_ultimo_ano_inscripcion(com_man_pred, numero_inscripcion):
+    query = construir_query_obtener_ultimo_ano_inscripcion_exclusivo(com_man_pred, numero_inscripcion)
+    last_initial_year_query = _ejecutar_query(query)
+    print(last_initial_year_query)
     return _obtener_ano_desde_query(last_initial_year_query)
 
-def _construir_query_obtener_ultimo_ano_inicial(com_man_pred):
-    return QUERY_OBTENER_ULT_ANO_INIT.format(com_man_pred=com_man_pred)
+def construir_query_obtener_ultimo_ano_inscripcion_exclusivo(com_man_pred, numero_inscripcion):
+    return QUERY_OBTENER_ULT_ANO_INSCRIPCION_EXCLUSIVO.format(com_man_pred=com_man_pred, numero_inscripcion=numero_inscripcion)
 
-# def _obtener_ano_desde_query(query_result):
-#     return query_result[0]['Ano']
+def construir_query_obtener_ultimo_ano_inscripcion(com_man_pred, numero_inscripcion):
+    return QUERY_OBTENER_ULT_ANO_INSCRIPCION.format(com_man_pred=com_man_pred, numero_inscripcion=numero_inscripcion)
+
+
 def obtener_multipropietario(numero_de_atencion):
     connect = obtener_conexion_db()
     try:
@@ -434,21 +444,15 @@ def agregar_multipropietario(com_man_pred, runrut, porcderecho,
 def _construir_query_obtener_multipropietarios_id(com_man_pred):
         return QUERY_OBTENER_ID_MULTIPROPIETARIOS_SQL.format(com_man_pred=com_man_pred)
 
-def _actualizar_multipropietarios_por_vigencia(last_initial_year_in, comuna, manzana, predio, fecha_inscripcion):
-    connect = obtener_conexion_db()
+def actualizar_multipropietarios_por_vigencia(com_man_pred, ano_final):
     try:
-        com_man_pred = _construir_com_man_pred(comuna, manzana, predio)
-        ano_final = _obtener_ano_final(fecha_inscripcion)
-        query_multipropietarios = _construir_query_actualizar_multipropietarios(ano_final, last_initial_year_in, com_man_pred)
-        _ejecutar_query_actualizar_multipropietarios(query_multipropietarios)
-        connect.commit()
+        query_multipropietarios = QUERY_ACTUALIZAR_MULTIPROPIETARIOS_POR_VIGENCIA.format(ano_final=ano_final, com_man_pred=com_man_pred)
+        print(query_multipropietarios)
+        _ejecutar_query(query_multipropietarios)
         return True
     except Exception as e:
-        connect.rollback()
         print(ERROR_MESSAGE, e)
         return jsonify({"error": str(e)}), INTERNAL_SERVER_ERROR
-    finally:
-        connect.close()
 
 def actualizar_transferia_por_vigencia(com_man_pred, ano_final):
     try:
@@ -595,6 +599,36 @@ def obtener_formularios_por_com_man_pred(com_man_pred):
     except Exception as e:
         print(f"Error al obtener formularios: {e}")
         return []
+    
+def obtener_formulario_por_numero_inscripcion(numero_inscripcion):
+    try:
+        query = _construir_query_obtener_formulario_por_num(numero_inscripcion)
+        formularios_raw = _ejecutar_query(query)
+        formularios = []
+        for formulario in formularios_raw:
+            formulario_procesado = {
+                'CNE': formulario['CNE'],
+                'bienRaiz': {
+                    'comuna': formulario['Comuna'],
+                    'manzana': formulario['Manzana'],
+                    'predio': formulario['Predio']
+                },
+                'fojas': formulario['Fojas'],
+                'fechaInscripcion': formulario['Fecha_de_inscripcion'].strftime('%Y-%m-%d'),
+                'nroInscripcion': formulario['Numero_de_insripcion'],
+                'enajenantes': obtener_enajenantes_por_formulario(formulario['Numero_de_atencion']),
+                'adquirentes': obtener_adquirentes_por_formulario(formulario['Numero_de_atencion'])
+            }
+            formularios.append(formulario_procesado)
+        return formularios[0]
+    except Exception as e:
+        print(f"Error al obtener formularios: {e}")
+        return []
+
+def _construir_query_obtener_formulario_por_num(numero_inscripcion):
+    return QUERY_SELECT_FORMULARIO_NUMERO_INSCRIPCION.format(
+        numero_de_inscripcion = numero_inscripcion
+    )
 
 def _construir_query_obtener_formulario(com_man_pred):
     comuna, manzana, predio = _deconstruir_com_man_pred(com_man_pred)
@@ -625,3 +659,11 @@ def _construir_query_obtener_formulario(com_man_pred):
     manzana=int(manzana),
     predio=int(predio)
     )
+
+def obtener_transferencias_desde_ano(com_man_pred, ano_inscripcion):
+    query = QUERY_OBTENER_TRANFERENCIAS_DESDE_ANO.format(
+        com_man_pred = com_man_pred,
+        ano_inscripcion = ano_inscripcion
+        )
+    transferenicas = _ejecutar_query(query)
+    return transferenicas
