@@ -36,9 +36,6 @@ def crear_formulario():
         return render_template('crear_formulario.html')
 
     try:
-        datos_formulario = extraer_datos_formulario(request.form)
-        datos = preparar_datos(datos_formulario)
-        formulario = procesar_formulario(datos)
         numero_de_atencion = obtener_numer_de_atencion()
         if numero_de_atencion:
             return redirect(url_for('ver_formulario', id=numero_de_atencion))
@@ -60,21 +57,34 @@ def extraer_datos_formulario(formulario):
     }
 
 def preparar_datos(datos_formulario):
-    # Convertir el generador en una lista
-    listas_formulario = list(datos_formulario['listas_formulario'])
+    listas_formulario = _convertir_generador_a_lista(datos_formulario['listas_formulario'])
+    datos_participantes = _procesar_datos_participantes(listas_formulario)
+    datos_bien_raiz = _extraer_datos_bien_raiz(datos_formulario)
     
-    datos_enajenantes = procesar_datos_participantes(listas_formulario, 'enajenantes')
-    datos_adquirentes = procesar_datos_participantes(listas_formulario, 'adquirentes')
-    
+    return _construir_diccionario_resultado(datos_formulario, datos_participantes, datos_bien_raiz)
+
+def _convertir_generador_a_lista(generador):
+    return list(generador)
+
+def _procesar_datos_participantes(listas_formulario):
+    return {
+        'enajenantes': procesar_datos_participantes(listas_formulario, 'enajenantes'),
+        'adquirentes': procesar_datos_participantes(listas_formulario, 'adquirentes')
+    }
+
+def _extraer_datos_bien_raiz(datos_formulario):
+    return {
+        'comuna': datos_formulario['comuna'],
+        'manzana': datos_formulario['manzana'],
+        'predio': datos_formulario['predio']
+    }
+
+def _construir_diccionario_resultado(datos_formulario, datos_participantes, datos_bien_raiz):
     return {
         'CNE': datos_formulario['cne'],
-        'bienRaiz': {
-            'comuna': datos_formulario['comuna'],
-            'manzana': datos_formulario['manzana'],
-            'predio': datos_formulario['predio']
-        },
-        'enajenantes': datos_enajenantes,
-        'adquirentes': datos_adquirentes,
+        'bienRaiz': datos_bien_raiz,
+        'enajenantes': datos_participantes['enajenantes'],
+        'adquirentes': datos_participantes['adquirentes'],
         'fojas': datos_formulario['fojas'],
         'fechaInscripcion': datos_formulario['fecha_inscripcion'],
         'nroInscripcion': datos_formulario['numero_inscripcion']
@@ -82,14 +92,24 @@ def preparar_datos(datos_formulario):
 
 def procesar_datos_participantes(listas_formulario, tipo_participante):
     datos_participante = []
-    for clave, valor in listas_formulario:
-        if clave.startswith(tipo_participante):
-            indice, campo = analizar_clave(clave)
-            asegurar_existencia_participante(datos_participante, indice)
-            datos_participante[indice][campo] = valor[0]
+    claves_relevantes = _filtrar_claves_por_tipo(listas_formulario, tipo_participante)
+    
+    for clave, valor in claves_relevantes:
+        _procesar_clave_valor(datos_participante, clave, valor)
     
     return datos_participante
 
+def _filtrar_claves_por_tipo(listas_formulario, tipo_participante):
+    return [(clave, valor) for clave, valor in listas_formulario if clave.startswith(tipo_participante)]
+
+def _procesar_clave_valor(datos_participante, clave, valor):
+    indice, campo = analizar_clave(clave)
+    _asegurar_existencia_participante(datos_participante, indice)
+    datos_participante[indice][campo] = valor[0]
+
+def _asegurar_existencia_participante(datos_participante, indice):
+    while len(datos_participante) <= indice:
+        datos_participante.append({})
 def analizar_clave(clave):
     partes = clave.split(INDEX_ARG)
     indice = int(partes[1].split(CAMPO_ARG)[0])
@@ -131,14 +151,19 @@ def subir_json():
 
 @app.route('/ver_todos_formularios', methods=['GET'])
 def ver_todos_formularios():
-    filtros = {
+    filtros = obtener_filtros_desde_request()
+    formularios = obtener_formularios(filtros)
+    return renderizar_template_formularios(formularios)
+
+def obtener_filtros_desde_request():
+    return {
         "CNE": request.args.get('CNE'),
         "Comuna": request.args.get('Comuna'),
         "Manzana": request.args.get('Manzana'),
         "Predio": request.args.get('Predio')
     }
 
-    formularios = obtener_formularios(filtros)
+def renderizar_template_formularios(formularios):
     return render_template('ver_todos_formularios.html', formularios=formularios)
 
 @app.route('/ver_formulario/<int:id>', methods=['GET'])
@@ -164,37 +189,60 @@ def ver_todos_multipropietarios():
 
 @app.route('/ver_multipropietarios_filtrados', methods=['GET'])
 def ver_multipropietarios_filtrados():
-    regiones = cargar_regiones()
-    comunas = cargar_comunas()
-    id_region = request.args.get('region')
-    id_comuna = request.args.get('comuna')
-    runrut = request.args.get('runrut')
-    fojas = request.args.get('fojas')
+    parametros_filtro = obtener_parametros_filtro()
+    regiones, comunas = cargar_datos_geograficos()
+    consulta = construir_consulta_sql(parametros_filtro, comunas)
+    multipropietarios = ejecutar_consulta(consulta)
+    return renderizar_template(multipropietarios, regiones, comunas)
 
-    # Construir la consulta SQL con los filtros
+def obtener_parametros_filtro():
+    return {
+        'id_region': request.args.get('region'),
+        'id_comuna': request.args.get('comuna'),
+        'runrut': request.args.get('runrut'),
+        'fojas': request.args.get('fojas')
+    }
+
+def cargar_datos_geograficos():
+    return cargar_regiones(), cargar_comunas()
+
+def construir_consulta_sql(parametros, comunas):
     consulta = QUERY_ALL_MULTIPROPIETARIOS
-    condiciones = []
-    if id_region:
-        comunas_filtradas = [id_comuna for id_comuna, datos in comunas.items() if datos['id_region'] == int(id_region)]
-        condiciones.append(f"Comuna IN ({','.join(map(str, comunas_filtradas))})")
-    if id_comuna:
-        condiciones.append(f"Comuna = {id_comuna}")
-    if runrut:
-        condiciones.append(f"RUNRUT LIKE '%{runrut}%'")
-    if fojas:
-        condiciones.append(f"Fojas = {fojas}")
-
+    condiciones = generar_condiciones_sql(parametros, comunas)
     if condiciones:
         consulta += QUERY_CONNECTOR.join(condiciones)
+    return consulta
 
+def generar_condiciones_sql(parametros, comunas):
+    condiciones = []
+    if parametros['id_region']:
+        comunas_filtradas = obtener_comunas_filtradas(comunas, parametros['id_region'])
+        condiciones.append(f"Comuna IN ({','.join(map(str, comunas_filtradas))})")
+    if parametros['id_comuna']:
+        condiciones.append(f"Comuna = {parametros['id_comuna']}")
+    if parametros['runrut']:
+        condiciones.append(f"RUNRUT LIKE '%{parametros['runrut']}%'")
+    if parametros['fojas']:
+        condiciones.append(f"Fojas = {parametros['fojas']}")
+    return condiciones
+
+def obtener_comunas_filtradas(comunas, id_region):
+    return [id_comuna for id_comuna, datos in comunas.items() if datos['id_region'] == int(id_region)]
+
+def ejecutar_consulta(consulta):
     connection = obtener_conexion_db()
     try:
         with connection.cursor() as cursor:
             cursor.execute(consulta)
-            multipropietarios = cursor.fetchall()
-        return render_template('ver_todos_multipropietarios.html', multipropietarios=multipropietarios, regiones=regiones, comunas=comunas)
+            return cursor.fetchall()
     finally:
         connection.close()
+
+def renderizar_template(multipropietarios, regiones, comunas):
+    return render_template('ver_todos_multipropietarios.html', 
+                           multipropietarios=multipropietarios, 
+                           regiones=regiones, 
+                           comunas=comunas)
 
 @app.route('/ver_multipropietario/<int:id>', methods=['GET'])
 def ver_multipropietario(id):
