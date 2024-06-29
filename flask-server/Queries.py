@@ -9,7 +9,8 @@ QUERY_ID_MULTIPROPIETARIOS = "SELECT id FROM Multipropietarios ORDER BY id DESC 
 QUERY_SELECT_MULTIPROPIETARIOS_VIGENTES = """
 SELECT * FROM Multipropietarios
 WHERE com_man_pred = '{com_man_pred}'
-AND Ano_vigencia_final = {ano_vigencia_final}"""
+AND Ano_vigencia_final = {ano_vigencia_final}
+"""
 
 QUERY_ALL_TRANSFERENCIAS = "SELECT * FROM Transferencias"
 
@@ -166,6 +167,14 @@ WHERE com_man_pred = '{com_man_pred}'
 and Ano_inscripcion > {ano_inscripcion} 
 ORDER by Ano_inscripcion
 """
+
+QUERY_OBTENER_TRANFERENCIAS_IGUAL_ANO = """
+SELECT * FROM Transferencias 
+WHERE com_man_pred = '{com_man_pred}'
+and Ano_inscripcion = {ano_inscripcion} 
+ORDER by Ano_inscripcion
+"""
+
 QUERY_ACTUALIZAR_MULTIPROPIETARIOS_POR_VIGENCIA = """
                     UPDATE Multipropietarios
                     SET Ano_vigencia_final={ano_final}

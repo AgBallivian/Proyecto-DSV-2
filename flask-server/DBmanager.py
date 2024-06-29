@@ -19,8 +19,8 @@ from Queries import (
     QUERY_ALL_MULTIPROPIETARIOS, QUERY_ALL_TRANSFERENCIAS, QUERY_OBTENER_TRANSFERENCIA_SQL, QUERY_ID_MULTIPROPIETARIOS,QUERY_OBTENER_USUARIO_FORM_TRANSFERENCIAS,
     QUERY_FORMULARIO_COM_MAN_PRED, QUERY_ENAJENANTES_POR_FORMULARIO, QUERY_ADQUIRENTES_POR_FORMULARIO,
     QUERY_OBTENER_TRANFERENCIAS_DESDE_ANO, QUERY_OBTENER_ULT_ANO_INSCRIPCION_EXCLUSIVO, QUERY_ELIMINAR_FILA_MULTIPROPIETARIOS_DESDE_ANO,
-    QUERY_SELECT_FORMULARIO_NUMERO_INSCRIPCION, QUERY_ACTUALIZAR_MULTIPROPIETARIO
-    )
+    QUERY_SELECT_FORMULARIO_NUMERO_INSCRIPCION, QUERY_ACTUALIZAR_MULTIPROPIETARIO, QUERY_OBTENER_TRANFERENCIAS_IGUAL_ANO,
+    QUERY_OBTENER_ULT_ANO_INSCRIPCION)
 
 ERROR_MESSAGE = "Error in DBmanager:  "
 config = Config()
@@ -394,17 +394,26 @@ def _insert_adquirientes_to_multipropietarios(id_transferencia, com_man_pred, ad
 #         "Aquirente"
 #     )
 
-def _obtener_ultimo_ano_inscripcion(com_man_pred, numero_inscripcion):
+def _obtener_ultimo_ano_inscripcion_exclusivo(com_man_pred, numero_inscripcion):
     query = construir_query_obtener_ultimo_ano_inscripcion_exclusivo(com_man_pred, numero_inscripcion)
     last_initial_year_query = _ejecutar_query(query)
+    if(not last_initial_year_query):
+        query = construir_query_obtener_ultimo_ano_inscripcion(com_man_pred)
+        last_initial_year_query = _ejecutar_query(query)
     print(last_initial_year_query)
     return _obtener_ano_desde_query(last_initial_year_query)
 
 def construir_query_obtener_ultimo_ano_inscripcion_exclusivo(com_man_pred, numero_inscripcion):
     return QUERY_OBTENER_ULT_ANO_INSCRIPCION_EXCLUSIVO.format(com_man_pred=com_man_pred, numero_inscripcion=numero_inscripcion)
 
-def construir_query_obtener_ultimo_ano_inscripcion(com_man_pred, numero_inscripcion):
-    return QUERY_OBTENER_ULT_ANO_INSCRIPCION.format(com_man_pred=com_man_pred, numero_inscripcion=numero_inscripcion)
+def _obtener_ultimo_ano_inscripcion(com_man_pred):
+    query = construir_query_obtener_ultimo_ano_inscripcion(com_man_pred)
+    last_initial_year_query = _ejecutar_query(query)
+    print(last_initial_year_query)
+    return _obtener_ano_desde_query(last_initial_year_query)
+
+def construir_query_obtener_ultimo_ano_inscripcion(com_man_pred):
+    return QUERY_OBTENER_ULT_ANO_INSCRIPCION.format(com_man_pred=com_man_pred)
 
 
 def obtener_multipropietario(numero_de_atencion):
@@ -662,6 +671,14 @@ def _construir_query_obtener_formulario(com_man_pred):
 
 def obtener_transferencias_desde_ano(com_man_pred, ano_inscripcion):
     query = QUERY_OBTENER_TRANFERENCIAS_DESDE_ANO.format(
+        com_man_pred = com_man_pred,
+        ano_inscripcion = ano_inscripcion
+        )
+    transferenicas = _ejecutar_query(query)
+    return transferenicas
+
+def obtener_transferencias_igual_ano(com_man_pred, ano_inscripcion):
+    query = QUERY_OBTENER_TRANFERENCIAS_IGUAL_ANO.format(
         com_man_pred = com_man_pred,
         ano_inscripcion = ano_inscripcion
         )

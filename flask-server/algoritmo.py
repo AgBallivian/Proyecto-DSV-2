@@ -8,7 +8,8 @@ from DBmanager import (_obtener_siguiente_id_transferencias, _insert_enajenantes
                         obtener_numer_de_atencion, obtener_transferencias_commanpred, obtener_transferencias_desde_ano,
                         _insert_adquirientes_to_transferencias, obtener_formularios_por_com_man_pred,
                         eliminar_multipropietarios_desde_ano, obtener_formulario_por_numero_inscripcion,
-                        obtener_conexion_db, actualizar_multipropietarios_por_vigencia)
+                        obtener_conexion_db, actualizar_multipropietarios_por_vigencia, obtener_transferencias_igual_ano,
+                        _obtener_ultimo_ano_inscripcion_exclusivo)
 from utils import (obtener_ano_inscripcion,_construir_com_man_pred, obtener_total_porcentaje)
 from Errores import ERROR_MESSAGE
 
@@ -253,7 +254,8 @@ class form_solver():
             print("Procesando Escenario 1: No hay historia")
             return True
         else:
-            ultimo_ano_inicial_transferencias = _obtener_ultimo_ano_inscripcion(com_man_pred, self.numero_inscripcion)
+            print(com_man_pred, self.numero_inscripcion)
+            ultimo_ano_inicial_transferencias = _obtener_ultimo_ano_inscripcion_exclusivo(com_man_pred, self.numero_inscripcion)
             ano_inscripcion_actual = obtener_ano_inscripcion(self.fecha_inscripcion)
             if ano_inscripcion_actual > ultimo_ano_inicial_transferencias:
                 self.procesar_escenario_2(com_man_pred)
@@ -316,25 +318,28 @@ class form_solver():
 
     def procesar_escenario_4(self, com_man_pred, ano_inscripcion_actual):
         print("Procesando Escenario 4: Llega un formulario para el mismo año")
+
+        transferencias_iguales = obtener_transferencias_igual_ano(com_man_pred, ano_inscripcion_actual)
+        print(transferencias_iguales)
         # obtener el ano de el formulario que acaba de llegar
         # obtener todos los formularios de ese ano
         # guardar solo el ultimo
         # 1. Obtener los formularios existentes para el mismo año
-        formularios_existentes = obtener_formularios_por_com_man_pred(com_man_pred)
-        formularios_mismo_ano = [f for f in formularios_existentes if obtener_ano_inscripcion(str(f['fechaInscripcion'])) == ano_inscripcion_actual]
+        # formularios_existentes = obtener_formularios_por_com_man_pred(com_man_pred)
+        # formularios_mismo_ano = [f for f in formularios_existentes if obtener_ano_inscripcion(str(f['fechaInscripcion'])) == ano_inscripcion_actual]
         
-        # 2. Eliminar registros del mismo año
-        self._eliminar_registros_mismo_ano(com_man_pred, ano_inscripcion_actual)
+        # # 2. Eliminar registros del mismo año
+        # self._eliminar_registros_mismo_ano(com_man_pred, ano_inscripcion_actual)
         
-        # 3. Insertar el nuevo registro
-        self._insertar_nuevo_registro(com_man_pred)
+        # # 3. Insertar el nuevo registro
+        # self._insertar_nuevo_registro(com_man_pred)
         
-        # 4. Reprocesar formularios del mismo año en orden cronológico
-        formularios_a_reprocesar = sorted(formularios_mismo_ano + [self.formulario], key=lambda x: x['fechaInscripcion'])
-        self._reprocesar_formularios(formularios_a_reprocesar)
+        # # 4. Reprocesar formularios del mismo año en orden cronológico
+        # formularios_a_reprocesar = sorted(formularios_mismo_ano + [self.formulario], key=lambda x: x['fechaInscripcion'])
+        # self._reprocesar_formularios(formularios_a_reprocesar)
         
-        # 5. Ajustar las transferencias existentes si es necesario
-        self._ajustar_transferencias_existentes(com_man_pred, ano_inscripcion_actual, formularios_existentes, es_escenario_4=True)
+        # # 5. Ajustar las transferencias existentes si es necesario
+        # self._ajustar_transferencias_existentes(com_man_pred, ano_inscripcion_actual, formularios_existentes, es_escenario_4=True)
 
 
     def _acotar_registros_previos(self, com_man_pred):
