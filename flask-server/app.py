@@ -7,7 +7,7 @@ from collections import defaultdict
 from config import Config
 from carga_datos import cargar_regiones, cargar_comunas
 from Queries import QUERY_CONNECTOR, QUERY_ALL_FORMULARIOS, QUERY_FORMULARIO_FILTER_ID, QUERY_ALL_MULTIPROPIETARIOS, QUERY_FORMULARIO_FILTER_NUM_ATENCION, QUERY_ENAJENANTES_INFO, QUERY_ADQUIRENTES_INFO
-from DBmanager import obtener_transferencias_filtrados, obtener_numer_de_atencion, obtener_multipropietarios_filtrados, agregar_formulario
+from DBmanager import obtener_numer_de_atencion, obtener_multipropietarios_filtrados, agregar_formulario
 from Errores import (ERROR_RUT_INVALIDO, ERROR_RUT_VERIFICADOR)
 
 INDEX_ARG = '['
@@ -249,7 +249,6 @@ def ver_multipropietario(id):
     connection = obtener_conexion_db()
     try:
         with connection.cursor() as cursor:
-            # multipropietario_sql = "SELECT * FROM Multipropietarios WHERE id = %s"
             cursor.execute(QUERY_FORMULARIO_FILTER_ID, (id,))
             multipropietario = cursor.fetchone()
         return render_template('ver_multipropietario.html', multipropietario=multipropietario)
@@ -276,7 +275,6 @@ def obtener_formularios(filtros):
 
 def obtener_formulario(id):
     connection = obtener_conexion_db()
-    # formulario_sql = f"SELECT * FROM formulario WHERE Numero_de_atencion = {id}"
     try:
         with connection.cursor() as cursor:
             cursor.execute(QUERY_FORMULARIO_FILTER_NUM_ATENCION, (id,))
@@ -287,7 +285,6 @@ def obtener_formulario(id):
 
 def obtener_enajenantes(id):
     connection = obtener_conexion_db()
-    # enajenantes_sql = "SELECT RUNRUT, porcDerecho FROM Enajenantes WHERE enajenante_id = %s"
     try:
         with connection.cursor() as cursor:
             cursor.execute(QUERY_ENAJENANTES_INFO, (id,))
@@ -298,7 +295,6 @@ def obtener_enajenantes(id):
 
 def obtener_adquirentes(id):
     connection = obtener_conexion_db()
-    # adquirentes_sql = "SELECT RUNRUT, porcDerecho FROM Adquirentes WHERE Adquirente_id = %s"
     try:
         with connection.cursor() as cursor:
             cursor.execute(QUERY_ADQUIRENTES_INFO, (id,))

@@ -16,8 +16,8 @@ def _obtener_ano_desde_query(query_result):
 def obtener_ano_inscripcion(fecha_inscripcion):
     return int(fecha_inscripcion.split("-")[0])
 
-def _obtener_ano_final(fecha_inscripcion):
-    return obtener_ano_inscripcion(fecha_inscripcion) - 1
+# def _obtener_ano_final(fecha_inscripcion):
+#     return obtener_ano_inscripcion(fecha_inscripcion) - 1
 
 def obtener_total_porcentaje(transactions):
     total = 0

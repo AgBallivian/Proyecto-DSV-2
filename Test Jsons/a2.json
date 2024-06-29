@@ -1,0 +1,21 @@
+{
+  "F2890": [
+    {
+      "CNE": 99,
+      "bienRaiz": {
+        "comuna": 1101,
+        "manzana": 12,
+        "predio": 9
+      },
+      "adquirentes": [
+        {
+          "RUNRUT": "456-9",
+          "porcDerecho": 100
+        }
+      ],
+      "fojas": 123,
+      "fechaInscripcion": "2023-05-10",
+      "nroInscripcion": 789
+    }
+  ]
+}

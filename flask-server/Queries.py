@@ -11,6 +11,8 @@ SELECT * FROM Multipropietarios
 WHERE com_man_pred = '{com_man_pred}'
 AND Ano_vigencia_final IS NULL
 """
+OBTENER_MULTIPROPIETARIO_COMMANPRED_SQL = "SELECT * FROM Multipropietarios WHERE com_man_pred = '{com_man_pred}'"
+QUERY_OBTENER_MULTIPROPIETARIO_RUNURT_COMMANPRED__SQL = "SELECT * FROM Multipropietarios WHERE com_man_pred = '{com_man_pred}' AND RUNRUT= '{runrut}'"
 
 QUERY_ALL_TRANSFERENCIAS = "SELECT * FROM Transferencias"
 
@@ -138,12 +140,6 @@ QUERY_ACTUALIZAR_TRANSFERENCIAS = """
                     """
 
 
-QUERY_OBTENER_MULTIPROPIETARIO_SQL = """
-SELECT *
-FROM Multipropietarios
-WHERE com_man_pred = '{com_man_pred}'
-AND RUNRUT= '{runrut}'
-"""
 QUERY_OBTENER_TRANSFERENCIA_SQL = """
 SELECT *
 FROM Transferencias
@@ -186,5 +182,11 @@ QUERY_ACTUALIZAR_MULTIPROPIETARIOS_POR_VIGENCIA = """
 QUERY_ELIMINAR_FILA_MULTIPROPIETARIOS_DESDE_ANO = """
 DELETE FROM Multipropietarios 
 WHERE Ano_inscripcion > {ano_inscripcion}
+AND com_man_pred = '{com_man_pred}'
+"""
+
+QUERY_ELIMINAR_FILA_MULTIPROPIETARIOS_IGUAL_ANO = """
+DELETE FROM Multipropietarios 
+WHERE Ano_inscripcion = {ano_inscripcion}
 AND com_man_pred = '{com_man_pred}'
 """
