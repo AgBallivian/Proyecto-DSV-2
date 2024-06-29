@@ -321,7 +321,7 @@ class form_solver():
 
         transferencias_iguales = obtener_transferencias_igual_ano(com_man_pred, ano_inscripcion_actual)
         print(transferencias_iguales)
-        # obtener el ano de el formulario que acaba de llegar
+        #borrar los multipropietarios de ese ano y agregar el ultimo/-
         # obtener todos los formularios de ese ano
         # guardar solo el ultimo
         # 1. Obtener los formularios existentes para el mismo año
