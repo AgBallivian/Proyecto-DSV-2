@@ -1,10 +1,6 @@
 INTERNAL_SERVER_ERROR = 500
-COMPRAVENTA = 8
-REGULARIZACION_DE_PATRIMONIO = 99
 
 QUERY_ALL_MULTIPROPIETARIOS = "SELECT * FROM Multipropietarios"
-QUERY_OBTENER_ID_MULTIPROPIETARIOS_SQL = "SELECT COUNT(*) FROM Multipropietarios WHERE com_man_pred='{com_man_pred}'"
-QUERY_OBTENER_MULTIPROPIETARIOS_POR_COMMANPRED = "SELECT * FROM Multipropietarios WHERE com_man_pred = '{com_man_pred}'"
 QUERY_ID_MULTIPROPIETARIOS = "SELECT id FROM Multipropietarios ORDER BY id DESC LIMIT 1"
 QUERY_SELECT_MULTIPROPIETARIOS_VIGENTES = """
 SELECT * FROM Multipropietarios
@@ -12,9 +8,6 @@ WHERE com_man_pred = '{com_man_pred}'
 AND Ano_vigencia_final IS NULL
 """
 OBTENER_MULTIPROPIETARIO_COMMANPRED_SQL = "SELECT * FROM Multipropietarios WHERE com_man_pred = '{com_man_pred}'"
-QUERY_OBTENER_MULTIPROPIETARIO_RUNURT_COMMANPRED__SQL = "SELECT * FROM Multipropietarios WHERE com_man_pred = '{com_man_pred}' AND RUNRUT= '{runrut}'"
-
-QUERY_ALL_TRANSFERENCIAS = "SELECT * FROM Transferencias"
 
 QUERY_ALL_FORMULARIOS = "SELECT * FROM formulario"
 QUERY_FORMULARIO_FILTER_ID = "SELECT * FROM Multipropietarios WHERE id = %s"
@@ -70,23 +63,6 @@ QUERY_INSERTAR_ADQUIRENTES = """
                         VALUES (%s, %s, %s, %s)
                     """
 QUERY_ID_TRANSFERENCIAS = "SELECT id FROM Transferencias ORDER BY id DESC LIMIT 1"
-QUERY_UPDATE_TRANSFERENCIAS_SQL = """
-                    UPDATE Transferencias
-                    SET Ano_vigencia_final={ano_final}
-                    WHERE Ano_vigencia_inicial={ano_inicial}
-                    AND Ano_vigencia_final IS NULL
-                    AND com_man_pred='{com_man_pred}'
-                    """
-QUERY_DELETE_TRANSFERENCIAS = """
-DELETE FROM Transferencias 
-WHERE Ano_vigencia_inicial = {last_initial_year}
-AND com_man_pred = '{com_man_pred}'"""
-
-QUERY_OBTENER_TRANSFERENCIAS_SQL = """
-SELECT *
-FROM Transferencias
-WHERE com_man_pred='{com_man_pred}'
-"""
 
 QUERY_OBTENER_ULT_ANO_INSCRIPCION_EXCLUSIVO = """
 SELECT Ano_inscripcion AS Ano FROM Transferencias
@@ -116,13 +92,6 @@ QUERY_INSERTAR_ADQUIRENTES_TRANSFERENCIAS_SQL = """
 
 QUERY_CONNECTOR = """ WHERE  AND """
 
-QUERY_AGREGAR_MULTIPROPIETARIO = """
-    INSERT INTO Multipropietarios (id, com_man_pred, RUNRUT, porcDerecho,
-                                    Fojas, Ano_inscripcion, Numero_inscripcion,
-                                    Fecha_de_inscripcion, Ano_vigencia_inicial,
-                                    Ano_vigencia_final)
-        VALUES ( %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-"""
 
 QUERY_ACTUALIZAR_MULTIPROPIETARIO = """
                     UPDATE Multipropietarios
@@ -140,24 +109,6 @@ QUERY_ACTUALIZAR_TRANSFERENCIAS = """
                     """
 
 
-QUERY_OBTENER_TRANSFERENCIA_SQL = """
-SELECT *
-FROM Transferencias
-WHERE com_man_pred = '{com_man_pred}'
-AND RUNRUT='{runrut}'
-"""
-
-QUERY_DELETE_MULTIPROPIETARIO = """
-DELETE FROM Multipropietarios
-WHERE Ano_vigencia_inicial = {last_initial_year}
-AND com_man_pred = {com_man_pred}"""
-
-QUERY_OBTENER_USUARIO_FORM_TRANSFERENCIAS = """
-SELECT *
-FROM Transferencias
-JOIN Formulario
-"""
-
 QUERY_OBTENER_TRANFERENCIAS_DESDE_ANO = """
 SELECT * FROM Transferencias 
 WHERE com_man_pred = '{com_man_pred}'
@@ -169,7 +120,7 @@ QUERY_OBTENER_TRANFERENCIAS_IGUAL_ANO = """
 SELECT * FROM Transferencias 
 WHERE com_man_pred = '{com_man_pred}'
 and Ano_inscripcion = {ano_inscripcion} 
-ORDER by Ano_inscripcion
+ORDER by id DESC
 """
 
 QUERY_ACTUALIZAR_MULTIPROPIETARIOS_POR_VIGENCIA = """

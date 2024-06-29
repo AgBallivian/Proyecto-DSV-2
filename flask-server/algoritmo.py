@@ -27,6 +27,7 @@ class form_solver():
         self.numero_inscripcion = int(formulario['nroInscripcion'])
         self.connection = connection
         self.form_anterior = None
+        self.formularios_por_procesar = []
         try:
             self.enajenantes_data = formulario['enajenantes']
         except Exception as e:
@@ -59,7 +60,6 @@ class form_solver():
     def agregar_transferencias(self):
         id_transferencias = _obtener_siguiente_id_transferencias()
         com_man_pred = _construir_com_man_pred(self.comuna, self.manzana, self.predio)
-        #print(self.enajenantes_data)
         for enajenante in self.enajenantes_data:
             _insert_enajenantes_to_transferencias(id_transferencias,
                 com_man_pred, enajenante, self.fojas, self.fecha_inscripcion, self.numero_inscripcion)
@@ -88,10 +88,8 @@ class form_solver():
         com_man_pred = str(_construir_com_man_pred(self.comuna, self.manzana, self.predio))
         multipropietarios = obtener_multipropietarios_vigentes(com_man_pred)
         multipropietarios_runrut = [propietarios["RUNRUT"] for propietarios in multipropietarios]
-        print(multipropietarios_runrut)
         for enajenante in self.enajenantes_data:
             if (enajenante["RUNRUT"] not in multipropietarios_runrut):
-                print("encontre un ghost")
                 is_ghost = True
                 enajenante['porcDerecho'] = 0
                 enajenante['fecha_inscripcion'] = None
@@ -126,7 +124,6 @@ class form_solver():
             porcentaje_igual = total_porc_enajenantes / len(self.adquirentes_data)
 
             if primer_caso:
-                print(str(int(self.fecha_inscripcion[:4]) - 1))
                 for adquirente in self.adquirentes_data:
                     adquirente["porcDerecho"] = float(adquirente
                     ["porcDerecho"]) * (total_porc_enajenantes / 100)
@@ -163,7 +160,6 @@ class form_solver():
                     if dueno["RUNRUT"] == enajenante["RUNRUT"]:
                         if is_ghost:
                             dueno["porcDerecho"] -= float(enajenante["porcDerecho"])
-                            print("deja de cumearlo",enajenante["porcDerecho"])
                             if float(dueno["porcDerecho"]) < 0:
                                 self.enajenantes_data[index]["porcDerecho"] = str(dueno["porcDerecho"])
                             else:
@@ -179,7 +175,6 @@ class form_solver():
 
         if(is_ghost):
             total_porc_multipropietarios = sum(float(adquirente["porcDerecho"]) for adquirente in self.adquirentes_data) + sum(float(persona["porcDerecho"]) for persona in multipropietarios if persona not in lista_duenos)
-            print(total_porc_multipropietarios, multipropietarios)
             diferencia = 100 - total_porc_multipropietarios
             lista_personas_con_0_porc = []
             for adquirente in self.adquirentes_data:
@@ -193,14 +188,9 @@ class form_solver():
                     enajenante["porcDerecho"] = 0
                     lista_personas_con_0_porc.append(enajenante)
             if (total_porc_multipropietarios > 100):
-                print("entro a fantasma caso 2")
                 for mp in multipropietarios:
                     mp["porcDerecho"] = (float(mp["porcDerecho"])/total_porc_multipropietarios)*100
-                    print(float(adquirente['porcDerecho']))
-                print((float(adquirente["porcDerecho"])/total_porc_multipropietarios)*100)
                 for adquirente in self.adquirentes_data:
-                    print(float(adquirente['porcDerecho']))
-                    print(total_porc_multipropietarios)
 
                     adquirente["porcDerecho"] = (float(adquirente["porcDerecho"])/total_porc_multipropietarios)*100
                 for mp in multipropietarios:
@@ -220,7 +210,6 @@ class form_solver():
             print("Procesando Escenario 1: No hay historia")
             return True
         else:
-            print(com_man_pred, self.numero_inscripcion)
             ultimo_ano_inicial_transferencias = _obtener_ultimo_ano_inscripcion_exclusivo(com_man_pred, self.numero_inscripcion)
             ano_inscripcion_actual = obtener_ano_inscripcion(self.fecha_inscripcion)
             if ano_inscripcion_actual > ultimo_ano_inicial_transferencias:
@@ -233,14 +222,20 @@ class form_solver():
 
     def procesar_escenario_2(self, com_man_pred):
         print("Procesando Escenario 2: Llega un formulario posterior")    
+
         self._acotar_registros_previos(com_man_pred)
         self.agregar_multipropietarios()
+
+        if(self.formularios_por_procesar):
+            numero_inscripcion = self.formularios_por_procesar[0]["Numero_inscripcion"]
+            formulario_proximo = obtener_formulario_por_numero_inscripcion(numero_inscripcion)
+            self.recibir_proximo_formulario_y_guardar(formulario_proximo, self.formularios_por_procesar[1:])
+            self.determinar_y_procesar_escenario()
 
     def procesar_escenario_3(self, com_man_pred, ano_inscripcion_actual):
         print("Procesando Escenario 3: Llega un formulario previo")
         
         transferencias_posteriores = obtener_transferencias_desde_ano(com_man_pred, ano_inscripcion_actual)
-        print(transferencias_posteriores)
         
         eliminar_multipropietarios_desde_ano(ano_inscripcion_actual, com_man_pred)
 
@@ -249,7 +244,7 @@ class form_solver():
 
         self.agregar_multipropietarios()
 
-        self.recibir_proximo_formulario_y_guardar(formulario_proximo)
+        self.recibir_proximo_formulario_y_guardar(formulario_proximo, transferencias_posteriores[1:])
         if(transferencias_posteriores):
             self.determinar_y_procesar_escenario()
 
@@ -257,11 +252,17 @@ class form_solver():
     def procesar_escenario_4(self, com_man_pred, ano_inscripcion_actual):
         print("Procesando Escenario 4: Llega un formulario para el mismo año")
         transferencias_iguales = obtener_transferencias_igual_ano(com_man_pred, ano_inscripcion_actual)
-        print(transferencias_iguales)
+
         eliminar_multipropietarios_igual_ano(ano_inscripcion_actual, com_man_pred)
-        print(self.formulario)
+
+        numero_inscripcion = transferencias_iguales[0]["Numero_inscripcion"]
+        formulario_ultimo = obtener_formulario_por_numero_inscripcion(numero_inscripcion)
+
         self.agregar_multipropietarios()
 
+        self.recibir_proximo_formulario_y_guardar(formulario_ultimo, self.formularios_por_procesar[1:])
+        if(self.formularios_por_procesar):
+            self.determinar_y_procesar_escenario()
 
     def _acotar_registros_previos(self, com_man_pred):
         ano_vigencia_final = obtener_ano_inscripcion(self.fecha_inscripcion) - 1
@@ -288,7 +289,6 @@ class form_solver():
             if run_rut_enajenantes:
                 sum_porc_derecho_enajenante = self._calcular_suma_porc_derecho_enajenante()
                 self._ajustar_porc_derecho_adquirentes(sum_porc_derecho_enajenante)
-                print(self.adquirentes_data)
 
     def _calcular_suma_porc_derecho_adquirente(self):
         return sum(int(adquirente.get('porcDerecho', 0)) for adquirente in self.adquirentes_data)
@@ -305,7 +305,7 @@ class form_solver():
             if porc_derecho != 0:
                 adquirente['porcDerecho'] = str(porc_derecho * sum_porc_derecho_enajenante / 100)
 
-    def recibir_proximo_formulario_y_guardar(self, formulario_proximo):
+    def recibir_proximo_formulario_y_guardar(self, formulario_proximo, formularios_por_procesar):
         self.formulario = formulario_proximo
         self.cne = int(formulario_proximo['CNE'])
         self.comuna = int(formulario_proximo['bienRaiz']['comuna'])
@@ -315,6 +315,7 @@ class form_solver():
         self.fecha_inscripcion = formulario_proximo['fechaInscripcion']
         self.numero_inscripcion = int(formulario_proximo['nroInscripcion'])
         self.form_anterior = None
+        self.formularios_por_procesar = formularios_por_procesar
         try:
             self.enajenantes_data = formulario_proximo['enajenantes']
         except Exception as e:
