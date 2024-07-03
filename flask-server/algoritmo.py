@@ -114,32 +114,9 @@ class form_solver():
         segundo_caso =(total_porc_adquirentes == 0)
         tercer_caso = (len(self.enajenantes_data) == 1) and (len(self.adquirentes_data) == 1)
 
-        if(primer_caso or segundo_caso):
-            print("primer caso y segundo caso")
-            if(is_ghost):
-                total_porc_enajenantes = 100
-            else:
-                for personas in lista_duenos:
-                        personas["porcDerecho"] += total_porc_enajenantes 
-            porcentaje_igual = total_porc_enajenantes / len(self.adquirentes_data)
+        self.primer_y_segundo_caso(primer_caso, segundo_caso, is_ghost, lista_duenos)
 
-            if primer_caso:
-                for adquirente in self.adquirentes_data:
-                    adquirente["porcDerecho"] = float(adquirente
-                    ["porcDerecho"]) * (total_porc_enajenantes / 100)
-                
-                for enajenante in self.enajenantes_data:
-                    for personas in lista_duenos:
-                        if(enajenante['RUNRUT'] == personas['RUNRUT']):
-                            self.enajenantes_data.remove(enajenante)
-                
-                
-                    
-            elif segundo_caso:
-                for adquirente in self.adquirentes_data:
-                    adquirente['porcDerecho'] = porcentaje_igual * (total_porc_enajenantes / 100)
-
-        elif(tercer_caso):
+        if(tercer_caso):
             print("tercer caso enajenante fantasma")
             adquirente = self.adquirentes_data[0]
             enajenante = self.enajenantes_data[0]
@@ -175,6 +152,32 @@ class form_solver():
 
         self.casos_fantasmas(is_ghost, lista_duenos, multipropietarios)
         actualizar_multipropietarios_por_vigencia(com_man_pred,  str(int(self.fecha_inscripcion[:4]) - 1))
+
+    def primer_y_segundo_caso(self, primer_caso, segundo_caso, is_ghost, lista_duenos):
+        if(primer_caso or segundo_caso):
+            print("primer caso y segundo caso")
+            if(is_ghost):
+                total_porc_enajenantes = 100
+            else:
+                for personas in lista_duenos:
+                        personas["porcDerecho"] += total_porc_enajenantes 
+            porcentaje_igual = total_porc_enajenantes / len(self.adquirentes_data)
+
+            if primer_caso:
+                for adquirente in self.adquirentes_data:
+                    adquirente["porcDerecho"] = float(adquirente
+                    ["porcDerecho"]) * (total_porc_enajenantes / 100)
+                
+                for enajenante in self.enajenantes_data:
+                    for personas in lista_duenos:
+                        if(enajenante['RUNRUT'] == personas['RUNRUT']):
+                            self.enajenantes_data.remove(enajenante)
+                
+                
+                    
+            elif segundo_caso:
+                for adquirente in self.adquirentes_data:
+                    adquirente['porcDerecho'] = porcentaje_igual * (total_porc_enajenantes / 100)
         
     def casos_fantasmas(self, is_ghost, lista_duenos, multipropietarios):
         if(is_ghost):
