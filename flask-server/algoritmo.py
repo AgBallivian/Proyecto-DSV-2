@@ -173,6 +173,10 @@ class form_solver():
                             self.enajenantes_data[index]["porcDerecho"] = str(dueno["porcDerecho"])
                             break
 
+        self.casos_fantasmas(is_ghost, lista_duenos, multipropietarios)
+        actualizar_multipropietarios_por_vigencia(com_man_pred,  str(int(self.fecha_inscripcion[:4]) - 1))
+        
+    def casos_fantasmas(self, is_ghost, lista_duenos, multipropietarios):
         if(is_ghost):
             total_porc_multipropietarios = sum(float(adquirente["porcDerecho"]) for adquirente in self.adquirentes_data) + sum(float(persona["porcDerecho"]) for persona in multipropietarios if persona not in lista_duenos)
             diferencia = 100 - total_porc_multipropietarios
@@ -198,8 +202,6 @@ class form_solver():
             elif(total_porc_multipropietarios < 100):
                 for multipropietario in lista_personas_con_0_porc:
                     multipropietario["porcDerecho"] = (diferencia/(len(lista_personas_con_0_porc)))
-        actualizar_multipropietarios_por_vigencia(com_man_pred,  str(int(self.fecha_inscripcion[:4]) - 1))
-        
 
     def _procesar_escenario_regularizacion_patrimonio(self):
         print("Procesando escenario de regularización de patrimonio")
