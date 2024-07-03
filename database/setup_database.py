@@ -2,9 +2,10 @@ import pymysql
 import csv
 import os
 
+# MYSQL_HOST = 'localhost'
+# MYSQL_ROOT_USER = 'root'
 MYSQL_HOST = 'localhost'
-MYSQL_ROOT_USER = 'root'
-
+MYSQL_ROOT_USER = 'admin'
 MYSQL_ROOT_PASSWORD = 'admin'
 MYSQL_USER = 'admin'
 MYSQL_PASSWORD = 'admin'

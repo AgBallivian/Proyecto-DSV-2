@@ -47,7 +47,7 @@ def _ejecutar_query(query, parameters = None):
         connect.commit()
         connect.close()
 
-def obtener_numer_de_atencion():
+def obtener_numero_de_atencion():
     connect = obtener_conexion_db()
     try:
         with connect.cursor() as cursor:

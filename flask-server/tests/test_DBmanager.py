@@ -4,11 +4,11 @@ from unittest.mock import patch, MagicMock
 from DBmanager import (
     obtener_conexion_db,
     _ejecutar_query,
-    obtener_numer_de_atencion,
+    obtener_numero_de_atencion,
     add_formulario,
     add_enajenante,
     add_adquirente,
-    _obtener_siguiente_id_Transferencias,
+    _obtener_siguiente_id_transferencias,
     _obtener_ano_final,
     delete_Transferencias_antiguos,
     obtener_Transferencias,
@@ -38,12 +38,12 @@ def test_ejecutar_query(mock_connection):
     result = _ejecutar_query("SELECT * FROM test")
     assert result == [{'result': 'test'}]
 
-def test_obtener_numer_de_atencion(mock_connection):
+def test_obtener_numero_de_atencion(mock_connection):
     mock_cursor = MagicMock()
     mock_connection.return_value.cursor.return_value.__enter__.return_value = mock_cursor
     mock_cursor.fetchall.return_value = [{'id': 1}, {'id': 2}, {'id': 3}]
 
-    result = obtener_numer_de_atencion()
+    result = obtener_numero_de_atencion()
     assert result == 3
 
 def test_add_formulario(mock_connection):
@@ -70,12 +70,12 @@ def test_add_adquirente(mock_connection):
     result = add_adquirente(3, '98765432-1', 50)
     assert result == "Ingreso el Adquirente"
 
-def test_obtener_siguiente_id_Transferencias(mock_connection):
+def test_obtener_siguiente_id_transferencias(mock_connection):
     mock_cursor = MagicMock()
     mock_connection.return_value.cursor.return_value.__enter__.return_value = mock_cursor
     mock_cursor.fetchall.return_value = [{'id': 5}]
 
-    result = _obtener_siguiente_id_Transferencias()
+    result = _obtener_siguiente_id_transferencias()
     assert result == 6
 
 def test_obtener_ano_final():

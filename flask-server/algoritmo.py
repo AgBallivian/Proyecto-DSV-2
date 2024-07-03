@@ -4,7 +4,7 @@ from DBmanager import (_obtener_siguiente_id_transferencias, _insert_enajenantes
                         obtener_multipropietarios_commanpred, _obtener_siguiente_id_multipropietarios,
                         actualizar_transferia_por_vigencia, _insert_enajenantes_to_multipropietarios,
                         obtener_multipropietarios_vigentes, _insert_adquirientes_to_multipropietarios,
-                        obtener_numer_de_atencion, obtener_transferencias_desde_ano,
+                        obtener_numero_de_atencion, obtener_transferencias_desde_ano,
                         _insert_adquirientes_to_transferencias, obtener_formularios_por_com_man_pred,
                         eliminar_multipropietarios_desde_ano, obtener_formulario_por_numero_inscripcion,
                         obtener_transferencias_igual_ano,
@@ -40,9 +40,9 @@ class form_solver():
 
         self.agregar_transferencias()
         for adquirente in self.adquirentes_data:
-            agregar_adquirente(obtener_numer_de_atencion(), adquirente["RUNRUT"], adquirente["porcDerecho"])
+            agregar_adquirente(obtener_numero_de_atencion(), adquirente["RUNRUT"], adquirente["porcDerecho"])
         for enajenantes in self.enajenantes_data:
-            agregar_enajenante(obtener_numer_de_atencion(), enajenantes["RUNRUT"], enajenantes["porcDerecho"])
+            agregar_enajenante(obtener_numero_de_atencion(), enajenantes["RUNRUT"], enajenantes["porcDerecho"])
         
     def agregar_multipropietarios(self):
         id_multipropietario = _obtener_siguiente_id_multipropietarios()

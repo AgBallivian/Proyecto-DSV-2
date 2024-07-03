@@ -26,7 +26,7 @@ def test_form_solver_initialization(sample_formulario):
     assert len(solver.enajenantes_data) == 1
     assert len(solver.adquirentes_data) == 1
 
-@patch('algoritmo._obtener_siguiente_id_Transferencias')
+@patch('algoritmo._obtener_siguiente_id_transferencias')
 @patch('algoritmo._insert_enajenantes_to_Transferencias')
 @patch('algoritmo._insert_adquirientes_to_Transferencias')
 def test_add_Transferencias(mock_insert_adquirientes, mock_insert_enajenantes, mock_obtener_id, sample_formulario):

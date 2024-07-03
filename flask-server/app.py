@@ -7,11 +7,16 @@ from collections import defaultdict
 from config import Config
 from carga_datos import cargar_regiones, cargar_comunas
 from Queries import QUERY_CONNECTOR, QUERY_ALL_FORMULARIOS, QUERY_FORMULARIO_FILTER_ID, QUERY_ALL_MULTIPROPIETARIOS, QUERY_FORMULARIO_FILTER_NUM_ATENCION, QUERY_ENAJENANTES_INFO, QUERY_ADQUIRENTES_INFO
-from DBmanager import obtener_numer_de_atencion, obtener_multipropietarios_filtrados, agregar_formulario
-from Errores import (ERROR_RUT_INVALIDO, ERROR_RUT_VERIFICADOR)
+from DBmanager import obtener_numero_de_atencion, obtener_multipropietarios_filtrados, agregar_formulario
+from Constants import (ERROR_RUT_INVALIDO, ERROR_RUT_VERIFICADOR, ERROR_FORMULARIO_NO_PROCESADO,
+                       INDEX_HTML, CREAR_FORMULARIO_HTML, ERROR_HTML, SUBIR_JSON_HTML,
+                       VER_TODOS_FORMULARIOS_HTML, VER_FORMULARIO_HTML, VER_TODOS_MULTIPROPIETARIOS_HTML, 
+                       VER_MULTIPROPIETARIO)
 
 INDEX_ARG = '['
 CAMPO_ARG = ']'
+PARTE_1 = "1"
+PARTE_2 = "2"
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": ["http://localhost:8000"]}})
@@ -28,21 +33,23 @@ def obtener_conexion_db():
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template(INDEX_HTML)
 
 @app.route('/crear_formulario', methods=['GET', 'POST'])
 def crear_formulario():
-    if request.method != 'POST':
-        return render_template('crear_formulario.html')
+    if request.method == 'GET':
+        return render_template(CREAR_FORMULARIO_HTML)
+    return procesar_formulario()
 
+def procesar_formulario():    
     try:
-        numero_de_atencion = obtener_numer_de_atencion()
+        numero_de_atencion = obtener_numero_de_atencion()
         if numero_de_atencion:
             return redirect(url_for('ver_formulario', id=numero_de_atencion))
     except ValueError as e:
-        return render_template('crear_formulario.html', error=str(e))
+        return render_template(CREAR_FORMULARIO_HTML, error=str(e))
     
-    return render_template('error.html', mensaje="Error al procesar el formulario.")
+    return render_template(ERROR_HTML, mensaje=ERROR_FORMULARIO_NO_PROCESADO)
 
 def extraer_datos_formulario(formulario):
     return {
@@ -112,8 +119,8 @@ def _asegurar_existencia_participante(datos_participante, indice):
         datos_participante.append({})
 def analizar_clave(clave):
     partes = clave.split(INDEX_ARG)
-    indice = int(partes[1].split(CAMPO_ARG)[0])
-    campo = partes[2].split(CAMPO_ARG)[0]
+    indice = int(partes[PARTE_1].split(CAMPO_ARG)[0])
+    campo = partes[PARTE_2].split(CAMPO_ARG)[0]
     return indice, campo
 
 def asegurar_existencia_participante(datos_participante, indice):
@@ -126,6 +133,37 @@ def procesar_formulario(datos):
     formulario.determinar_y_procesar_escenario()
     formulario.ajustar_porcentajes_adquirentes()
     return formulario
+
+def subir_json():
+    if request.method == 'GET':
+        return render_template(SUBIR_JSON_HTML)
+    return procesar_archivo_json()
+
+def procesar_archivo_json():
+    archivo = request.files.get('archivo')
+    if not archivo:
+        return render_template(SUBIR_JSON_HTML)
+
+    datos_json = cargar_datos_json(archivo)
+    errores = procesar_formularios(datos_json)
+
+    if errores:
+        return render_template(SUBIR_JSON_HTML, errores=errores)
+    return redirect(url_for('ver_todos_formularios'))
+
+def cargar_datos_json(archivo):
+    contenido = archivo.read()
+    datos_json = json.loads(contenido)
+    return datos_json.get("F2890", [])
+
+def procesar_formularios(formularios):
+    errores = []
+    for datos in formularios:
+        try:
+            procesar_formulario(datos)
+        except ValueError as e:
+            errores.append(f"Error en formulario: {str(e)}")
+    return errores
 
 @app.route('/subir_json', methods=['GET', 'POST'])
 def subir_json():
@@ -142,11 +180,11 @@ def subir_json():
                 except ValueError as e:
                     errores.append(f"Error en formulario: {str(e)}")
             if errores:
-                return render_template('subir_json.html', errores=errores)
+                return render_template(SUBIR_JSON_HTML, errores=errores)
             else:
                 return redirect(url_for('ver_todos_formularios'))
 
-    return render_template('subir_json.html')
+    return render_template(SUBIR_JSON_HTML)
 
 
 @app.route('/ver_todos_formularios', methods=['GET'])
@@ -164,14 +202,14 @@ def obtener_filtros_desde_request():
     }
 
 def renderizar_template_formularios(formularios):
-    return render_template('ver_todos_formularios.html', formularios=formularios)
+    return render_template(VER_TODOS_FORMULARIOS_HTML, formularios=formularios)
 
 @app.route('/ver_formulario/<int:id>', methods=['GET'])
 def ver_formulario(id):
     formulario = obtener_formulario(id)
     enajenantes = obtener_enajenantes(id)
     adquirentes = obtener_adquirentes(id)
-    return render_template('ver_formulario.html', formulario=formulario, enajenantes=enajenantes, adquirentes=adquirentes)
+    return render_template(VER_FORMULARIO_HTML, formulario=formulario, enajenantes=enajenantes, adquirentes=adquirentes)
 
 @app.route('/ver_todos_multipropietarios', methods=['GET'])
 def ver_todos_multipropietarios():
@@ -185,7 +223,7 @@ def ver_todos_multipropietarios():
     year = request.args.get('year', type=int)
 
     multipropietarios = obtener_multipropietarios_filtrados(region_id, comuna_id, block_number, property_number, year)
-    return render_template('ver_todos_multipropietarios.html', multipropietarios=multipropietarios, regiones=regiones, comunas=comunas, region_id=region_id, comuna_id=comuna_id, block_number=block_number, property_number=property_number, year=year)
+    return render_template(VER_TODOS_MULTIPROPIETARIOS_HTML, multipropietarios=multipropietarios, regiones=regiones, comunas=comunas, region_id=region_id, comuna_id=comuna_id, block_number=block_number, property_number=property_number, year=year)
 
 @app.route('/ver_multipropietarios_filtrados', methods=['GET'])
 def ver_multipropietarios_filtrados():
@@ -239,7 +277,7 @@ def ejecutar_consulta(consulta):
         connection.close()
 
 def renderizar_template(multipropietarios, regiones, comunas):
-    return render_template('ver_todos_multipropietarios.html', 
+    return render_template(VER_TODOS_MULTIPROPIETARIOS_HTML, 
                            multipropietarios=multipropietarios, 
                            regiones=regiones, 
                            comunas=comunas)
@@ -251,7 +289,7 @@ def ver_multipropietario(id):
         with connection.cursor() as cursor:
             cursor.execute(QUERY_FORMULARIO_FILTER_ID, (id,))
             multipropietario = cursor.fetchone()
-        return render_template('ver_multipropietario.html', multipropietario=multipropietario)
+        return render_template(VER_MULTIPROPIETARIO, multipropietario=multipropietario)
     finally:
         connection.close()
 

@@ -1,0 +1,13 @@
+ERROR_MESSAGE = "Error "
+ERROR_RUT_INVALIDO = "RUT inválido: {runrut_ingresado}. El formato debe ser XXXXXXXX-X "
+ERROR_RUT_VERIFICADOR = "RUT inválido: {runrut_ingresado}. El dígito verificador no es correcto"
+ERROR_FORMULARIO_NO_PROCESADO = "Error al procesar el formulario"
+
+INDEX_HTML = "index.html"
+CREAR_FORMULARIO_HTML = "crear_formulario.html"
+ERROR_HTML = "error.html"
+SUBIR_JSON_HTML = "subir_json.html"
+VER_TODOS_FORMULARIOS_HTML = "ver_todos_formularios.html"
+VER_FORMULARIO_HTML = "ver_formulario.html"
+VER_TODOS_MULTIPROPIETARIOS_HTML = "ver_todos_multipropietarios.html"
+VER_MULTIPROPIETARIO = "ver_multipropietario.html"
