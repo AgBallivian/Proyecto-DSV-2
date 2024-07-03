@@ -114,97 +114,129 @@ class form_solver():
         segundo_caso =(total_porc_adquirentes == 0)
         tercer_caso = (len(self.enajenantes_data) == 1) and (len(self.adquirentes_data) == 1)
 
-        self.primer_y_segundo_caso(primer_caso, segundo_caso, is_ghost, lista_duenos)
-
+        self.primer_y_segundo_caso_cne8(primer_caso, segundo_caso, is_ghost, lista_duenos, total_porc_enajenantes)
         if(tercer_caso):
             print("tercer caso enajenante fantasma")
-            adquirente = self.adquirentes_data[0]
-            enajenante = self.enajenantes_data[0]
-            if not is_ghost:
-                porcentaje = float(lista_duenos[0]["porcDerecho"]) * float(adquirente["porcDerecho"]) / 100
-                enajenante["porcDerecho"] = float(lista_duenos[0]["porcDerecho"]) - porcentaje
-
+            self.caso_3_cne8(is_ghost, lista_duenos)
         else:
             print("Cuarto caso enajenante fantasma", is_ghost)
-            actualizar_transferia_por_vigencia(com_man_pred,  str(int(self.fecha_inscripcion[:4]) - 1))
             #toda la gente con el mismo comapredio
-            for personas in multipropietarios:
-                if personas not in self.enajenantes_data and personas not in self.adquirentes_data:
-                    self.enajenantes_data.append(personas)
-            
-            for dueno in lista_duenos:
-                for index, enajenante in enumerate(self.enajenantes_data[:]):
-                    if dueno["RUNRUT"] == enajenante["RUNRUT"]:
-                        if is_ghost:
-                            dueno["porcDerecho"] -= float(enajenante["porcDerecho"])
-                            if float(dueno["porcDerecho"]) < 0:
-                                self.enajenantes_data[index]["porcDerecho"] = str(dueno["porcDerecho"])
-                            else:
-                                self.enajenantes_data[index]["porcDerecho"] = 0
-                            break
-
-                        else:
-                            dueno["porcDerecho"] -= float(enajenante["porcDerecho"])
-                            if dueno["porcDerecho"] <= 0:
-                                self.enajenantes_data.remove(enajenante)
-                            self.enajenantes_data[index]["porcDerecho"] = str(dueno["porcDerecho"])
-                            break
+            self.caso_4_cne8(is_ghost, lista_duenos, multipropietarios)
 
         self.casos_fantasmas(is_ghost, lista_duenos, multipropietarios)
         actualizar_multipropietarios_por_vigencia(com_man_pred,  str(int(self.fecha_inscripcion[:4]) - 1))
+    
+    
 
-    def primer_y_segundo_caso(self, primer_caso, segundo_caso, is_ghost, lista_duenos):
-        if(primer_caso or segundo_caso):
+    def primer_y_segundo_caso_cne8(self, primer_caso, segundo_caso, is_ghost, lista_duenos, total_porc_enajenantes):
+        if primer_caso or segundo_caso:
             print("primer caso y segundo caso")
-            if(is_ghost):
-                total_porc_enajenantes = 100
-            else:
-                for personas in lista_duenos:
-                        personas["porcDerecho"] += total_porc_enajenantes 
-            porcentaje_igual = total_porc_enajenantes / len(self.adquirentes_data)
-
+            total_porc_enajenantes = self._ajustar_porcentaje_total(is_ghost, lista_duenos, total_porc_enajenantes)
+            
             if primer_caso:
-                for adquirente in self.adquirentes_data:
-                    adquirente["porcDerecho"] = float(adquirente
-                    ["porcDerecho"]) * (total_porc_enajenantes / 100)
-                
-                for enajenante in self.enajenantes_data:
-                    for personas in lista_duenos:
-                        if(enajenante['RUNRUT'] == personas['RUNRUT']):
-                            self.enajenantes_data.remove(enajenante)
-                
-                
-                    
+                self._aplicar_primer_caso_cne8(total_porc_enajenantes, lista_duenos)
             elif segundo_caso:
-                for adquirente in self.adquirentes_data:
-                    adquirente['porcDerecho'] = porcentaje_igual * (total_porc_enajenantes / 100)
+                self._aplicar_segundo_caso_cne8(total_porc_enajenantes)
+
+    def _ajustar_porcentaje_total(self, is_ghost, lista_duenos, total_porc_enajenantes):
+        if is_ghost:
+            return 100
+        else:
+            for persona in lista_duenos:
+                persona["porcDerecho"] += total_porc_enajenantes
+            return total_porc_enajenantes
+
+    def _aplicar_primer_caso_cne8(self, total_porc_enajenantes, lista_duenos):
+        for adquirente in self.adquirentes_data:
+            adquirente["porcDerecho"] = float(adquirente["porcDerecho"]) * (total_porc_enajenantes / 100)
+        self.enajenantes_data = [
+            enajenante for enajenante in self.enajenantes_data
+            if enajenante['RUNRUT'] not in [persona['RUNRUT'] for persona in lista_duenos]
+        ] 
+
+    def _aplicar_segundo_caso_cne8(self, total_porc_enajenantes):
+        porcentaje_igual = total_porc_enajenantes / len(self.adquirentes_data)
+        for adquirente in self.adquirentes_data:
+            adquirente['porcDerecho'] = porcentaje_igual * (total_porc_enajenantes / 100)
+
+    def caso_3_cne8(self, is_ghost, lista_duenos):
+        adquirente = self.adquirentes_data[0]
+        enajenante = self.enajenantes_data[0]
+        if not is_ghost:
+            porcentaje = float(lista_duenos[0]["porcDerecho"]) * float(adquirente["porcDerecho"]) / 100
+            enajenante["porcDerecho"] = float(lista_duenos[0]["porcDerecho"]) - porcentaje
+
+    def caso_4_cne8(self, is_ghost, lista_duenos, multipropietarios):
+        for persona in multipropietarios:
+            if persona not in self.enajenantes_data and persona not in self.adquirentes_data:
+                self.enajenantes_data.append(persona)
+        for dueno in lista_duenos:
+            for index, enajenante in enumerate(self.enajenantes_data[:]):
+                if dueno["RUNRUT"] == enajenante["RUNRUT"]:
+                    self._ajustar_porcentaje(dueno, enajenante, index, is_ghost)
+                    break
+
+
+    def _ajustar_porcentaje(self, dueno, enajenante, index, is_ghost):
+        dueno["porcDerecho"] -= float(enajenante["porcDerecho"])
+        if is_ghost:
+            if float(dueno["porcDerecho"]) < 0:
+                self.enajenantes_data[index]["porcDerecho"] = str(dueno["porcDerecho"])
+            else:
+                self.enajenantes_data[index]["porcDerecho"] = 0
+        else:
+            if dueno["porcDerecho"] <= 0:
+                self.enajenantes_data.remove(enajenante)
+                self.enajenantes_data[index]["porcDerecho"] = str(dueno["porcDerecho"])
         
     def casos_fantasmas(self, is_ghost, lista_duenos, multipropietarios):
-        if(is_ghost):
-            total_porc_multipropietarios = sum(float(adquirente["porcDerecho"]) for adquirente in self.adquirentes_data) + sum(float(persona["porcDerecho"]) for persona in multipropietarios if persona not in lista_duenos)
-            diferencia = 100 - total_porc_multipropietarios
-            lista_personas_con_0_porc = []
-            for adquirente in self.adquirentes_data:
-                porcentaje = float(adquirente["porcDerecho"])
-                if float(porcentaje) <= 0:
-                    adquirente["porcDerecho"] = 0
-                    lista_personas_con_0_porc.append(adquirente)
-            for enajenante in self.enajenantes_data:
-                porcentaje = float(enajenante["porcDerecho"])
-                if float(porcentaje) <= 0:
-                    enajenante["porcDerecho"] = 0
-                    lista_personas_con_0_porc.append(enajenante)
-            if (total_porc_multipropietarios > 100):
-                for mp in multipropietarios:
-                    mp["porcDerecho"] = (float(mp["porcDerecho"])/total_porc_multipropietarios)*100
-                for adquirente in self.adquirentes_data:
+        if not is_ghost:
+            return
 
-                    adquirente["porcDerecho"] = (float(adquirente["porcDerecho"])/total_porc_multipropietarios)*100
-                for mp in multipropietarios:
-                    self.adquirentes_data.append(mp)
-            elif(total_porc_multipropietarios < 100):
-                for multipropietario in lista_personas_con_0_porc:
-                    multipropietario["porcDerecho"] = (diferencia/(len(lista_personas_con_0_porc)))
+        total_porc_multipropietarios = self._calcular_total_porcentaje(lista_duenos, multipropietarios)
+        diferencia = 100 - total_porc_multipropietarios
+        lista_personas_con_0_porc = self._identificar_personas_sin_porcentaje()
+
+        if total_porc_multipropietarios > 100:
+            self._ajustar_porcentajes_exceso(multipropietarios, total_porc_multipropietarios)
+        elif total_porc_multipropietarios < 100:
+            self._distribuir_diferencia(lista_personas_con_0_porc, diferencia)
+
+    def _calcular_total_porcentaje(self, lista_duenos, multipropietarios):
+        return (sum(float(adquirente["porcDerecho"]) for adquirente in self.adquirentes_data) +
+                sum(float(persona["porcDerecho"]) for persona in multipropietarios if persona not in lista_duenos))
+
+    def _identificar_personas_sin_porcentaje(self):
+        lista_personas_con_0_porc = []
+        self._identificar_adquirentes_sin_porcentaje(lista_personas_con_0_porc)
+        self._identificar_enajenantes_sin_porcentaje(lista_personas_con_0_porc)
+        return lista_personas_con_0_porc
+
+    def _identificar_adquirentes_sin_porcentaje(self, lista_personas_con_0_porc):
+        for adquirente in self.adquirentes_data:
+            if float(adquirente["porcDerecho"]) <= 0:
+                adquirente["porcDerecho"] = 0
+                lista_personas_con_0_porc.append(adquirente)
+
+    def _identificar_enajenantes_sin_porcentaje(self, lista_personas_con_0_porc):
+        for enajenante in self.enajenantes_data:
+            if float(enajenante["porcDerecho"]) <= 0:
+                enajenante["porcDerecho"] = 0
+                lista_personas_con_0_porc.append(enajenante)
+
+    def _ajustar_porcentajes_exceso(self, multipropietarios, total_porc_multipropietarios):
+        factor_ajuste = 100 / total_porc_multipropietarios
+        for mp in multipropietarios:
+            mp["porcDerecho"] = float(mp["porcDerecho"]) * factor_ajuste
+        for adquirente in self.adquirentes_data:
+            adquirente["porcDerecho"] = float(adquirente["porcDerecho"]) * factor_ajuste
+        self.adquirentes_data.extend(multipropietarios)
+
+    def _distribuir_diferencia(self, lista_personas_con_0_porc, diferencia):
+        if lista_personas_con_0_porc:
+            porcentaje_distribuido = diferencia / len(lista_personas_con_0_porc)
+            for persona in lista_personas_con_0_porc:
+                persona["porcDerecho"] = porcentaje_distribuido
 
     def _procesar_escenario_regularizacion_patrimonio(self):
         print("Procesando escenario de regularización de patrimonio")
