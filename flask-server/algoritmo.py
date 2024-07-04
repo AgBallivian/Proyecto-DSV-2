@@ -11,7 +11,7 @@ from DBmanager import (_obtener_siguiente_id_transferencias, _insert_enajenantes
                         _obtener_ultimo_ano_inscripcion_exclusivo, eliminar_multipropietarios_igual_ano
                         )
 from utils import (obtener_ano_inscripcion,_construir_com_man_pred, obtener_total_porcentaje)
-
+from Constants import ERROR_MESSAGE
 COMPRAVENTA = 8
 REGULARIZACION_DE_PATRIMONIO = 99
 
@@ -33,6 +33,7 @@ class form_solver():
             self.enajenantes_data = formulario['enajenantes']
         except Exception as e:
             self.enajenantes_data = []
+            print(ERROR_MESSAGE + str(e))
             
         if formulario['adquirentes'] != []:
             self.adquirentes_data = formulario['adquirentes']
@@ -73,55 +74,62 @@ class form_solver():
         
 
     def determinar_y_procesar_escenario(self):
-        subir_formulario = True
         if self.cne == COMPRAVENTA:
             self.procesar_escenario_compraventa()
         elif self.cne == REGULARIZACION_DE_PATRIMONIO:
-            subir_formulario = self._procesar_escenario_regularizacion_patrimonio()
-        if subir_formulario:
-            pass
-            # self.agregar_transferencias()
-            # self.agregar_multipropietarios()
+            self._procesar_escenario_regularizacion_patrimonio()
 
-    
     def procesar_escenario_compraventa(self):
-        is_ghost=False
         com_man_pred = str(_construir_com_man_pred(self.comuna, self.manzana, self.predio))
         multipropietarios = obtener_multipropietarios_vigentes(com_man_pred)
-        multipropietarios_runrut = [propietarios["RUNRUT"] for propietarios in multipropietarios]
-        for enajenante in self.enajenantes_data:
-            if (enajenante["RUNRUT"] not in multipropietarios_runrut):
-                is_ghost = True
-                enajenante['porcDerecho'] = 0
-                enajenante['fecha_inscripcion'] = None
-                enajenante['ano'] = None
-                enajenante['numero_inscripcion'] = None
+        
+        is_ghost, lista_duenos_enajenantes = self.identificar_fantasmas(multipropietarios)
+        
+        lista_duenos_adquirientes = self.obtener_lista_duenos_adquirientes(multipropietarios)
+        
+        total_porc_enajenantes = obtener_total_porcentaje(lista_duenos_enajenantes)
+        total_porc_adquirentes = obtener_total_porcentaje(self.adquirentes_data)
+        
+        self.aplicar_nivel_1(total_porc_adquirentes, total_porc_enajenantes, 
+                            lista_duenos_enajenantes, multipropietarios, 
+                            is_ghost, lista_duenos_adquirientes)
+        
+        self.casos_fantasmas(is_ghost, lista_duenos_enajenantes, multipropietarios)
+        self._acotar_registros_previos(com_man_pred)
 
-
+    def identificar_fantasmas(self, multipropietarios):
+        is_ghost = False
         lista_duenos_enajenantes = []
+        multipropietarios_runrut = [propietario["RUNRUT"] for propietario in multipropietarios]
+
         for enajenante in self.enajenantes_data:
-            for propietario in multipropietarios:
-                if(enajenante['RUNRUT'] == propietario['RUNRUT']):
-                    lista_duenos_enajenantes.append(propietario)
+            if enajenante["RUNRUT"] not in multipropietarios_runrut:
+                is_ghost = True
+                self.marcar_como_fantasma(enajenante)
+            else:
+                for propietario in multipropietarios:
+                    if enajenante['RUNRUT'] == propietario['RUNRUT']:
+                        lista_duenos_enajenantes.append(propietario)
+
+            if float(enajenante['porcDerecho']) == 0:
+                is_ghost = True
+
+        return is_ghost, lista_duenos_enajenantes
+
+    def marcar_como_fantasma(self, enajenante):
+        enajenante['porcDerecho'] = 0
+        enajenante['fecha_inscripcion'] = None
+        enajenante['ano'] = None
+        enajenante['numero_inscripcion'] = None
+
+    def obtener_lista_duenos_adquirientes(self, multipropietarios):
         lista_duenos_adquirientes = [] 
         for adquiriente in self.adquirentes_data:
             for propietario in multipropietarios:
                 if(adquiriente['RUNRUT'] == propietario['RUNRUT']):
                     lista_duenos_adquirientes.append(propietario)
-                
-        for enajenante in self.enajenantes_data:
-            if(float(enajenante['porcDerecho']) == 0):
-                is_ghost = True
-                break
-        total_porc_enajenantes = obtener_total_porcentaje(lista_duenos_enajenantes)
-        total_porc_adquirentes = obtener_total_porcentaje(self.adquirentes_data)
+        return lista_duenos_adquirientes
 
-
-        self.aplicar_nivel_1(total_porc_adquirentes, total_porc_enajenantes, lista_duenos_enajenantes, multipropietarios, is_ghost, lista_duenos_adquirientes)
-
-        self.casos_fantasmas(is_ghost, lista_duenos_enajenantes, multipropietarios)
-        self._acotar_registros_previos(com_man_pred)
-        
     def aplicar_nivel_1(self, total_porc_adquirentes, total_porc_enajenantes, lista_duenos_enajenantes, multipropietarios, is_ghost, lista_duenos_adquirientes):
         if(total_porc_adquirentes == 100):
             print("Procesando escenario 1: Suma adquirientes igual a 100")
@@ -299,7 +307,6 @@ class form_solver():
                 self.procesar_escenario_3(com_man_pred, ano_inscripcion_actual)
             else:
                 self.procesar_escenario_4(com_man_pred, ano_inscripcion_actual)
-            return False
 
     def procesar_escenario_2(self, com_man_pred):
         print("Procesando Escenario 2: Llega un formulario posterior")    
@@ -400,6 +407,7 @@ class form_solver():
             self.enajenantes_data = formulario_proximo['enajenantes']#cambiar por una funcion que llame todos los enajenantes para ese num_inscripcion
         except Exception as e:
             self.enajenantes_data = []
+            print(ERROR_MESSAGE + str(e))
             
         if formulario_proximo['adquirentes'] != []:
             self.adquirentes_data = formulario_proximo['adquirentes']#cambiar por una funcion que llame todos los adquirientes para ese num_inscripcion
