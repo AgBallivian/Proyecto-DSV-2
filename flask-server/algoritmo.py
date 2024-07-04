@@ -153,10 +153,10 @@ class form_solver():
             adquirente["porcDerecho"] = float(adquirente["porcDerecho"]) * (total_porc_enajenantes / 100)
         
 
+        self.convertir_dueno_no_enajenante_a_adquiriente(multipropietarios)
+        self.convertir_dueno_adquiriente_a_adquiriente(lista_duenos_adquirientes)
         self.enajenantes_data = []
         if not is_ghost:
-            self.convertir_dueno_no_enajenante_a_adquiriente(multipropietarios)
-            self.convertir_dueno_adquiriente_a_adquiriente(lista_duenos_adquirientes)
             self.agregar_multipropietarios()
         
 
