@@ -10,14 +10,15 @@ from Queries import (
     QUERY_ALL_ENAJENANTES, QUERY_INSERTAR_ENAJENANTES, QUERY_ALL_ADQUIRENTES,
     QUERY_INSERTAR_ADQUIRENTES, QUERY_ID_TRANSFERENCIAS, QUERY_INSERTAR_ENAJENANTES_TRANSFERENCIAS_SQL,
     QUERY_INSERTAR_ADQUIRENTES_TRANSFERENCIAS_SQL, QUERY_INSERTAR_ADQUIRENTES_MULTIPROPIETARIOS_SQL,
-    QUERY_CONNECTOR, QUERY_INSERTAR_ENAJENANTES_MULTIPROPIETARIOS_SQL, QUERY_ACTUALIZAR_MULTIPROPIETARIOS_POR_VIGENCIA,
+    QUERY_CONNECTOR, QUERY_INSERTAR_ENAJENANTES_MULTIPROPIETARIOS_SQL,
     QUERY_ACTUALIZAR_TRANSFERENCIAS, QUERY_SELECT_MULTIPROPIETARIOS_VIGENTES,
     QUERY_ALL_MULTIPROPIETARIOS, QUERY_ID_MULTIPROPIETARIOS,
     QUERY_FORMULARIO_COM_MAN_PRED, QUERY_ENAJENANTES_POR_FORMULARIO, QUERY_ADQUIRENTES_POR_FORMULARIO,
     QUERY_OBTENER_TRANFERENCIAS_DESDE_ANO, QUERY_OBTENER_ULT_ANO_INSCRIPCION_EXCLUSIVO, QUERY_ELIMINAR_FILA_MULTIPROPIETARIOS_DESDE_ANO,
     QUERY_SELECT_FORMULARIO_NUMERO_INSCRIPCION, QUERY_OBTENER_TRANFERENCIAS_IGUAL_ANO,
     QUERY_OBTENER_ULT_ANO_INSCRIPCION, OBTENER_MULTIPROPIETARIO_COMMANPRED_SQL,
-    QUERY_ELIMINAR_FILA_MULTIPROPIETARIOS_IGUAL_ANO)
+    QUERY_ELIMINAR_FILA_MULTIPROPIETARIOS_IGUAL_ANO, QUERY_ACTUALIZAR_MULTIPROPIETARIOS_POR_VIGENCIA,
+    QUERY_OBTENER_NUM_MULTIPROPIETARIO_SEGUN_ID, QUERY_OBTENER_ID_MULTIPROPIETARIO_SEGUN_NUM)
 
 ERROR_MESSAGE = "Error in DBmanager:  "
 config = Config()
@@ -277,10 +278,15 @@ def _obtener_ultimo_ano_inscripcion(com_man_pred):
 def construir_query_obtener_ultimo_ano_inscripcion(com_man_pred):
     return QUERY_OBTENER_ULT_ANO_INSCRIPCION.format(com_man_pred=com_man_pred)
 
-def actualizar_multipropietarios_por_vigencia(com_man_pred, ano_final):
+    
+def actualizar_multipropietarios_por_vigencia(com_man_pred, ano_final, numero_inscripcion):
     try:
-        query_multipropietarios = QUERY_ACTUALIZAR_MULTIPROPIETARIOS_POR_VIGENCIA.format(ano_final=ano_final, com_man_pred=com_man_pred)
-        _ejecutar_query(query_multipropietarios)
+        query_multipropietarios_id = QUERY_OBTENER_ID_MULTIPROPIETARIO_SEGUN_NUM.format(com_man_pred=com_man_pred, numero_inscripcion=numero_inscripcion)
+        multipropietarios_id = _ejecutar_query(query_multipropietarios_id)
+        query_multipropietarios_num_inscripcion = QUERY_OBTENER_NUM_MULTIPROPIETARIO_SEGUN_ID.format(com_man_pred=com_man_pred, id=multipropietarios_id[0]["id"])
+        multipropietarios_num_inscripcion = _ejecutar_query(query_multipropietarios_num_inscripcion)
+        actualizar_vigencia_multipropietarios = QUERY_ACTUALIZAR_MULTIPROPIETARIOS_POR_VIGENCIA.format(com_man_pred=com_man_pred, numero_inscripcion=multipropietarios_num_inscripcion[0]["Numero_inscripcion"], ano_final=ano_final)
+        _ejecutar_query(actualizar_vigencia_multipropietarios)
         return True
     except Exception as e:
         print(ERROR_MESSAGE, e)
@@ -411,8 +417,12 @@ def obtener_transferencias_desde_ano(com_man_pred, ano_inscripcion):
         com_man_pred = com_man_pred,
         ano_inscripcion = ano_inscripcion
         )
+    num_inscripcion_transferenicas = []
     transferenicas = _ejecutar_query(query)
-    return transferenicas
+    for transferencia in transferenicas:
+        if(transferencia["Numero_inscripcion"] not in num_inscripcion_transferenicas):
+            num_inscripcion_transferenicas.append(transferencia["Numero_inscripcion"])
+    return num_inscripcion_transferenicas
 
 def obtener_transferencias_igual_ano(com_man_pred, ano_inscripcion):
     query = QUERY_OBTENER_TRANFERENCIAS_IGUAL_ANO.format(

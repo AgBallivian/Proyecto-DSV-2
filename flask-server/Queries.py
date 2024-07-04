@@ -110,7 +110,7 @@ QUERY_ACTUALIZAR_TRANSFERENCIAS = """
 
 
 QUERY_OBTENER_TRANFERENCIAS_DESDE_ANO = """
-SELECT * FROM Transferencias 
+SELECT Numero_inscripcion FROM Transferencias 
 WHERE com_man_pred = '{com_man_pred}'
 and Ano_inscripcion > {ano_inscripcion} 
 ORDER by Ano_inscripcion
@@ -123,13 +123,6 @@ and Ano_inscripcion = {ano_inscripcion}
 ORDER by id DESC
 """
 
-QUERY_ACTUALIZAR_MULTIPROPIETARIOS_POR_VIGENCIA = """
-                    UPDATE Multipropietarios
-                    SET Ano_vigencia_final={ano_final}
-                    WHERE Ano_vigencia_final IS NULL
-                    AND com_man_pred='{com_man_pred}'
-                    """
-
 QUERY_ELIMINAR_FILA_MULTIPROPIETARIOS_DESDE_ANO = """
 DELETE FROM Multipropietarios 
 WHERE Ano_inscripcion > {ano_inscripcion}
@@ -140,4 +133,21 @@ QUERY_ELIMINAR_FILA_MULTIPROPIETARIOS_IGUAL_ANO = """
 DELETE FROM Multipropietarios 
 WHERE Ano_inscripcion = {ano_inscripcion}
 AND com_man_pred = '{com_man_pred}'
+"""
+
+QUERY_ACTUALIZAR_MULTIPROPIETARIOS_POR_VIGENCIA = """
+UPDATE Multipropietarios SET
+Ano_vigencia_final={ano_final}
+WHERE com_man_pred = '{com_man_pred}' AND
+Numero_inscripcion = {numero_inscripcion}
+"""
+QUERY_OBTENER_NUM_MULTIPROPIETARIO_SEGUN_ID = """
+SELECT Numero_inscripcion FROM Multipropietarios 
+WHERE com_man_pred = '{com_man_pred}' AND
+id = {id}-1
+"""
+QUERY_OBTENER_ID_MULTIPROPIETARIO_SEGUN_NUM = """
+SELECT id FROM Multipropietarios 
+WHERE com_man_pred = '{com_man_pred}' AND 
+Numero_inscripcion = {numero_inscripcion} LIMIT 1
 """

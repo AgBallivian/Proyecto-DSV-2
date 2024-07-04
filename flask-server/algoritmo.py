@@ -8,7 +8,8 @@ from DBmanager import (_obtener_siguiente_id_transferencias, _insert_enajenantes
                         _insert_adquirientes_to_transferencias, obtener_formularios_por_com_man_pred,
                         eliminar_multipropietarios_desde_ano, obtener_formulario_por_numero_inscripcion,
                         obtener_transferencias_igual_ano,
-                        _obtener_ultimo_ano_inscripcion_exclusivo, eliminar_multipropietarios_igual_ano)
+                        _obtener_ultimo_ano_inscripcion_exclusivo, eliminar_multipropietarios_igual_ano
+                        )
 from utils import (obtener_ano_inscripcion,_construir_com_man_pred, obtener_total_porcentaje)
 
 COMPRAVENTA = 8
@@ -124,7 +125,8 @@ class form_solver():
             self.caso_4_cne8(is_ghost, lista_duenos, multipropietarios)
 
         self.casos_fantasmas(is_ghost, lista_duenos, multipropietarios)
-        actualizar_multipropietarios_por_vigencia(com_man_pred,  str(int(self.fecha_inscripcion[:4]) - 1))
+        self._acotar_registros_previos(com_man_pred)
+        # actualizar_multipropietarios_por_vigencia(com_man_pred,  str(int(self.fecha_inscripcion[:4]) - 1), self.numero_inscripcion)
     
     
 
@@ -260,11 +262,10 @@ class form_solver():
     def procesar_escenario_2(self, com_man_pred):
         print("Procesando Escenario 2: Llega un formulario posterior")    
 
-        self._acotar_registros_previos(com_man_pred)
         self.agregar_multipropietarios()
-
+        self._acotar_registros_previos(com_man_pred)
         if(self.formularios_por_procesar):
-            numero_inscripcion = self.formularios_por_procesar[0]["Numero_inscripcion"]
+            numero_inscripcion = self.formularios_por_procesar[0]
             formulario_proximo = obtener_formulario_por_numero_inscripcion(numero_inscripcion)
             self.recibir_proximo_formulario_y_guardar(formulario_proximo, self.formularios_por_procesar[1:])
             self.determinar_y_procesar_escenario()
@@ -273,13 +274,12 @@ class form_solver():
         print("Procesando Escenario 3: Llega un formulario previo")
         
         transferencias_posteriores = obtener_transferencias_desde_ano(com_man_pred, ano_inscripcion_actual)
-        
         eliminar_multipropietarios_desde_ano(ano_inscripcion_actual, com_man_pred)
 
-        numero_inscripcion = transferencias_posteriores[0]["Numero_inscripcion"]
+        numero_inscripcion = transferencias_posteriores[0]
         formulario_proximo = obtener_formulario_por_numero_inscripcion(numero_inscripcion)
-
         self.agregar_multipropietarios()
+        self._acotar_registros_previos(com_man_pred)
 
         self.recibir_proximo_formulario_y_guardar(formulario_proximo, transferencias_posteriores[1:])
         if(transferencias_posteriores):
@@ -301,9 +301,10 @@ class form_solver():
         if(self.formularios_por_procesar):
             self.determinar_y_procesar_escenario()
 
+
     def _acotar_registros_previos(self, com_man_pred):
         ano_vigencia_final = obtener_ano_inscripcion(self.fecha_inscripcion) - 1
-        actualizar_multipropietarios_por_vigencia(com_man_pred, ano_vigencia_final)
+        actualizar_multipropietarios_por_vigencia(com_man_pred, ano_vigencia_final, self.numero_inscripcion)
 
     def _guardar_formularios_existentes(self, com_man_pred, ano_inscripcion_actual):
         formularios = obtener_formularios_por_com_man_pred(com_man_pred)
@@ -354,11 +355,11 @@ class form_solver():
         self.form_anterior = None
         self.formularios_por_procesar = formularios_por_procesar
         try:
-            self.enajenantes_data = formulario_proximo['enajenantes']
+            self.enajenantes_data = formulario_proximo['enajenantes']#cambiar por una funcion que llame todos los enajenantes para ese num_inscripcion
         except Exception as e:
             self.enajenantes_data = []
             
         if formulario_proximo['adquirentes'] != []:
-            self.adquirentes_data = formulario_proximo['adquirentes']
+            self.adquirentes_data = formulario_proximo['adquirentes']#cambiar por una funcion que llame todos los adquirientes para ese num_inscripcion
         else:
             self.adquirentes_data = []

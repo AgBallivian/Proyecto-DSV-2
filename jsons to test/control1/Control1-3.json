@@ -1,0 +1,42 @@
+{
+    "F2890": [
+      {
+        "CNE": 99,
+        "bienRaiz": {
+          "comuna": 256,
+          "manzana": 64,
+          "predio": 32
+        },
+        "adquirentes": [
+          {
+            "RUNRUT": "2-7",
+            "porcDerecho": 100
+          }
+        ],
+        "fojas": 123,
+        "fechaInscripcion": "2021-01-01",
+        "nroInscripcion": 123
+      },
+      {
+        "CNE": 99,
+        "bienRaiz": {
+          "comuna": 256,
+          "manzana": 64,
+          "predio": 32
+        },
+        "adquirentes": [
+          {
+            "RUNRUT": "3-5",
+            "porcDerecho": 33
+          },
+          {
+            "RUNRUT": "1-9",
+            "porcDerecho": 33
+          }
+        ],
+        "fojas": 123,
+        "fechaInscripcion": "2015-03-03",
+        "nroInscripcion": 444
+      }
+    ]
+  }
