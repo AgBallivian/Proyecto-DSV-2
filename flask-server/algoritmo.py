@@ -104,11 +104,11 @@ class form_solver():
             for propietario in multipropietarios:
                 if(enajenante['RUNRUT'] == propietario['RUNRUT']):
                     lista_duenos_enajenantes.append(propietario)
-        lista_duenos_adquirientes = []
+        #lista_duenos_adquirientes = []
         for adquiriente in self.adquirentes_data:
             for propietario in multipropietarios:
                 if(adquiriente['RUNRUT'] == propietario['RUNRUT']):
-                    lista_duenos_adquirientes.append(propietario)
+                    adquiriente['porcDerecho'] += propietario['porcDerecho']
                 
         for enajenante in self.enajenantes_data:
             if(float(enajenante['porcDerecho']) == 0):
@@ -129,8 +129,8 @@ class form_solver():
         #     print("Cuarto caso enajenante fantasma", is_ghost)
         #     #toda la gente con el mismo comapredio
         #     self.caso_4_cne8(is_ghost, lista_duenos, multipropietarios)
-
-        # self.casos_fantasmas(is_ghost, lista_duenos, multipropietarios)
+        print("SOY ENTERO PTOO",self.adquirentes_data,"",self.enajenantes_data)
+        self.casos_fantasmas(is_ghost, lista_duenos_enajenantes, multipropietarios)
         self._acotar_registros_previos(com_man_pred)
         
     def aplicar_nivel_1(self, total_porc_adquirentes, total_porc_enajenantes, lista_duenos_enajenantes, multipropietarios, is_ghost):
@@ -146,6 +146,7 @@ class form_solver():
             print("Procesando escenario 3: 1 adquiriente y 1 enajenante")
             self.aplicar_tercer_caso_cne_8(is_ghost, lista_duenos_enajenantes, multipropietarios)
         else:
+            print("Procesando escenario 4: TODO DISTITNITO")
             self.aplicar_cuarto_caso_cne_8(is_ghost, lista_duenos_enajenantes, multipropietarios)
 
     # def primer_y_segundo_caso_cne8(self, primer_caso, segundo_caso, is_ghost, lista_duenos, total_porc_enajenantes):
@@ -201,8 +202,11 @@ class form_solver():
 
 
     def ajustar_porcentaje(self, is_ghost, lista_duenos_enajenantes):
-        for indice, enajenante in enumerate(self.enajenantes_data):
+        print("NECESITO MAS RESPUESTAS","", self.adquirentes_data,"SOY UN SUPER ENAJENANTE", self.enajenantes_data,"soy dueño del local", lista_duenos_enajenantes)
+        """ for indice, enajenante in enumerate(self.enajenantes_data):
             porcentaje_derecho_dueno = next((item["porcDerecho"] for item in lista_duenos_enajenantes if item["RUNRUT"] == enajenante["RUNRUT"]), enajenante["porcDerecho"])
+            print("SOY LA WEA DEL MALDO", porcentaje_derecho_dueno)
+            print("SOY SENDO PEDAZO DE NAZI","", self.adquirentes_data,"SOY UN SUPER ENAJENANTE", self.enajenantes_data)
             if not is_ghost:
                 porcentaje_nuevo = porcentaje_derecho_dueno - enajenante["porcDerecho"]
             if is_ghost:
@@ -212,17 +216,38 @@ class form_solver():
                     self.enajenantes_data[indice]["porcDerecho"] = 0
             else:
                 self.enajenantes_data[indice]["porcDerecho"] = str(porcentaje_nuevo)
+ """
+        for dueno in lista_duenos_enajenantes:
+            for index, enajenante in enumerate(self.enajenantes_data[:]):
+                if dueno["RUNRUT"] == enajenante["RUNRUT"]:
+                    if is_ghost:
+                        dueno["porcDerecho"] -= float(enajenante["porcDerecho"])
+                        if float(dueno["porcDerecho"]) > 0:
+                            self.enajenantes_data[index]["porcDerecho"] = dueno["porcDerecho"]
+                        else:
+                            self.enajenantes_data[index]["porcDerecho"] = 0
+                        break
 
+                    else:
+                        dueno["porcDerecho"] -= float(enajenante["porcDerecho"])
+                        if dueno["porcDerecho"] <= 0:
+                            self.enajenantes_data.remove(enajenante)
+                        self.enajenantes_data[index]["porcDerecho"] = str(dueno["porcDerecho"])
+                        break
+        print("Q ALGUIEN ME EXPLIQUE",self.enajenantes_data)
+                    
     def sacar_enajenantes_con_0_porcentaje(self):
         for enajenante in self.enajenantes_data:
-            if(int(enajenante["porcDerecho"]) <= 0):
+            if(float(enajenante["porcDerecho"]) <= 0):
                 self.enajenantes_data.remove(enajenante)
         
     def casos_fantasmas(self, is_ghost, lista_duenos, multipropietarios):
+
         if not is_ghost:
             return
 
-        total_porc_multipropietarios = self._calcular_total_porcentaje(lista_duenos, multipropietarios)
+        total_porc_multipropietarios = self._calcular_total_porcentaje(self.enajenantes_data, self.adquirentes_data)
+        print("TOTAL PORCENTAJE", total_porc_multipropietarios, "lista de dueños", lista_duenos, "multipropietarios", self.enajenantes_data)
         diferencia = 100 - total_porc_multipropietarios
         lista_personas_con_0_porc = self._identificar_personas_sin_porcentaje()
 
@@ -230,10 +255,12 @@ class form_solver():
             self._ajustar_porcentajes_exceso(multipropietarios, total_porc_multipropietarios)
         elif total_porc_multipropietarios < 100:
             self._distribuir_diferencia(lista_personas_con_0_porc, diferencia)
+        self.agregar_multipropietarios()
+
 
     def _calcular_total_porcentaje(self, lista_duenos, multipropietarios):
         return (sum(float(adquirente["porcDerecho"]) for adquirente in self.adquirentes_data) +
-                sum(float(persona["porcDerecho"]) for persona in multipropietarios if persona not in lista_duenos))
+                (sum(float(enajenante["porcDerecho"]) for enajenante in self.enajenantes_data)))
 
     def _identificar_personas_sin_porcentaje(self):
         lista_personas_con_0_porc = []
