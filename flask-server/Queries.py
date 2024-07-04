@@ -139,7 +139,8 @@ QUERY_ACTUALIZAR_MULTIPROPIETARIOS_POR_VIGENCIA = """
 UPDATE Multipropietarios SET
 Ano_vigencia_final={ano_final}
 WHERE com_man_pred = '{com_man_pred}' AND
-Numero_inscripcion = {numero_inscripcion}
+Numero_inscripcion = {numero_inscripcion} AND
+id < {id}
 """
 QUERY_OBTENER_NUM_MULTIPROPIETARIO_SEGUN_ID = """
 SELECT Numero_inscripcion FROM Multipropietarios 

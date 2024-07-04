@@ -243,6 +243,8 @@ def _insert_adquirientes_to_transferencias(id_transferencia, com_man_pred, adqui
     _ejecutar_query(query, parameters)
 
 def _insert_adquirientes_to_multipropietarios(id_transferencia, com_man_pred, adquirente, fojas, fecha_inscripcion, numero_inscripcion):
+    if("Numero_inscripcion" in adquirente.keys()):
+        numero_inscripcion = adquirente["Numero_inscripcion"]
     query = QUERY_INSERTAR_ADQUIRENTES_MULTIPROPIETARIOS_SQL
     parameters = (
         id_transferencia,
@@ -285,7 +287,11 @@ def actualizar_multipropietarios_por_vigencia(com_man_pred, ano_final, numero_in
         multipropietarios_id = _ejecutar_query(query_multipropietarios_id)
         query_multipropietarios_num_inscripcion = QUERY_OBTENER_NUM_MULTIPROPIETARIO_SEGUN_ID.format(com_man_pred=com_man_pred, id=multipropietarios_id[0]["id"])
         multipropietarios_num_inscripcion = _ejecutar_query(query_multipropietarios_num_inscripcion)
-        actualizar_vigencia_multipropietarios = QUERY_ACTUALIZAR_MULTIPROPIETARIOS_POR_VIGENCIA.format(com_man_pred=com_man_pred, numero_inscripcion=multipropietarios_num_inscripcion[0]["Numero_inscripcion"], ano_final=ano_final)
+        actualizar_vigencia_multipropietarios = QUERY_ACTUALIZAR_MULTIPROPIETARIOS_POR_VIGENCIA.format(
+            com_man_pred=com_man_pred, 
+            numero_inscripcion=multipropietarios_num_inscripcion[0]["Numero_inscripcion"], 
+            ano_final=ano_final,
+            id=multipropietarios_id[0]["id"])
         _ejecutar_query(actualizar_vigencia_multipropietarios)
         return True
     except Exception as e:
