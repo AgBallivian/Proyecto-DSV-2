@@ -65,7 +65,7 @@ def create_tables():
                     id INT,
                     Adquirente_id INT,
                     RUNRUT VARCHAR(100),
-                    porcDerecho INT,
+                    porcDerecho FLOAT,
                     FOREIGN KEY (Adquirente_id) REFERENCES formulario(Numero_de_atencion)
                 )
             """)
@@ -76,7 +76,7 @@ def create_tables():
                     id INT,
                     enajenante_id INT,
                     RUNRUT VARCHAR(100),
-                    porcDerecho INT,
+                    porcDerecho FLOAT,
                     FOREIGN KEY (enajenante_id) REFERENCES formulario(Numero_de_atencion)
                 )
             """)
@@ -87,7 +87,7 @@ def create_tables():
                     id INT,
                     com_man_pred VARCHAR(100),
                     RUNRUT VARCHAR(100),
-                    porcDerecho INT,
+                    porcDerecho FLOAT,
                     Fojas INT,
                     Ano_inscripcion INT,
                     Numero_inscripcion INT,
@@ -123,7 +123,7 @@ def create_tables():
                     id INT,
                     com_man_pred VARCHAR(100),
                     RUNRUT VARCHAR(100),
-                    porcDerecho INT,
+                    porcDerecho FLOAT,
                     Fojas INT,
                     Ano_inscripcion INT,
                     Numero_inscripcion INT,
