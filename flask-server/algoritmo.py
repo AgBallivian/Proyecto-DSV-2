@@ -74,7 +74,6 @@ class form_solver():
 
     def determinar_y_procesar_escenario(self):
         subir_formulario = True
-        # print(self.enajenantes_data)
         if self.cne == COMPRAVENTA:
             self.procesar_escenario_compraventa()
         elif self.cne == REGULARIZACION_DE_PATRIMONIO:
@@ -194,7 +193,6 @@ class form_solver():
             self.agregar_multipropietarios()
 
     def aplicar_cuarto_caso_cne_8(self, is_ghost, lista_duenos_enajenantes, multipropietarios):
-
         self.ajustar_porcentaje(is_ghost, lista_duenos_enajenantes)
         self.convertir_dueno_no_enajenante_a_adquiriente(multipropietarios)
 
@@ -204,8 +202,9 @@ class form_solver():
 
     def ajustar_porcentaje(self, is_ghost, lista_duenos_enajenantes):
         for indice, enajenante in enumerate(self.enajenantes_data):
-            porcentaje_derecho_dueno = next((item["porcDerecho"] for item in lista_duenos_enajenantes if item["RUNRUT"] == enajenante["RUNRUT"]), None)
-            porcentaje_nuevo = porcentaje_derecho_dueno - enajenante["porcDerecho"]
+            porcentaje_derecho_dueno = next((item["porcDerecho"] for item in lista_duenos_enajenantes if item["RUNRUT"] == enajenante["RUNRUT"]), enajenante["porcDerecho"])
+            if not is_ghost:
+                porcentaje_nuevo = porcentaje_derecho_dueno - enajenante["porcDerecho"]
             if is_ghost:
                 if porcentaje_derecho_dueno < 0:
                     self.enajenantes_data[indice]["porcDerecho"] = str(porcentaje_derecho_dueno)
