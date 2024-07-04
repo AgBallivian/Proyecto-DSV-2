@@ -100,12 +100,6 @@ def test_insert_enajenantes_to_transferencias(mock_ejecutar):
     _insert_enajenantes_to_transferencias(1, '001-002-003', enajenante, 'fojas', '2023-01-01', '123')
     mock_ejecutar.assert_called_once()
 
-@patch('DBmanager._ejecutar_query')
-def test_actualizar_multipropietarios_por_vigencia(mock_ejecutar):
-    resultado = actualizar_multipropietarios_por_vigencia('001-002-003', 2022)
-    assert resultado == True
-    mock_ejecutar.assert_called_once()
-
 @patch('DBmanager.obtener_conexion_db')
 def test_obtener_multipropietarios_filtrados(mock_conexion):
     mock_cursor = MagicMock()

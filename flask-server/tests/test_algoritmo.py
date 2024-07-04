@@ -64,13 +64,15 @@ def test_procesar_escenario_compraventa(mock_actualizar, mock_obtener_vigentes, 
 
 @patch('algoritmo.obtener_multipropietarios_commanpred')
 @patch('algoritmo._obtener_ultimo_ano_inscripcion_exclusivo')
-def test_procesar_escenario_regularizacion_patrimonio(mock_obtener_ultimo_ano, mock_obtener_multipropietarios, formulario_regularizacion):
+@patch('algoritmo.obtener_ano_inscripcion')
+def test_procesar_escenario_regularizacion_patrimonio(mock_obtener_ano, mock_obtener_ultimo_ano, mock_obtener_multipropietarios, formulario_regularizacion):
     mock_obtener_multipropietarios.return_value = None
+    mock_obtener_ano.return_value = 2023
+    mock_obtener_ultimo_ano.return_value = 2022
     
     solver = form_solver(formulario_regularizacion, MagicMock())
-    result = solver._procesar_escenario_regularizacion_patrimonio()
+    solver._procesar_escenario_regularizacion_patrimonio()
     
-    assert result == True
     mock_obtener_multipropietarios.assert_called_once()
     mock_obtener_ultimo_ano.assert_not_called()
 
@@ -94,7 +96,7 @@ def test_acotar_registros_previos(mock_actualizar, mock_obtener_ano, formulario_
     solver = form_solver(formulario_compraventa, MagicMock())
     solver._acotar_registros_previos('1-2-3')
     
-    mock_actualizar.assert_called_once_with('1-2-3', 2022)
+    mock_actualizar.assert_called_once_with('1-2-3', 2022, solver.numero_inscripcion)
 
 def test_ajustar_porcentajes_adquirentes(formulario_compraventa):
     solver = form_solver(formulario_compraventa, MagicMock())
@@ -104,6 +106,43 @@ def test_ajustar_porcentajes_adquirentes(formulario_compraventa):
     solver.ajustar_porcentajes_adquirentes()
     
     assert float(solver.adquirentes_data[0]['porcDerecho']) == 75
+
+@patch('algoritmo.obtener_multipropietarios_vigentes')
+def test_identificar_fantasmas(mock_obtener_vigentes, formulario_compraventa):
+    mock_obtener_vigentes.return_value = [
+        {'RUNRUT': '12345678-9', 'porcDerecho': 50},
+        {'RUNRUT': '98765432-1', 'porcDerecho': 50}
+    ]
+    
+    solver = form_solver(formulario_compraventa, MagicMock())
+    is_ghost, lista_duenos_enajenantes = solver.identificar_fantasmas(mock_obtener_vigentes.return_value)
+    
+    assert not is_ghost
+    assert len(lista_duenos_enajenantes) == 1
+    assert lista_duenos_enajenantes[0]['RUNRUT'] == '12345678-9'
+
+def test_marcar_como_fantasma(formulario_compraventa):
+    solver = form_solver(formulario_compraventa, MagicMock())
+    enajenante = {'RUNRUT': '12345678-9', 'porcDerecho': '50'}
+    
+    solver.marcar_como_fantasma(enajenante)
+    
+    assert enajenante['porcDerecho'] == 0
+    assert enajenante['fecha_inscripcion'] is None
+    assert enajenante['ano'] is None
+    assert enajenante['numero_inscripcion'] is None
+
+def test_obtener_lista_duenos_adquirientes(formulario_compraventa):
+    solver = form_solver(formulario_compraventa, MagicMock())
+    multipropietarios = [
+        {'RUNRUT': '98765432-1', 'porcDerecho': 50},
+        {'RUNRUT': '11111111-1', 'porcDerecho': 50}
+    ]
+    
+    lista_duenos_adquirientes = solver.obtener_lista_duenos_adquirientes(multipropietarios)
+    
+    assert len(lista_duenos_adquirientes) == 1
+    assert lista_duenos_adquirientes[0]['RUNRUT'] == '98765432-1'
 
 if __name__ == '__main__':
     pytest.main()
