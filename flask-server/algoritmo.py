@@ -116,24 +116,10 @@ class form_solver():
         total_porc_enajenantes = obtener_total_porcentaje(lista_duenos_enajenantes)
         total_porc_adquirentes = obtener_total_porcentaje(self.adquirentes_data)
 
-        # primer_caso = (total_porc_adquirentes == 100)
-        # segundo_caso =(total_porc_adquirentes == 0)
-        # tercer_caso = (len(self.enajenantes_data) == 1) and (len(self.adquirentes_data) == 1)
+
         self.aplicar_nivel_1(total_porc_adquirentes, total_porc_enajenantes, lista_duenos_enajenantes, multipropietarios, is_ghost, lista_duenos_adquirientes)
 
-        # self.primer_y_segundo_caso_cne8(primer_caso, segundo_caso, is_ghost, lista_duenos, total_porc_enajenantes)
-        # if(tercer_caso):
-        #     print("tercer caso enajenante fantasma")
-        #     self.caso_3_cne8(is_ghost, lista_duenos)
-        # else:
-        #     print("Cuarto caso enajenante fantasma", is_ghost)
-        #     #toda la gente con el mismo comapredio
-        #     self.caso_4_cne8(is_ghost, lista_duenos, multipropietarios)
-        print(self.adquirentes_data)
-        print(self.enajenantes_data)
         self.casos_fantasmas(is_ghost, lista_duenos_enajenantes, multipropietarios)
-        print(self.adquirentes_data)
-        print(self.enajenantes_data)
         self._acotar_registros_previos(com_man_pred)
         
     def aplicar_nivel_1(self, total_porc_adquirentes, total_porc_enajenantes, lista_duenos_enajenantes, multipropietarios, is_ghost, lista_duenos_adquirientes):
@@ -149,7 +135,7 @@ class form_solver():
             print("Procesando escenario 3: 1 adquiriente y 1 enajenante")
             self.aplicar_tercer_caso_cne_8(is_ghost, lista_duenos_enajenantes, multipropietarios, lista_duenos_adquirientes)
         else:
-            print("Procesando escenario 4: TODO DISTITNITO")
+            print("Procesando escenario 4: Caso excepcion")
             self.aplicar_cuarto_caso_cne_8(is_ghost, lista_duenos_enajenantes, multipropietarios, lista_duenos_adquirientes)
 
 
@@ -182,6 +168,7 @@ class form_solver():
     def aplicar_tercer_caso_cne_8(self, is_ghost, lista_duenos_enajenantes, multipropietarios, lista_duenos_adquirientes):
         adquirente = self.adquirentes_data[0]
         enajenante = self.enajenantes_data[0]
+        print(self.enajenantes_data)
         if not is_ghost:
             porcentaje = float(lista_duenos_enajenantes[0]["porcDerecho"]) * float(adquirente["porcDerecho"]) / 100
             enajenante["porcDerecho"] = float(lista_duenos_enajenantes[0]["porcDerecho"]) - porcentaje
@@ -189,6 +176,9 @@ class form_solver():
             self.convertir_dueno_no_enajenante_a_adquiriente(multipropietarios)
             self.convertir_dueno_adquiriente_a_adquiriente(lista_duenos_adquirientes)
             self.agregar_multipropietarios()
+        else:
+            self.convertir_dueno_no_enajenante_a_adquiriente(multipropietarios)
+        print(self.adquirentes_data)
 
     def aplicar_cuarto_caso_cne_8(self, is_ghost, lista_duenos_enajenantes, multipropietarios, lista_duenos_adquirientes):
         self.ajustar_porcentaje(is_ghost, lista_duenos_enajenantes)
