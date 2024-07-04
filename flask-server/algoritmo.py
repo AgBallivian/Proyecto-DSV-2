@@ -133,7 +133,7 @@ class form_solver():
     def aplicar_nivel_1(self, total_porc_adquirentes, total_porc_enajenantes, lista_duenos_enajenantes, multipropietarios, is_ghost, lista_duenos_adquirientes):
         if(total_porc_adquirentes == 100):
             print("Procesando escenario 1: Suma adquirientes igual a 100")
-            self.aplicar_primer_caso_cne_8(total_porc_enajenantes, multipropietarios, lista_duenos_adquirientes)
+            self.aplicar_primer_caso_cne_8(is_ghost,total_porc_enajenantes, multipropietarios, lista_duenos_adquirientes)
 
         elif(total_porc_adquirentes == 0):
             print("Procesando escenario 2: Suma adquirientes igual a 0")
@@ -155,14 +155,18 @@ class form_solver():
     #             persona["porcDerecho"] += total_porc_enajenantes
     #         return total_porc_enajenantes
 
-    def aplicar_primer_caso_cne_8(self, total_porc_enajenantes, multipropietarios, lista_duenos_adquirientes):
+    def aplicar_primer_caso_cne_8(self, is_ghost, total_porc_enajenantes, multipropietarios, lista_duenos_adquirientes):
+        if( is_ghost and total_porc_enajenantes == 0):
+            total_porc_enajenantes = 100
         for adquirente in self.adquirentes_data:
             adquirente["porcDerecho"] = float(adquirente["porcDerecho"]) * (total_porc_enajenantes / 100)
 
         self.convertir_dueno_no_enajenante_a_adquiriente(multipropietarios)
         self.convertir_dueno_adquiriente_a_adquiriente(lista_duenos_adquirientes)
         self.enajenantes_data = []
-        self.agregar_multipropietarios()
+        if not is_ghost:
+            self.agregar_multipropietarios()
+        
 
     def aplicar_segundo_caso_cne_8(self, total_porc_enajenantes, multipropietarios, lista_duenos_adquirientes):
         porcentaje_igual = total_porc_enajenantes / len(self.adquirentes_data)
@@ -171,7 +175,6 @@ class form_solver():
 
         self.convertir_dueno_no_enajenante_a_adquiriente(multipropietarios)
         self.convertir_dueno_adquiriente_a_adquiriente(lista_duenos_adquirientes)
-        self.agregar_multipropietarios()
 
     def aplicar_tercer_caso_cne_8(self, is_ghost, lista_duenos_enajenantes, multipropietarios, lista_duenos_adquirientes):
         adquirente = self.adquirentes_data[0]
